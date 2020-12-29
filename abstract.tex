@@ -1,4 +1,49 @@
+\keyword{C, Modularity, Compositional Compiler Verification, CompCert, Separate Compilation, Multi-Language Linking}
+
 \begin{abstract}
-\noindent
-\lipsum[1-3]
+
+%% In modern computer systems, to tame complexity, each component is developed modularly and then composed.
+
+  %% In modern computer systems, each component is developed modularly and then compiled down to assembly,
+%% by possibly different compilation passes.
+%% In order to support these
+
+  %% multi-language >>stronger>> different compilers. the latter can be embedded like: C_gcc/C_llvm
+  %% In modern computer systems, each module is compiled down to assembly by possibly different compilers composed of multiple translation passes.
+
+  Modern computer systems are often composed of different languages such as C and handwritten assembly, where each language is compiled with different compilers.
+  Verifying a compiler in the presence of such multi-language linking requires a compositional notion of compiler correctness.
+  In this dissertation, I propose a 
+  For a compiler to support multi-language linking, 
+
+Supporting multi-language linking such as linking C and handwritten
+assembly modules in the verified compiler CompCert requires a more
+compositional verification technique than that used in CompCert just
+supporting separate compilation.  The two extensions, CompCertX and
+Compositional CompCert, supporting multi-language linking take
+different approaches. The former simplifies the problem by imposing
+restrictions that the source modules should have no mutual dependence
+and be verified against certain well-behaved specifications. On the
+other hand, the latter develops a new verification technique that
+directly solves the problem but at the expense of significantly
+increasing the verification cost.
+
+In this paper, we develop a novel lightweight verification technique,
+called RUSC (Refinement Under Self-related Contexts), and demonstrate
+how RUSC can solve the problem without any restrictions but still with
+low verification overhead. For this, we develop CompCertM, a full
+extension of the latest version of CompCert supporting multi-language
+linking. Moreover, we demonstrate the power of RUSC as a program
+verification technique by modularly verifying interesting programs
+consisting of C and handwritten assembly against their mathematical
+specifications.
+
+This dissertation presents a new theory modular verification, and its application to CompCert compiler.
+%% When developing complex software systems, to tame complexity, each component is developed modularly and then composed.
+%% When developing complex software systems, modularity plays a crucial role in taming complexity.
+-- abstraction -- composition
+In Part I,
+In Part II, ...
+In Part III,
+
 \end{abstract}
