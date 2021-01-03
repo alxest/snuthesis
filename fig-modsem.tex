@@ -1,0 +1,49 @@
+\begin{figure}[t!]
+\footnotesize
+
+\begin{minipage}{1\linewidth}
+  \mytitle{module}\\
+$
+  \begin{stackTL}
+  \begin{array}{l@{}l}
+  \module \in \Module = \{ & (\texttt{scode}, \texttt{get\_sem}) \in (\Skel \times (\Skenv \rightarrow \Msem)) \; | \; \forall \skenv, \texttt{get\_sem}(\skenv).\texttt{senv} = \skenv \textbar_{\texttt{scode}}
+                        \} \\
+  \end{array}
+  \end{stackTL}
+$
+\end{minipage}%
+\\
+\begin{minipage}{1\linewidth}
+  \mytitle{module semantics}\\
+$
+  \begin{stackTL}
+  \begin{array}{@{}l@{}}
+    \msem \in \Msem = \\
+    \quad  \setof{ \myst \in \textrm{Set}, \texttt{senv} \in \Skenv, \estep{} \; \in \powset{(\Memory \times \myst) \times \Events \times (\Memory \times \myst)}, \\
+    \quad\ \ \;\texttt{init\_core} \in \Args \rightarrow \powset{\Memory \times \myst}, \texttt{at\_external} \in (\Memory \times \myst) \rightarrow \option{\Args}, \\
+    \quad\ \ \;\texttt{after\_external} \in (\myst \times \Retv) \rightarrow \option{(\Memory \times \myst)}, \texttt{halted} \in (\Memory \times \myst) \rightarrow \option{\Retv} \; | \\
+    \quad\ \ \;\{ \ms \;|\; \exists e, \ms',~ \ms \estep{e} \ms' \}, \{ \ms \;|\; \exists \args, \texttt{at\_external}(\ms) = \some{\args} \},
+               \{ \ms \;|\; \exists \retv, \texttt{halted}(\ms) = \some{\retv} \} \text{ disjoint}
+    } \\
+  \end{array}
+  \\
+  \begin{array}{l@{}l@{}l}
+    \Args & \defeq \{ (\texttt{m}, \texttt{f}, \texttt{vs}) \in (\Memory \times \Val \times \overrightarrow{\Val}) \} & \; \uplus \;
+                   \{ (\texttt{m}, \texttt{f}, \texttt{rs}) \in (\Memory \times \Val \times (\Reg \rightarrow \Val)) \} \\
+    \Retv & \defeq \{ (\texttt{m}, \texttt{v}) \in (\Memory \times \Val) \} & \; \uplus \;
+                   \{ (\texttt{m}, \texttt{rs}) \in (\Memory \times (\Reg \rightarrow \Val)) \} \\
+    %% \args.\texttt{f} & \defeq \textbf{match} \; \args \; \textbf{with}~~
+    %%                    \mathtt{|}~ \textbf{left}~ \args \Rightarrow \args.\texttt{f}~
+    %%                    \mathtt{|}~ \textbf{right}~ \args \Rightarrow \args.\texttt{rs}(\textbf{PC})~
+    %%                    \textbf{end} \span \\
+  \end{array}
+  \end{stackTL}
+$
+\\
+\end{minipage}
+
+%% \youngju{Use [ $\defeq$ ] for [ $\module \in \Module =$ ]? If so, we should change this fig and fig-param too.}
+
+\caption{Module and Module Semantics}
+\label{fig:modsem}
+\end{figure}

@@ -1,0 +1,847 @@
+\section{Formalization of Verification Techniques}
+\label{sec:main-verification}
+
+%% \todo{slight difference in math and coq dev ?}
+
+Now we present the formalization of our verification techniques.
+%% As discussed in \Cref{sec:overview-verification:solution},
+We parameterize the notion of open simulation presented in
+\Cref{sec:overview-verification} with three parameters: memory relations, symbol
+relations, and memory predicates.  We present the three parameters
+(\Cref{sec:main-verification:parameter}), the parameterized open simulations
+(\Cref{sec:main-verification:opensim}), and their horizontal compositionality and adequacy theorems
+(\Cref{sec:main-verification:theorems}).
+%% Then we introduce mixed simulation that allows forward
+%% reasoning in the presence of nondeterminism (\Cref{sec:main-verification:mixedsim}).
+
+\subsection{Parameters for Open Simulations}
+\label{sec:main-verification:parameter}
+
+\Cref{fig:simulation-parameters} presents
+the sets of three parameters for open simulations:
+the set of memory relations $\MREL$, the set of symbol relations $\SREL$, and the set of memory predicates $\MPRED$.
+%% , which we will explain in details.
+%% Note that this section will be easier to follow if read in color:
+%% \textcolor{myred}{memory relations} are presented in red, \textcolor{darkgreen}{symbol relations} in
+%% green, and \textcolor{myblue}{memory predicates} in blue.
+
+\input{fig-param}
+
+\myparagraph{Memory Relation}
+
+The first parameter ranges over Kripke-style memory/value relations in $\MREL$.
+%~\cite{DBLP:conf/popl/AhmedDR09}
+Following \cite{DBLP:conf/icfp/DreyerNB10,pb}, we model the
+evolution of memory relations using \emph{possible worlds} and \emph{private and public transitions}
+over the worlds.
+Note that this parameter will be instantiated with the three memory relations used in \cc{}---namely memory
+identity, extension, and injection---and the memory injection with module-local invariants we introduced.
+%% for verifying \texttt{Unreadglob}.
+
+A memory relation in $\MREL$ consists of $(i)$ a set $\code{t}$ of possible worlds; $(ii)$ \emph{public}
+and \emph{private} transition relations $\sqsubseteq$ and $\sqsubseteq_\weak$ over the worlds;
+and $(iii)$ for each world $w \in \code{t}$, memory relation $\texttt{mrel}(w)$ and
+value relation $\texttt{vrel}(w)$.  A world $w$ represents an invariant on the memory, which
+can evolve over time according to the public/private transition relations,
+as we discussed in \Cref{sec:overview-verification:injection}.
+%% public transitions $\sqsubseteq$ represent possible evolution of the world before and after an external function
+%% call, and private transitions $\sqsubseteq_\weak$ represent possible evolution between any two interaction points with
+%% external modules. %(\eg{} between two invocations of external functions).
+%% For example, we use private transitions to capture the permission changes in the arguments area of the stack,
+%% which cannot be public transitions according to the \newnewrevision{enriched} memory injection.
+%% For example, memory
+%% injection's public transition encodes the invariant that injection should be increased and memory
+%% access permissions are the same before and after a function call; but its private transition allows
+%% certain changes in access permissions, as discussed in \Cref{sec:overview-semantics:solution}.  The
+%% public transition relation is reflexive and transitive, and is a subset of the private transition
+%% relation.
+There are four natural well-formedness conditions, which are self-explanatory.
+%% $\texttt{vrel}(w)$ should be monotone w.r.t. the world's private
+%% transition, and it relates an integer value in source only with the same value in target.
+We can also straightforwardly extend the value/memory relation to relations on $\Args$ and $\Retv$, denoted $\succsim_{\mrel}$.
+%% For each
+%% world $w \in \code{t}$, relations on the input/output of external function calls are defined in a
+%% straightforward manner: function pointers, arguments, and results are related as values, and
+%% input/output memories are related as memories.
+
+\myparagraph{Symbol Relation}
+
+The second parameter ranges over symbol relations in $\SREL$ that
+relate information about global symbols (\eg which block each global
+variable points to) in the source and target.  This parameter is
+needed to verify optimizations like \code{Unusedglob},
+\code{Unreadglob} that remove unnecessary static variables thereby
+having non-identical symbol information in the source and target.
+
+%% enables he verification of such
+%% specifications and optimizations as \code{Unusedglob} that change symbol tables.
+%% Verification of
+%% all \cc{} optimizations, except for \code{unused-globs}, requires only a trivial symbol relation
+%% in which the source and target symbols are exactly the same.  The main purpose of $\SREL$ is
+%% guaranteeing a \emph{run-time} symbol relation, assuming all its modules satisfy \emph{compile-time}
+%% symbol relation.  We allow modular reasoning of symbol relations using states and their
+%% compatibility relation w.r.t. linking.  For example, the verification of \code{unused-globs} uses a
+%% symbol relation whose state is the set of dropped symbols.  To model the evolution of symbol
+%% relations under linking, we say two states are compatible if the former is a subset of the latter.
+%% The compile-time and run-time symbol relations check whether the symbols in the state are actually
+%% dropped.
+%% Specifically,
+
+A symbol relation in $\SREL$ consists of $(i)$ a set $\code{t}$ of symbol relation states; $(ii)$ 
+an extension relation $\sqsubseteq$ on the states; $(iii)$ for each state $d$,
+a (compile-time) symbol code relation $\texttt{screl}(d)$; and $(iv)$ for each state $d$ and world $w \in \MREL.\code{t}$,
+(run-time) symbol environment relation $\texttt{serel}(d,w)$.
+There are seven well-formedness conditions:
+%% $\SREL$ should satisfy the following conditions:
+$(1)$ the extension relation $\sqsubseteq$ is transitive and reflexive;
+$(2)$ \texttt{screl} is closed under the syntactic linking;
+$(3)$ if symbol codes are related by \texttt{screl}, then \newnewrevision{the initial memories and symbol environments loaded by \textrm{load\_mem} and \textrm{load\_se} are related by \texttt{mrel} and \texttt{serel}, respectively};
+$(4)$ \texttt{serel} is monotone w.r.t. private transitions;
+$(5)$ \newnewrevision{for symbol environments related by \texttt{serel}, their public symbols are identical and their functions have the same signatures};
+$(6)$ \texttt{serel} is compatible with $\sqsubseteq$: for $d \sqsubseteq d'$, $\texttt{serel}(d')$ restricted on $\texttt{screl}(d)$ should be in $\texttt{serel}(d)$; and
+%% is preserved w.r.t. compatible restriction on symbol codes; and
+$(7)$ the memory and symbol relations should be compatible with \cc{}'s axiom about system calls (\ie \textrm{external\_call}).
+%% external function symbols related by \texttt{serel} satisfy the condition for open simulation.
+
+% \cdashbox{darkgreen}{$\texttt{screl}(d)$} statically holds for some $d \sqsubseteq d'$ at compile time.
+
+
+
+% (0) \SREL{}는 크게 3가지로 instantiate 된다: identity, drop (unusedglob용), invariant (spec 증명용).
+%    t 는 두 symbol code (lanugage-dependent 한 부분을 걷어낸 코드)를 relate (screl) 하는데 쓰인다.
+%    identity의 경우 unit 타입이고 screl은 항상 true이다.
+%    drop의 경우 set of symbol이고 screl은 (i) 실제로 그 symbol이 빠졌는지 (ii) 그 symbol을 refer하는게 없는지 체크한다. (injection 매핑에서 빼줘야 하기 때문)
+%    invariant의 경우 역시 set of symbol이고 screl은 (i) 실제로 그 symbol이 invariant를 만족하는지 (ii) 그 symbol을 refer하는게 없는지 체크한다. (injection 매핑에서 빼줘야 하기 때문)
+%    $\sqsubseteq$의 의미는 대충 set inclusion 이다. \\
+%    이 interface의 모든 목적은 static하게 $\cfbox{darkgreen}{screl}$ 을 guarantee 해주면 runtime에 $\cdashbox{darkgreen}{serel}$ 를 rely 받는 것이다. \\
+
+% (5) serel이면 (i) public symbol들이 같고 (ii) 어떤 relate되어있는 src/tgt value가 있을 때, src가 function이면 tgt도 function이고 둘의 signature가 같다. \\
+% (6) 큰 senv가 큰 d'에 대해 serel이고, 작은 sc가 작은 d에 대해 screl이면, 각각의 큰 senv를 작은 sc로 restrict 한 것도 relate 되어있다. \\
+% (7) external call axiom \\
+
+
+
+\myparagraph{Memory Predicate}
+
+The third parameter ranges over Kripke-style memory predicates in $\MPRED$,
+which are needed to modularly verify \cc{}'s analysis engines such as value analysis (see \Cref{sec:main-verification:opensim}).
+%% based on which is proved the soundness of compiler's analyses such as \cc{}'s value analysis.
+$\MPRED$ is essentially a unary version of $\MREL$ combined with $\SREL$
+where $\SREL{}.{\sqsubseteq}$ and $\simsk$ are taken as the total relations (\ie relating everything):
+it consists of
+$(i)$ the set $\code{t}$ of possible worlds;
+$(ii)$ public and private transition relations $\sqsubseteq$ and $\sqsubseteq_\weak$ over the worlds, respectively; and
+$(iii)$ for each world $w \in \code{t}$, a memory predicate $\textrm{mpred}(w)$,
+a value predicate $\textrm{vpred}(w)$, and a symbol environment predicate $\textrm{sepred}(w)$.
+The well-formedness conditions are self-explanatory.
+%% Similarly to $\MREL$, $(i)$ $\MPRED$ has world's public and private transitions; $(ii)$ its value
+%% predicate should be monotone w.r.t. the world's private transition; and $(iii)$ for each world
+%% $w \in \code{t}$, relations on the input/output of external function calls are defined in a
+%% straightforward manner.  Similarly to $\SREL$, $\MPRED$ has a few conditions on the symbol
+%% environment predicate, which we omit in \Cref{fig:simulation-parameters} for brevity.
+
+% \youngju{3, 4, 6이라고 해놓은거 다른 표현으로 바꿨습니다}
+%% \youngju{
+%%       \ccc{}가 개발될 당시에는 Value Analysis가 없었고, \ccx{}는 ($\MREL{}$에서와 마찬가지로) closed simulation이기 때문에 문제가 없다.
+%%       \ccc{}의 후속연구인 \cascc{}에서도 Value Analysis가 들어간 pass들은 지원하지 않는다.
+%%       그러니까 우리가 이 문제를 처음으로 tackle 하는}
+
+
+\subsection{Open Simulations with Parameters}
+\label{sec:main-verification:opensim}
+
+\input{fig-sim}
+
+% \jeehoon{explain rely-guarantee?}
+
+%% TODO: Fig.11에 STEP 케이스가 forward 뿐인데, backward 케이스는 생략되었음을 언급
+
+\Cref{fig:full-sim} presents our parameterized open simulations, which
+are given in the form of forward simulation for simplicity though
+they are actually in the form of mixed simulation presented in
+\Cref{sec:overview-verification:mixedsim}.
+In this section, we omit $\MREL$,
+$\SREL$, and $\MPRED$ when clear from context (\eg{} $\texttt{vrel}(w)$ for
+$\MREL{}.\texttt{vrel}(w)$).  Also, $\cdashbox{black}{R}$ and $\cfbox{black}{G}$ means rely and
+guarantee conditions for the external modules.
+%% whose edge color indicates which parameters are
+%% involved in the rely/guarantee reasoning.
+
+\myparagraph{Simulation of Machine States}
+
+%% \setlist[description]{font=\normalfont\textbullet\space}
+
+A relation $match\_states$ on machine states is an \emph{open simulation} if all related states
+either $(i)$ transition to related states, $(ii)$ invoke related external calls (hence the name
+``open'' simulation), or $(iii)$ halt with related return values and memories.  Specifically, given
+source and target module semantics $\msem_\src$, $\msem_\tgt$ and a (source) soundness predicate $sound\_state$ (discussed later),
+%% relations $match\_states(w)$ for each possible world $w \in \MREL.\code{t}$
+the relation $match\_states$ over worlds is an open simulation if
+the relatedness of $\mssrc$ and $\mstgt$ at a world $w$ with the soundness of $\mssrc$ implies
+one of the followings.
+\begin{itemize}
+\item \caselabel{STEP} The source and target states transition to related states.
+  Specifically:
+  \begin{itemize}[leftmargin=11mm]
+  \item[\textbf{line 1:}] the source machine state takes intramodule steps, and
+  \item[\textbf{line 2:}] if the source machine state transitions to a next state emitting an event $e$,
+  \item[\textbf{line 3:}] then the target machine state is able to transition to a next state emitting the same
+    event $e$, possibly with additional silent transitions, and
+  \item[\textbf{line 4:}] the next states are related by $match\_states(w')$ for a public future world $w' \sqsupseteq w$.
+  %% \item[\textbf{line 3:}] the
+  %%   next source and target memories are related at a public future world $w' \sqsupseteq w$,
+  %% \item[\textbf{line 4:}] and the next states are related by $match\_states(w')$.
+  \end{itemize}
+  \vskip 1mm
+\item \caselabel{CALL} The source and target states invoke related external calls.
+  Specifically:
+  \begin{itemize}[leftmargin=11mm]
+  \item[\textbf{line 1:}] certain external functions and arguments in the source and target are related at a private future world $w' \sqsupseteq_\weak w$, and
+  \item[\textbf{line 2:}] the source and target machine states invoke the related external functions with the related arguments, and
+  \item[\textbf{line 3:}] for any return values and memories related at any public future world $w'' \sqsupseteq w'$,
+  \item[\textbf{line 4:}] if the source safely returns from the external call,
+  \item[\textbf{line 5:}] then the target also safely returns from the external call, and
+  \item[\textbf{line 6:}] the states after return are related by $match\_states(w''')$ for a world $w'''$ that is a private future of $w''$ and a public future of $w$.
+
+  %% \item[\textbf{line 1:}] The source and target machine states are about to invoke external calls, whose
+  %%   arguments are related at a private future world $w' \sqsupseteq_\weak w$,
+  %% \item[\textbf{line 2:}] for any public future world $w'' \sqsupseteq w'$ and return values and memories related at $w''$,
+  %% \item[\textbf{line 3:}] if the source safely returns from the external call,
+  %% \item[\textbf{line 4:}] then the target also safely returns from the external call,
+  %% \item[\textbf{line 5:}] and there exists a world $w'''$ that $(i)$ is a public future of $w$,
+  %%   %% and $(ii)$ a private future of $w''$,
+  %%   and $(ii)$ relates the next memories at $w'''$,
+  %% \item[\textbf{line 6:}] and the next states are related by $match\_states(w''')$.
+  \end{itemize}
+  \vskip 1mm
+\item \caselabel{RET} The source and target states halt with related values and memories.
+  Specifically:
+  \begin{itemize}[leftmargin=11mm]
+  \item[\textbf{line 1:}] with return values and memories related at~$w'$
+    for a public future world $w' \sqsupseteq w$,
+  \item[\textbf{line 2:}] the source and target machine states halt.
+  \end{itemize}
+\end{itemize}
+
+
+\myparagraph{Simulation of Module Semantics}
+
+Module semantics are related if their initial machine states are related.
+Specifically, for a symbol relation $d \in \SREL$ and a (source) soundness predicate $sound\_state$,
+a target module semantics $\msem_\tgt$ simulates a source one $\msem_\src$ if for an open simulation $match\_states$:
+\begin{itemize}
+\item \caselabel{INIT} the initial machine states of $\msem_\src$ and $\msem_\tgt$ are related by $match\_states$.
+Specifically: 
+\begin{itemize}[leftmargin=11mm]
+\item[\textbf{line 1:}] for any source and target call data related at any world $w \in \MREL$,
+\item[\textbf{line 2:}] if the functions of the source and target call data belong to the modules and
+\item[\textbf{line 3:}] the symbol environments are related at $d$ and $w$, then for any initial machine state of the source function call,
+\item[\textbf{line 4:}] there exists an initial machine state of the target function call such that
+\item[\textbf{line 5:}] the two initial machine states are related by $match\_states(w')$
+  for $w'$ a public future of~$w$.
+%\item[\textbf{line 3:}] if source and target symbol environments are related at $d$ and $w$,
+%\item[\textbf{line 4:}] then for all possible source initial machine state,
+%\item[\textbf{line 5:}] there exists a target initial machine state such that,
+%\item[\textbf{line 6:}] the initial memories are related at a public future $w'$ of the current world $w$,
+%\item[\textbf{line 7:}] and the initial machine states are again related by $match\_states(w')$.
+\end{itemize}
+\end{itemize}
+
+
+\myparagraph{Simulation of Modules}
+Modules are related if their module semantics are related. Specifically,
+a target module $\module_\tgt$ simulates a source one $\module_\src$
+if the following hold for a symbol relation $d \in \SREL$ and a soundness predicate $sound\_state$:
+\begin{itemize}[leftmargin=11mm]
+\item[\textbf{line 1:}] the source and target symbol codes are related at $d$,
+\item[\textbf{line 2:}] $sound\_state$ satisfies the open preservation property (discussed below), and
+\item[\textbf{line 3:}] for any symbol environments related at any symbol relation $d'$ extending $d$ and any world~$w$,
+\item[\textbf{line 4:}] the source and target module semantics for the related symbol environments are related at $d$ and $w$.
+\end{itemize}
+Note that the symbol environments are related at $d'$, which represents the possible symbol information after linking with an arbitrary module,
+while the module semantics are related at $d$, which represents the module's own symbol information.
+
+\myparagraph{Simulation of Programs}
+\newnewrevision{Two programs each of which consists of a list of modules are simulated if each corresponding modules are simulated.}
+
+\myparagraph{Open Preservation with Parameters}
+{\newnewrevisioncmd
+\cc{} uses a relation $match\_states$ to prove correctness of a translation pass
+and a predicate $sound\_state$ to prove correctness of the analyzer performing value analysis,
+where $sound\_state$ specifies those states where the analysis results hold.
+As we do for $match\_states$,
+we perform a similar generalization from a closed setting to an open setting for $sound\_state$.
+Specifically, 
+we generalize the conditions for $sound\_state$ from preservation to open preservation
+(\cf from simulation to open simulation);
+and parameterize over memory predicates $\MPRED{}$ (\cf memory relations $\MREL{}$),
+which intuitively encodes the analysis results of the analyzer.
+Also, as we do for open simulation,
+we prove that all \textrm{Clight} and \textrm{Asm} modules satisfy
+open preservation with $\MPRED{}$, which intuitively means that
+all those context modules preserve the analysis results of the analyzer.
+Note that the definition of open preservation, \text{open\_prsv}, is essentially a unary version of
+that of open simulation, where the \caselabel{INIT} case corresponds
+to that of the module semantics simulation and the \caselabel{STEP},
+\caselabel{CALL}, and \caselabel{RET} cases to those of the state simulation.
+
+% For brevity, we omit a detailed explanation of the conditions.
+
+%% Open simulation permits modular verification of compiler analyses and optimizations.
+%% analyzer L sound-state open preservation
+%% exists sound-state, ... Clight, Asm
+
+%% compiler verification uses sound-state given as a parameter to open simulation, so that the verifier can prove optimizations assuming that the sound-predicate holds.
+%% Analyzer prove, varifier uses.
+
+%% >  the (source) soundness predicate `sound_state` [l. 923]
+%% What is this predicate?
+%% >> First, compiler passes are developed in a modular way so that optimization passes can "query" analysis passes, and rely on the analysis result without any extra obligation.
+%% >> Such modular nature is reflected in the proof structure too.
+%% >> In CompCert, sound_state quantifies the states that are congruent with analysis result (e.g., if analysis concluded that global variable "x" is always positive, sound_state quantifies only those states).
+%% >> Then, the obligation for optimization passes is to establish "simulation" assuming "sound_state", while the obligation for analysis passes obligation is to establish "preservation" of "sound_state".
+%% >> We extended such notions into an open setting, where "simulation" resulted in "open simulation" and "preservation" resulted in "open preservation."
+%% >> We will add these explanations in our revision.
+
+%% Maybe: In particular, $(iii)$ is necessary for proving that context modules are self-related.
+
+%% For this, we
+%% require the analyzer for a language $L$ to be equipped with $(i)$ memory predicate $\MPRED$; and
+%% $(ii)$ soundness predicate $sound\_states$ for $L$ that satisfies open preservation for $\MPRED$,
+%% and $(iii)$ sound predicates for context languages---\textrm{Clight} and \textrm{Asm}---that
+%% respectively satisfy open preservation for $\MPRED$.  Then we can use them for discharging
+%% \textsc{(sim:mod)}'s condition (2) in the proof of open simulation.
+%% In particular, $(iii)$ is necessary for proving that context modules are self-related.
+
+% ; $(iii)$ open preservation of $A$ for $L$: for all $L$-module $M_\src$ and symbol environment
+% $\skenv_{\src}$, we have
+% $sound\_states(A(M_\src)) \in \text{open\_prsv}_{\MPRED}(\module_{\src}.\texttt{sem} \;
+% \skenv_{\src})$; and $(iii)$ open preservation of $A$ for context languages, \textrm{Clight} and
+% \textrm{Asm}, for suitable soundness predicates and $\MPRED$.  
+
+%% Furthermore, while the simulation definitions accept only one memory predicate parameter, we can
+%% essentially utilize multiple memory predicates (and analyses) by composing them.  Specifically, we
+%% proved the following composibility lemma for memory predicates and soundness predicates:
+%% \[
+%%   \begin{stackTL}
+%%     \forall \MPRED{}_{0}, \MPRED{}_{1} \in \textrm{MemPred},~ \exists \MPRED{}_{2} \in \textrm{MemPred},~ \forall sound\_states_{0}, sound\_states_{1}, \msem, \\
+%%     \quad sound\_states_{0} \in \textrm{open\_prsv}_{\MPRED{}_{0}}(\msem) \land sound\_states_{1} \in \textrm{open\_prsv}_{\MPRED{}_{1}}(\msem)  \implies \\
+%%     \quad (sound\_states_{0} \land sound\_states_{1}) \in \textrm{open\_prsv}_{\MPRED{}_{2}}(\msem)~.
+%%   \end{stackTL}
+%% \]
+}
+
+\subsection{Horizontal Compositionality and Adequacy}
+\label{sec:main-verification:theorems}
+
+To use open simulations in RUSC, we prove their horizontal compositionality and adequacy.  Let $P$
+and $Q$ be programs (\ie lists of modules) and we define $P \llink Q$ to be the list concatenation
+of $P$ and $Q$.  Let
+$\MREL \in \textrm{MemRel}, \SREL \in \textrm{SymbRel}, \MPRED \in \textrm{MemPred}$ be parameters,
+and $\succsim$ be the program simulation relation for the parameters,
+given in \textsc{(sim:prog)} of \Cref{fig:full-sim}.  Then we have:
+
+\begin{theorem}[HorComp]
+  For any programs $P_\src$, $P_\tgt$, $Q_\src$, $Q_\tgt$, if $P_\src \succsim P_\tgt$ and
+  $Q_\src \succsim Q_\tgt$:
+  \[
+  \vspace{-0.8mm}
+  P_\src \llink Q_\src \succsim P_\tgt \llink Q_\tgt~.
+  \vspace{-0.8mm}
+  \]
+\end{theorem}
+%% \begin{proof} Immediate from the definition of $\llink$ and \textsc{(sim:prog)}.
+%% \end{proof}
+\begin{theorem}[Adequacy]
+  For any programs $P_\src$ and $P_\tgt$, if $P_\src \succsim P_\tgt$:
+  \[
+  \vspace{-0.8mm}
+  \beh{P_\src} \supseteq \beh{P_\tgt}~.
+  \vspace{-0.8mm}
+  \]
+\end{theorem}
+%% \begin{proof} By ``weaving'' module simulations as in \cite{pb}.
+%% \end{proof}
+
+% Our parameterized open simulations satisfy two conditions that are required by RUSC: horizontal
+% compositionality and adequacy.  Formally speaking, for any
+% $\MREL \in \textrm{MemRel}, \SREL \in \textrm{SymbRel}, \MPRED \in \textrm{MemPred},~ \succsim$
+% (the one in SIM:PROG) is horizontally compositional and adequate.  In terms of linking algebra,
+% our linking operator is merely a list append operation and horizontal compositionality holds
+% trivially by the definition of (SIM:PROG).  The interesting part is adequacy.  adequacy는 간단히
+% 말하면 rely/guarantee condition이 \emph{아구가 잘 맞는다}는 뜻이다(이라고 볼 수 있다).  It is
+% similar with overview so we omit details.
+
+
+
+%% 우리 framework의 포인트는, closed simulation에서와 마찬가지로, preservation 증명과 simulation 증명이 \emph{완전히} 독립적이라는 것이다.
+%% 구체적으로, (i) 분석을 한번 증명하면 n개의 pass에서 공짜로 쓸 수 있고 (ii) 한 pass에서 분석 n개를 쓸 수도 있다.
+%% 분석기 개발자는 sound\_state를 정의하고 이것의 open\_preservation을 증명하면 되고 최적화 개발자는 해당 sound\_state를 아무런 obligation 없이 가져다 쓸 수 있다.
+
+%% 분석기 개발자의 obligation은 SIM:MOD의 (2)번과 같다. 구체적으로: \\
+
+%% $
+%% (i) \text{현재 상태가 분석한 결과와 consistent 함을 나타내는 predicate인 sound\_state를 정의한다.}
+%% \\
+%% (ii) \cfbox{myblue}{$\forall \skenv_{\src},~ sound\_state \in \text{open\_prsv}(\module_{\src}.\texttt{sem} \; \skenv_{\src})$} \\
+%% $
+
+% \youngju{$\land$ things: }
+% 이렇게 (static 분석을 지원하기 위해) $\MPRED{}$의 instance가 여러개로 늘어났다고 하자. 그리고 한 pass에서 서로 다른 $\MPRED{}$를 써야하는 분석 두개가 있다고 한다면, 이를 어떻게 지원할 것인가?
+% 이를 위해 metatheory에서 다음을 증명하였다.
+
+
+% \begin{enumerate}
+% \item mixed sim 정의
+% \item determinate/receptive (Pilsner와 비교)
+% \item self stuttering
+% \end{enumerate}
+
+% As discussed in the \Cref{sec:background-verification}, instead of establishing backward simulation
+% directly, \cc{} (mostly) establishes the exact dual of it: forward simulation.
+% \[
+% \forall (\stsrc{}, \sttgt{}) \in R,~ \forall e, \stsrc',~ \stsrc{} \estep{e} \stsrc' \Rightarrow \exists \sttgt',~  \sttgt{} \step^\ast \estep{e}\step^\ast \sttgt' \land (\stsrc', \sttgt') \in R~.
+% \]
+% For complier translations, forward simulation is usually much easier
+% to establish than backward simulation. This is because a single
+% instruction in the source is usually compiled down to multiple
+% instructions in the target, and forward simulation naturally allows
+% reasoning of such translation (it suffices to, given single source
+% step, find multiple target steps) while backward does not.
+
+% However, as forward simulation is the dual of backward simulation, it
+% also implies the dual of behavioral refinement: \eg if $P$ and $Q$ are
+% related by forward simulation, then $\beh{P} \subseteq \beh{Q}$. Thus,
+% in order to use forward simulation, the target language should be
+% \emph{deterministic} --- only a single transition is possible from
+% each state --- which is a sufficient condition for forward simulation
+% to imply behavioral refinement. Roughly speaking, a deterministic
+% language has only one observable behavior, so $\beh{P} = \beh{Q}$
+% holds.
+
+% To this end, \cc{}'s languages (except for the source, C) are
+% designed to be deterministic.
+
+% \hide{
+
+%   deterministic --> intuition 설명이 쉬움 (beh singleton). flip이야기가 나올 필요가 없음. mixed 설명이 어려움
+%   receptive/determinate --> intuition 설명이 힘듦 (flipping). mixed 설명이 쉬움
+
+% %% In order to establish behavioral
+% %% refinement, forward simulation additionally requires target language
+% %% to be deterministic.  which is a sufficient condition to for forward
+% %% simulation to imply backward simulation (or behavioral refinement).
+
+% \footnote{Technically, \cc{} uses a weaker
+%   condition, namely that the source language is \emph{receptive} and
+%   the target is \emph{determinate}.}
+
+% Nevertheless, this seemingly inadequate relation can be ``flipped''
+% into backward simulation if certain condition is satisfied: the target
+% language should be deterministic, meaning that there is at most one
+% step from each state.
+% }
+
+% Nevertheless, requiring a language to be deterministic is rather a harsh condition, since
+% nondeterminism is an essential semantic ingredient to explain some ``textbook'' optimizations
+% (\eg global value numbering) \cite{lee:freeze}, concurrent behaviors, integer to pointer castings
+% \cite{TODO}, etc. Non-determinism also plays a central role in properly modeling interaction
+% between C and assembly (which we will discuss in \Cref{sec:overview-semantics}), so we have
+% introduced it into interaction semantics.
+
+
+% \hide{
+% The nondeterminism we introduced in \Cref{sec:overview-semantics} can
+% potentially cause significant overhead: without determinism, we cannot
+% ``flip'' a forward simulation into a backward simulation thus we might
+% need to re-prove each pass using a backward simulation.
+% }
+
+\hide{
+  minki's sentences
+  
+The intuition of forward simulation is that, since the
+target state has at most one possible next execution, if there exists
+next target states related with the next source state by R, then the
+"all" next possible target state is related with the next source
+state. However, this intuition can apply not only for when the whole
+target language is deterministic, but also for when the current taget
+state is deterministic.
+We do not flip a "whole" forward simulation into
+backward simulation, but we flip a "step" when the current target
+state is locally deterministic - having at most one posstble next
+state.
+  }
+
+% \myparagraph{Our Solution}
+
+
+% %% we allow forward reasoning when current target \emph{state} is deterministic.
+% We address the problem with our new proof technique called
+% \textit{mixed simulation}, which allows forward reasoning (locally)
+% even when the target language (as a whole) is not deterministic. The
+% key idea is to exploit \textit{local determinism}: for each step,
+% \xsim{} allows a user to decide which simulation technique to use
+% (either forward or backward) where forward is only allowed when the
+% current target \textit{state} is deterministic. \Cref{fig:mixedsim}
+% illustrates mixed simualtion.  \todo{erase?: To put it another way,
+% while vanilla \fsim{} requires determinism of the \textit{whole
+%   language} to allow forward reasoning for \textit{whole proof},
+% \xsim{} requires determinism of a \textit{state} and allows forward
+% reasoning for a \textit{step}.} As a proof technique, mixed simulation
+% subsumes both forward and backward simulation.
+
+% \todo{I said target ``state'' is deterministic, but in figure there are multiple states}
+
+% \vspace{3mm}
+
+% $\forall (\mssrc, \mstgt) \in R$
+
+% $(\forall e, \mssrc',~ \mssrc \estep{e} \mssrc' \implies {} \exists \mstgt',~
+% \mstgt \dstep{\tau}^{\raisebox{-1mm}{\scriptsize$\ast$}} \dstep{e}\dstep{\tau}^{\raisebox{-1mm}{\scriptsize$\ast$}} \mstgt'
+% \land (\mssrc', \mstgt') \in R)~ \lor$
+
+% $(\forall e, \mstgt',~ \mstgt \estep{e} \mstgt' \implies {} \exists \mssrc',~
+% \mssrc \estep{\tau}^{\raisebox{-1mm}{\scriptsize$\ast$}} \estep{e}\estep{\tau}^{\raisebox{-1mm}{\scriptsize$\ast$}} \mssrc'
+% \land (\mssrc', \mstgt') \in R)~ .$
+
+% where
+% $\stt{} \dstep{e} \stt{}' \triangleq \stt{} \oset{e}{\rightarrow} \stt{}' \; \wedge \; $ deterministic\_at($\stt{}$)
+
+% \todo{just one: figure or formula?}
+
+% \todo{(1) choose better 'deterministic step' notation (2) synch
+%   notations of fig and formula }
+
+% Mixed simulation implies behavioral refinement. Intuitively, mixed
+% simulaiton is made by ``stitching'' forward and backward simulations.
+% In the viewpoint of each fragmented forward simulations, whole
+% language is deterministic, and it is sufficient to imply behavioral
+% refinement for each fragment, which in sum establishes behavioral
+% refinement.
+
+
+
+% \todo{mixed sim is a unifying theory: (1) backward (C -> Clight), forward (others)
+% --> 사실 open backward만 있어도 됨}
+
+%% \begin{definition}\label{def:xsim} (Mixed Simulation)
+
+%%   $ \psrc{} \succsim_{x} \ptgt{} \triangleq \exists \; R: \src{}.(state) \rightarrow \tgt{}.(state) \rightarrow Prop $ such that
+
+%%     1) $ (load(\psrc{}), \; load(\ptgt{})) \in R \; $
+
+%%     2) For any $ (\stsrc{}, \, \sttgt{}) \in R $, one of the following conditions hold
+
+%%       2-a) For any $ \sttgt{} \oset{e}{\rightarrow} \sttgt{}' $, there exists $ \stsrc{}' $ s.t. $ \stsrc{} \oset{e}{\rightarrow}^{+} \stsrc{}' $ and $ (\stsrc{}', \; \sttgt{}') \in R $
+
+%%       2-b) For any $ \stsrc{} \oset{e}{\rightarrow} \stsrc{}' $, there exists $ \sttgt{}' $ s.t. $ st_{tgt} \oset{e}{\twoheadrightarrow}^{+} \sttgt{}' $ and $ (\stsrc{}', \; \sttgt{}') \in R $
+
+%% where
+%% $\stt{} \oset{e}{\twoheadrightarrow} \stt{}' \triangleq \stt{} \oset{e}{\rightarrow} \stt{}' \; \wedge \; $ deterministic\_at($\stt{}$)
+%% \end{definition}
+
+
+
+
+\hide{
+To establish such a backward simulation for each pass, \cc{} uses two
+different techniques: one is unrestricted but harder to use, and the
+other is easier but restricted to use. Specifically, the former is to
+establish a backward simulation directly, and the latter is to
+establish a forward simulation, which is the reverse of a backward
+simulation (\ie the target simulates the source).  A forward
+simulation is much easier to establish because a compiler pass
+typically compiles a single instruction in the source down to several
+instructions in the target. However, a forward simulation is
+restricted to use because it implies a backward simulation (or
+behavioral refinement) only when the target language is
+deterministic\footnote{Technically, \cc{} uses a weaker condition, namely that
+  the source language is \emph{receptive} and the target is \emph{determinate}.},
+and even then it may be too strong to establish.
+
+In fact, \cc{} uses a forward simulation for all the passes except for
+the first one, for which a forward simulation is too strong to
+establish.
+}
+
+%% -----
+
+%% \jeehoon{It seems overview sections make many forward references. Make sure they are all treated in
+%%   the main sections.}
+
+%% \youngju{\cc{}의 최적화들은 서로 다른 relation으로 증명되어있는데, 우리의 open simulation은 이를 모두 포함하도록 정의했다.}
+%% \youngju{그러는 motivation 설명이 있어야 함. 그래서 개발 양이 적다는 이야기를 앞에서 or 여기서 or later (results)}
+%% \youngju{\ccx{}는 하나의 big relation이 필요했다는 이야기 어디선가 언급: overview-RUSC?}
+%% \youngju{왜 3개씩이나 쓰냐? \cc{}가 ill-design된거고 애초에 princeton처럼 하나 쓰면 되는거 아니냐? 라는 궁금증에 대해 어느 정도 답을 줘야?}
+%% \youngju{
+%%       우리의 open simulation 또한 global environment 사이 서술을 해야 하는데, 이것을 Unusedglob을 지원하도록 정의하면, 다른 최적화들의 simulation relation을 사용하지 못한다.
+%%       내 모듈의 최적화에서 symbol을 건드리지 않았다고 하더라도, 링킹하는 다른 모듈이 symbol을 건드렸다면 (unusedglob으로 최적화를 했다면), 내 mapping도 identity가 아니게 된다.
+%%       %% 예를 들어 내 모듈은 { c } 를 { c } 그대로 내버려뒀고, 링킹하는 다른 모듈은 { a, b }를 { a }로 최적화했다고 하면, mapping은 오른쪽 그림처럼 될 것이고 c 사이의 mapping도 identity가 아니게 된다.
+%%       \ccc{}와 \ccx{}가 개발될 당시에는 Unusedglob이 없었고, 각각의 후속 연구들 (\cascc{}, \saccx{})이 개발될 당시에는 Unusedglob이 있었지만 지원하지 않는다.
+%%       이들의 simulation relation에는 global environment mapping이 identitiy로 baked in 되어있다.
+%%       이 문제를 tackle하는건 우리가 처음이다.
+%% }
+
+\hide{
+%% \begin{enumerate}
+%% \item open simulation\\
+  %% 앞서 이야기했듯이 우리는 RUSC를 만족하는 set of relation --- open simulation --- 을 정의했다.
+  %% \cc{}의 최적화들은 서로 다른 relation으로 증명되어있는데, 우리의 open simulation은 이를 모두 포함하도록 정의했다. \todo{그러는 motivation 설명이 있어야 함. 그래서 개발 양이 적다는 이야기를 앞에서 or 여기서}
+  %% \cc{}의 relation들은 크게 3가지 방향에서 다르고, 따라서 3가지 방향으로 parameterize 시켰다: $\MREL{}, \SREL{}, \MPRED{}$.
+  %% 먼저 Context (\cc{}의 relation들이 어떻게 다른지) Gap (이를 어떻게 open sim으로 옮길지) 이야기하고, 우리의 정의를 이야기하겠다. \\
+  %% \textbf{Problems (Context+Gap)} \\
+
+  %% \begin{enumerate}
+  %%   \item memory relation이 다르다.\\
+  %%     \youngju{\ccx{}는 하나의 big relation이 필요했다는 이야기 어디선가 언급: overview-RUSC?}\\
+  %%     \myparagraph{Context}
+  %%     identity, extension, injection 3개가 있고 순서대로 복잡해지는데, 각각의 최적화는 simplest but sufficient relation을 쓴다.
+  %%     \youngju{왜 3개씩이나 쓰냐? \cc{}가 ill-design된거고 애초에 princeton처럼 하나 쓰면 되는거 아니냐? 라는 궁금증에 대해 어느 정도 답을 줘야 함.}
+  %%     injection이 가장 복잡하고 가장 강력하다.
+  %%     extension은 injection과 달리 auxiliary data를 들고 다니지 않아서 더 간단한 대신 더 약하다.
+  %%     identity는 lebiniz equality라 무척 편하다.
+
+    %% \item Unusedglob \\
+      %% \myparagraph{Context}
+      %% 일반적인 최적화들은 symbol을 건드리지 않는다.
+      %% 그러면 src/tgt global environment 사이 서술이 간단하다: 그냥 identity mapping을 사용하면 되기 때문이다. (\Cref{fig:symbrel}-왼쪽)
+      %% 그런데 Unusedglob 최적화는 안쓰이는 symbol을 지우기 때문에 이를 깨뜨린다 \Cref{fig:symbrel}.
+
+      %% \myparagraph{Gap}
+      %% 우리의 open simulation 또한 global environment 사이 서술을 해야 하는데, 이것을 Unusedglob을 지원하도록 정의하면, 다른 최적화들의 simulation relation을 사용하지 못한다.
+      %% 내 모듈의 최적화에서 symbol을 건드리지 않았다고 하더라도, 링킹하는 다른 모듈이 symbol을 건드렸다면 (unusedglob으로 최적화를 했다면), 내 mapping도 identity가 아니게 된다.
+      %% 예를 들어 내 모듈은 { c } 를 { c } 그대로 내버려뒀고, 링킹하는 다른 모듈은 { a, b }를 { a }로 최적화했다고 하면, mapping은 오른쪽 그림처럼 될 것이고 c 사이의 mapping도 identity가 아니게 된다.
+
+      %% \ccc{}와 \ccx{}가 개발될 당시에는 Unusedglob이 없었고, 각각의 후속 연구들 (\cascc{}, \saccx{})이 개발될 당시에는 Unusedglob이 있었지만 지원하지 않는다.
+      %% 이들의 simulation relation에는 global environment mapping이 identitiy로 baked in 되어있다.
+      %% 이 문제를 tackle하는건 우리가 처음이다.
+
+    %% \item ValueAnalysis \\
+
+    %%   \myparagraph{Context}
+
+%% \cc{}'s optimizations often make use of static analyses (\eg value and
+%% alias analysis). The static analyzers are independent of
+%% optimizations, so that an analyzer can be shared among multiple
+%% optimizations and an optimization can use multiple analyzers. The
+%% following example shows how an optimization pass and an analyzer
+%% cooperates. The constant propagation pass will query value analysis,
+%% asking the abstract value of each variables for each line. Then, the
+%% analysis result will say, ``x must be 0 at line 3''. Accordingly, the
+%% pass will optimize as follows \emph{assuming} the analysis result is
+%% correct.
+
+%% %
+%% \[
+%% \begin{minipage}{0.5\textwidth}
+%% \begin{verbatim}
+%% 1: int x = 0;
+%% 2: f();
+%% 3: out(x); // optimizes to "out(0)"
+%% \end{verbatim}
+%% \end{minipage}
+%% \]
+%% %
+
+%% \cc{} maintains such modular structure for verification too: the
+%% correctness of an analysis is verified separately, and for each
+%% optimization using such analysis, its simulation is established
+%% \emph{assuming} the analysis result is correct. Formally, the
+%% correctness of an analysis is expressed as \emph{preservation} of
+%% \emph{sound state}, where $\text{sound-state } P \text{ } s$ basically
+%% means the state $s$ is consistent with the analysis result of a
+%% program $P$.
+
+%% \[
+%% %% \forall \, prg, \,
+%% \text{sound-state } P \text{ } \stt,~ \stt \estep{e} \stt' \Rightarrow \text{sound-state } P \text{ } \stt'~.
+%% \]
+
+%% \noindent
+%% Then, the (forward) simulation is established assuming the source
+%% state is sound, \emph{without} proving the subsequent state is sound.
+
+%% \[
+%% \begin{array}{r@{\ \ }l}
+%%   \forall (\mssrc, \mstgt) \in R,~ \text{sound-state } P \text{ } \mssrc, \forall e, \mssrc',~&
+%%   \mssrc \estep{e} \mssrc' \implies {}\\[1mm]
+%%   \exists \mstgt',~&
+%%   \mstgt \estep{\tau}^{\raisebox{-1mm}{\scriptsize$\ast$}} \estep{e}\estep{\tau}^{\raisebox{-1mm}{\scriptsize$\ast$}} \mstgt' \land (\mssrc', \mstgt') \in R~.
+%% \end{array}
+%% \]
+
+%% \todo{better align, backward로 바꾸기}
+
+%%       \myparagraph{Gap}
+
+%% Now, we need to extend such reasoning principle for open
+%% simulation. The problem is that, correctness of analyses also are
+%% established with essential assumptions on external modules (\eg it
+%% cannot access an unleaked memory block), but the memory relation
+%% (thus, rely/guarantee condition) an optimization is using does not
+%% necessarily imply such. %% Moreover, even if an optimization is
+%% already using a powerful
+%% memory relation, memory blocks that the optimization is aware of does
+%% not necessarily include ones that the analyzer is aware of.
+
+  %%     \ccc{}가 개발될 당시에는 Value Analysis가 없었고, \ccx{}는 ($\MREL{}$에서와 마찬가지로) closed simulation이기 때문에 문제가 없다.
+  %%     \ccc{}의 후속연구인 \cascc{}에서도 Value Analysis가 들어간 pass들은 지원하지 않는다.
+  %%     그러니까 우리가 이 문제를 처음으로 tackle 하는거다.
+
+  %% \end{enumerate}
+
+%% \hide{
+%%   우리가 정의한 $\MREL{}, \SREL{}, \MPRED{}$는 이 3가지 방향에서 open simulation을 parameterize한다.
+%%   예를 들어 (i) $\MREL{}$ 인자는 사용할 memory relation(rely/guarantee)을 나타내며, 그 인자로 만들어진 open simulation이 RUSC를 만족하기 위해 필요한 minimal한 성질들 또한 quantify 한다.
+%%   \cc{}의 memory relation들은 이 interface를 만족시키고, 따라서 우리는 \cc{}의 simulation relation과 compatible한 (그대로 가져다 쓸 수 있는) open simulation instance를 얻는다.
+%%   (ii) $\SREL{}$ interface는 symbol relation을 나타내는데, \cc{}를 위해서는 두가지로 instantiate 시켰다 --- identity와 drop.
+%%   \eg{} identitiy interface를 쓸 경우, 링킹에 참여하는 각 module pair들은 symbol을 건드리지 않았다고 (guarantee) 해줘야 하고, 그 결과로 identical한 global environment mapping을 얻는다 (rely).
+%%   %% drop interface를 쓸 경우, symbol을 뺄 수 있지만 (Unusedglob) 더이상 identical한 mapping은 얻지 못한다.
+%%   $\MREL{}$의 rely/guarantee는 실행 중에 call/return때마다 계속 일어나지만, $\SREL{}$의 rely/guarantee는 loading할 때 한번 일어난다.
+%%   (iii) $\MPRED{}$는 각각 분석을 위한 별도의 rely/guarantee를 나타낸다. 여기서의 rely/guarantee는 twofold다.
+%%   첫째로, sound\_state가 \emph{open preservation}이라는 것을 만족함을 증명하면 (guarantee), \Cref{fig:simstates}에서 sound\_state를 가정하고 (rely) simulation 할 수 있다.
+%%   \cc{} whole program proof에서 그랬던 것처럼 두 증명은 완전히 분리되어있다.
+%%   두번째로, open preservation 정의 자체에서 rely/guarantee가 있는데, 이는 기본적으로 $\MREL{}$의 rely/guarantee의 unary version이라고 보면 된다.
+%%   $\MREL{}$의 rely/guarantee가 (최적화의) context에 대한 essential assumption을 인코딩했듯이, $\MPRED{}$의 rely/guarantee는 (분석의) context에 대한 essential assumption을 인코딩한다.
+%%   \\
+%%   \\
+%%   %% \input{fig-sim}
+%%   %% 이 parameter들이 overview 에서 이야기한 structural simulation과의 주된 차이이고, 각각의 정확한 정의는 subsection에서 더 자세히 설명할 것이다.\\
+%% }
+  %% 이렇게 parameterize 되어있음에도, 우리가 quantify한 minimal한 성질들만 있으면, open simulation은 RUSC의 성질 두가지를 만족한다. \\
+  %% (i) horizontal composition: \Cref{fig:simmod}를 보자. program 사이의 relation은 각 module 사이에 pairwise relation으로 되어있다. 따라서 by definition 성립한다. \\
+  %% (ii) adequacy: adequacy는 간단히 말하면 rely/guarantee condition이 \emph{아구가 잘 맞는다}는 뜻이다(이라고 볼 수 있다).
+  %% 이제 우리가 정의한 $\MREL{}, \SREL{}, \MPRED{}$ 각각의 rely/guarantee 조건이 open simulation 에서 어떻게 드러나고 어떻게 \emph{아구가 잘 맞는지}만 설명할 것이고, 나머지는 (overview에서 다뤘던) standard open simulation과 비슷하기 때문에 설명은 생략한다.
+  %% \todo{\Cref{fig:simmod}랑 \Cref{fig:simmodsem} 간단히는 설명? BSTEP이 overview랑 다른데, safe\_modsem은 ..., PRSV는 ..., coinductive (greatest fixpoint)로 정의했고...}
+  %% 먼저 $\SREL{}$의 경우, \Cref{fig:simmod}-(1)에서 두 module의 symbol들이 $\SREL{}.\succsim{}$을 만족함을 guarantee 한다. 그러면, \Cref{fig:simmodsem}에서 내가 불렸을 때 global environment가 $\SREL{}.\succsim{}$에 있음을 rely 할 수 있다.
+  %% $\MPRED{}$의 경우, \Cref{fig:simmodsem}-(2)에서 내 모듈이 \emph{open preservation}을 만족함을 guarantee 했다면, \Cref{fig:simstates}에서 내가 만나는 모든 source state임을 이야기할 수 있다.
+  %% $\MREL{}$의 경우, 대충 앞이랑 비슷하다.
+
+%%   \begin{enumerate}
+%%   \item $\MREL{}$ 정의 및 설명 \\
+%%     %% \input{fig-mrel}\\
+%%     4가지로 instantiate: \cc{} 3개, 우리 demo를 위해서 1개 (injection with invariant)\\
+%%     injection을 예로 들어 figure 설명. \todo{적절히 abstraction 필요}\\
+%%     t는 src/tgt 메모리와 injection mapping (여기서 처음 나오나? 설명 필요한지?), \emph{부모 메모리} 그리고 src/tgt이 실제로 injection 관계에 있다는 Prop까지 dependent type으로 있다고 보면 된다. (구현은 wf으로 빼놓음)
+%%     부모 메모리는 (i) 부모의 private 영역을 명시하기 위해서 (ii) 부모 영역에 함부로 injection 연결하지 않기 위해서 필요하다.
+%%     \\
+%%     mrel이 vrel까지 같이 이야기하는 이유 설명?: memory에서 load하면 value니까
+%%   \item $\MPRED{}$ 정의 및 설명 \\
+%%     %% \input{fig-prsv}
+%%     %% \input{fig-mpred}
+%%     \mbox{}\\
+%%     2가지로 instantiate: top, unreach(value analysis)\\
+%%     value analysis(unreach)을 예로 들어 설명 --- \Cref{fig:mpred}는 그냥 \Cref{fig-mrel}의 unary version이다. main dish는 \Cref{fig:prsv}인데, 이것도 거의 \Cref{fig:simmodsem}-(3)의 unary version이다.
+%%     한가지 차이는 opensim은 coinductive하게 정의되어있지만 $sound\_state$는 그렇지 않다는 것이다.
+%%     만약 coinductive하게 정의했다면 strong coinduction을 써서 $sound\_state$가 중간 state를 뛰어넘고 듬성듬성 성립해도 되는데, 그건 우리가 원하는 것이 아니다.
+%%     (우리는 모든 state가 $sound\_state$가 성립하기를 원한다.)
+%%     또 한가지 clarify하자면 \Cref{fig:simmodsem}-(SIM) 3번째 줄을 보면 $\exists su$로 되어있는데, 그냥 존재만 해도 되는건지 의문이 들 수 있다.
+%%     이 $\MPRED{}.\texttt{t}$는 open\_preservation 에서만 관심있는 데이터고, 최적화 증명에서는 $su$ 값에 관심이 없다.
+%%     그래서 $\exists su$로 충분하다.
+%%     \\
+%%     우리 framework의 포인트는, closed simulation에서와 마찬가지로, preservation 증명과 simulation 증명이 \emph{완전히} 독립적이라는 것이다.
+%%     구체적으로, (i) 분석을 한번 증명하면 n개의 pass에서 공짜로 쓸 수 있고 (ii) 한 pass에서 분석 n개를 쓸 수도 있다.
+%%     (i)는 정의상 당연하므로 생략하겠다. (ii)를 위해서 $sidx$가 있는데, 각각이 open preservation을 만족하면 ... 잘 된다.
+%%     \youngju{사실 technical하게는 $sidx$들 중 하나만 full open preservation (rely/guarantee 둘다) 보이고, 나머지는 rely만 해도 되도록 구현되어있다. 그런데 이걸 활용해서 재밌는걸 한게 없음.
+%%       다만 아래에서 reach-closed 이야기할 때, 걔네는 reach-closedness를 언어에 대해 한번만 증명하면 되는데 우리는 분석마다 매번 증명해야되는 것처럼 보일 수도 있음.}
+%%     \\
+%%     사실 우리가 instantiate한게 unreach 뿐인데, 이건 \ccc{}의 reach-closed semantics 이야기랑 흡사하지만 차이가 있다: 우리의 방식은 static 변수와 관련된 분석으로 확장이 가능하지만 reach-closedness로는 어떻게 확장할지 unclear하다
+%%     static 변수와 관련된 논증은 \Cref{sec:results}-program verification에서 보여줄 것이고, 그걸 unary로 확장하는건 그냥 하면 되는 일이다. \youngju{forward reference 하면서 이렇게 얘기하면 좀 약해보이기는 하는 듯}
+%%     static 변수와 관련된 분석은 충분히 있음직하지만 우연히 \emph{\cc{}에 없었}던 것 뿐이고 그래서 우리도 instantiate를 안시킨 것이다. %(그래서 우리도 가급적 개발을 lightweight하게 하기 위해 $\mathcal{SP}$ 같은걸 안만든 것이고)
+%%     우리 framework의 flexibility를 보여주기 위해 실제로 간단한 static variable 분석기를 구현 중이다.
+%%     Also (i) we give verification condition/technique while RC is just a property on semantics (ii) we can naturally support ``global'' analysis.
+%%     구체적으로, RC는 ``guarantee'' 만 체크하는거고 ``rely'' 하는게 없다.
+%%     %% reach-closed랑 비교, static 변수 언급 --- 우리는 $\SREL{}$ 똑같이 따라해서 $\mathcal{SP}$ 같은거 만들면 충분히 가능하다. 안한 이유는 단순히 \emph{\cc{}에 그런 분석이 없기 때문}이다.
+%%     %% gcc/clang은 static 변수에 대한 분석을 당연히 하고, \todo{remove?: 우리의 flexibility를 보여주기 위해 (demo) 현재 구현 중이다}.
+%%     \\
+%%   \end{enumerate}
+%% \end{enumerate}
+}
+
+%% \note{overview에서는 verification - semantics 순서지만 여기는 반대로 가는게 좋을 듯.
+%%   semantics가 정의되어있어야 simulation 정의 가능}
+
+%% \[ X \: Y \: Z \: W \]
+%% \[ X \; Y \; Z \; W \]
+%% \[ X \ Y \ Z \ W \]
+%% \[ X\text{ }Y\text{ }Z\text{ }W \]
+%% \mbox{}\\
+     %% ;
+
+
+%% \begin{figure}
+%%   \small
+%%   \begin{flushleft}
+%%     \fbox{\checker{\insrc{\Prg}}{\intgt{\Prg}}}
+%%   \end{flushleft}
+%%   \resizebox{\textwidth}{!}{
+%%     \vspace*{-10pt}
+%%     \begin{tabular}{@{}l@{}}
+%%       %% \hspace*{-20pt}
+%%       \infer
+%%       {\checker{\insrc{\Prg}}{\intgt{\Prg}}}
+%%       {\deduce{\forall F\!,\!B,\!B'\!.\, \hoare{\Psi[F].\alpha[B,\!-1]}{\insrc{\Prg}[F].\phi[B,\!B']\!}{\!\intgt{\Prg}[F].\phi[B,\!B']}{\Psi[F].\alpha[B'\!,\!0]}}
+%%       {\deduce{\forall F\!,\!B,\!i.\, \hoare{\Psi[F].\alpha[B,\!i]}{\insrc{\Prg}[F].\zeta[B,\!i]}{\intgt{\Prg}[F].\zeta[B,\!i]}{\Psi[F].\alpha[B,\!i\!+\!1]}}
+%%       {\deduce{\textrm{CheckCFG}(\insrc{\Prg}, \intgt{\Prg}) \quad \quad \forall F \in \insrc{\Prg}.~\textrm{CheckInit}(\Psi[F].\alpha[\textrm{Entry}(F),0])}
+%%       {\textsc{(Sim)}\phantom{}}}}}
+%%     \end{tabular}
+%%   }
+
+%%   \vspace*{-4pt}
+%%   \begin{flushleft}
+%%     \fbox{\hoare{P}{\insrc{I}}{\intgt{I}}{Q}}
+%%   \end{flushleft}
+%%   \vspace*{-11pt}
+%%   \begin{tabular}{@{\qquad\qquad\qquad}ll}
+%%     \infer
+%%     {\hoare{P}{\insrc{I}}{\intgt{I}}{Q}}
+%%     {\deduce{Q = \textrm{CalcPostAssn}(P, \insrc{I}, \intgt{I})}
+%%     {\deduce{\textrm{CheckEquivBeh}(P, \insrc{I}, \intgt{I})}
+%%     {\textsc{(PostAssn)}\phantom{}}}}
+%%     &
+%%       \infer
+%%       {\hoare{P}{\insrc{I}}{\intgt{I}}{Q'}}
+%%       {\deduce{\viewshift{Q}{Q'}}
+%%       {\deduce{\hoare{P}{\insrc{I}}{\intgt{I}}{Q}}
+%%       {\textsc{(Consequence)}\phantom{aaa}}}}
+%%   \end{tabular}
+
+%%   \begin{flushleft}
+%%     \fbox{\viewshift{Q}{Q'}}
+%%   \end{flushleft}
+%%   \vspace*{-22pt}
+%%   \resizebox{\columnwidth}{!}{
+%%     \begin{tabular}{@{~~\qquad\qquad}lll@{}}
+%%       \infer
+%%       {\viewshift{Q}{Q''}}
+%%       {\deduce{\viewshift{Q'}{Q''}}
+%%       {\deduce{\viewshift{Q}{Q'}}
+%%       {\deduce{\textsc{(Trans)}\phantom{aa}}{\phantom{a}}}}}
+%%       &
+%%       \infer
+%%       {\viewshift{Q}{Q'}}
+%%       {\deduce{Q' = \textrm{ApplyInf}(rule, Q)}
+%%       {\deduce{rule \in \textrm{CustomRules}}
+%%       {\deduce{\textsc{(ApplyInf)}\phantom{aaaaaaaaaaa}}{\phantom{a}}}}}
+%%       &
+%%       \infer
+%%       {\viewshift{Q}{Q'}}
+%%       {\deduce{\textrm{CheckIncl}(Q, Q')}
+%%       {\deduce{\phantom{R}}
+%%       {\deduce{\textsc{(Incl)}\phantom{aaaaaaaaaaa}}{\phantom{a}}}}}
+%%     \end{tabular}
+%%     }
+%% \vspace*{2pt}
+%%   \hrule
+%%   \caption{Proof Rules of \erhl{}}
+%%   \label{fig:proofchecker:rule}
+%% \end{figure}
+
+
+%% \input{fig-inj}
+
+%%% Local Variables:
+%%% mode: latex
+%%% TeX-master: "main"
+%%% End:

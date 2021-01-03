@@ -1,0 +1,165 @@
+\begin{figure}[t!]
+\footnotesize
+
+\begin{minipage}{1\linewidth}
+  \mytitle{memory relation}\\
+$
+  %% \[
+  \begin{stackTL}
+  %% \MREL = \{
+  %% (\ty, \texttt{mem}, \sqsubseteq, \sqsubseteq_\pub, \texttt{vrel}) \; | \;
+  %% \ty \in \textrm{Set}, \texttt{mem} \in \ty \rightarrow (\Memory \times \Memory), \sqsubseteq, \sqsubseteq_\pub \; \in \powset{\ty \times \ty}, \texttt{vrel} \in \ty \rightarrow \powset{\Val \times \Val}
+  %% %% & \ty \in \textrm{Set}, \texttt{src} \in \ty \rightarrow \Memory, \texttt{tgt} \in \ty \rightarrow \Memory, \sqsubseteq, \sqsubseteq_\pub \; \in \powset{\ty \times \ty}, \texttt{vrel} \in \ty \rightarrow \powset{\Val \times \Val}
+  %% \}
+  %% \\
+  %% \MREL \text{ is a \emph{MemRel} if the following properties hold.}
+  %% \\
+  %% \\
+  %% \caselabel{properties}\\
+  %% {\begin{array}{l@{\;}l}
+  %%   \caselabel{1} & \sqsubseteq_\pub \text{ is preorder}\\
+  %%   \caselabel{2} & \sqsubseteq_\pub \subseteq \sqsubseteq\\
+  %%   \caselabel{3} & \forall \mrel, \mrel',\; \mrel \sqsubseteq \mrel' \implies \texttt{vrel}(\mrel) \subseteq \texttt{vrel}(\mrel')\\
+  %% \end{array}}
+  %% \\
+  %% %% \texttt{mrel}: \ty \rightarrow \powset{\Memory \times \Memory} \defeq \lambda \mrel, \mem_\src, \mem_\tgt, ($\MREL{}$.\texttt{src} \; \mrel) = \mem_\src \land ($\MREL{}$.\texttt{tgt} \; \mrel) = \mem_\tgt \\
+  %% \caselabel{derived}\\
+  %% \begin{array}{r@{\;}l}
+  %% \texttt{mrel} & \defeq \lambda \mrel, \mem_\src, \mem_\tgt,\; ($\MREL{}$.\texttt{src} \; \mrel) = \mem_\src \land ($\MREL{}$.\texttt{tgt} \; \mrel) = \mem_\tgt \\
+  %% \args_\src \succsim_{\mrel} \args_\tgt & \defeq (\args_\src.\texttt{f}, \args_\tgt.\texttt{f}) \in \texttt{vrel}(\mrel) \land
+  %%   (\args_\src.\texttt{mem}, \args_\tgt.\textrm{mem}) \in \texttt{mrel}(\mrel) \land
+  %%   (\args_\src.\texttt{vs}, \args_\tgt.\texttt{vs}) \in \overrightarrow{\texttt{vrel}(\mrel)}\\
+  %% \retv_\src \succsim_{\mrel} \retv_\tgt & \defeq (\retv_\src.\texttt{v}, \retv_\tgt.\texttt{v}) \in \texttt{vrel}(\mrel) \land
+  %%   (\retv_\src.\texttt{mem}, \retv_\tgt.\textrm{mem}) \in \texttt{mrel}(\mrel)\\
+  %% \end{array}
+  %% \\
+  %% .
+  %% \\
+  %% .
+  %% \\
+  %% .
+  %% \\
+
+
+  \begin{array}{l@{}l}
+  \MREL \in \textrm{MemRel} = \span
+  \\\quad
+  \setof{
+    (&\ty, \sqsubseteq, \sqsubseteq_\weak, \texttt{mrel}, \texttt{vrel}) \in (\textrm{Set} \times \powset{\ty \times \ty} \times \powset{\ty \times \ty} \times (\ty \rightarrow \powset{\Memory \times \Memory}) \times (\ty \rightarrow \powset{\Val \times \Val})) \; |
+  \\\quad
+  & (\sqsubseteq \text{ is preorder}) \; \land \;
+    (\sqsubseteq \, \subseteq \, \sqsubseteq_\weak) \; \land \;
+    (\forall \mrel, \mrel',\; \mrel \sqsubseteq \mrel' \implies \texttt{vrel}(\mrel) \subseteq \texttt{vrel}(\mrel')) \; \land \;
+  \\\quad
+  & (\forall \mrel, i,~ (\textrm{Vint } i, v_\tgt) \in \texttt{vrel}(\mrel) \implies v_\tgt = \textrm{Vint } i)
+  }
+  \end{array}
+  \\
+  %% \texttt{mrel}: \ty \rightarrow \powset{\Memory \times \Memory} \defeq \lambda \mrel, \mem_\src, \mem_\tgt, ($\MREL{}$.\texttt{src} \; \mrel) = \mem_\src \land ($\MREL{}$.\texttt{tgt} \; \mrel) = \mem_\tgt \\
+  \begin{array}{r@{\;}l}
+  \args_\src \succsim_{\mrel} \args_\tgt \defeq &
+    (\args_\src.\texttt{m}, \args_\tgt.\texttt{m}) \in \texttt{mrel}(\mrel) \land
+    (\args_\src.\texttt{f}, \args_\tgt.\texttt{f}) \in \texttt{vrel}(\mrel) \land
+    (\args_\src.\texttt{vs}, \args_\tgt.\texttt{vs}) \in \overrightarrow{\texttt{vrel}(\mrel)} \; \land \\
+    & (\args_\src.\texttt{rs}, \args_\tgt.\texttt{rs}) \in \overrightarrow{\texttt{vrel}(\mrel)} \\
+  \retv_\src \succsim_{\mrel} \retv_\tgt \defeq &
+    (\retv_\src.\texttt{m}, \retv_\tgt.\texttt{m}) \in \texttt{mrel}(\mrel) \land
+    (\retv_\src.\texttt{v}, \retv_\tgt.\texttt{v}) \in \texttt{vrel}(\mrel) \land
+    (\retv_\src.\texttt{rs}, \retv_\tgt.\texttt{rs}) \in \overrightarrow{\texttt{vrel}(\mrel)} \\
+  \end{array}
+  \end{stackTL}
+$
+  %% \]
+%% \youngju{\texttt{vrel} should be $\MREL{}$.\texttt{vrel}. (1) change? note that Former (and overview) is textrm but latter is texttt (2) specify $\MREL{}$ only when it is confusing (e.g. \ty)}
+\\
+\end{minipage}%
+\\
+\begin{minipage}{1\linewidth}
+  \mytitle{symbol relation}\\
+$
+  \begin{stackTL}
+  \begin{array}{@{}l@{}l@{~}l@{}}
+    \SREL \in \textrm{SymbRel} = \span \span
+\\\quad
+\setof{&(\ty, \sqsubseteq, \simsk, \simskenv) \in
+(\textrm{Set} \times \powset{\ty \times \ty} \times (\ty \rightarrow \powset{\Skel \times \Skel}) \times (\ty \rightarrow \MREL.\ty \rightarrow \powset{\Skenv \times \Skenv})) \; | \span
+\\\quad
+& \caselabel{1} \;&  \sqsubseteq \textrm{is preorder}
+\\\quad
+& \caselabel{2} \;& \forall \skel_\src, \skel'_\src, \skel''_\src, \skel_\tgt, \skel'_\tgt, \skel''_\tgt,~ \skel''_\src = \skel_\src \plink \skel'_\src \land \skel''_\tgt = \skel_\tgt \plink \skel'_\tgt \implies {}
+\\\quad
+&                   &
+\forall \srel, \srel',~ (\skel_\src, \skel_\tgt) \in \simsk(\srel) \land (\skel'_\src \; \skel'_\tgt) \in \simsk(\srel') \implies {}
+\\\quad
+&                   &
+\exists \srel'',~ (\skel''_\src, \skel''_\tgt) \in \simsk(\srel'') \land \srel \sqsubseteq \srel'' \land \srel' \sqsubseteq \srel''
+\\\quad
+& \caselabel{3} \; & \forall \skel_\src, \skel_\tgt, \srel,~ (\skel_\src, \skel_\tgt) \in \simsk(\srel) \implies
+\\\quad
+  &                   & \exists \mrel,~ (\textrm{load\_mem}(\skel_\src), \textrm{load\_mem}(\skel_\tgt)) \in \texttt{mrel}(w) \; \land \;
+(\textrm{load\_se}(\skel_\src), \textrm{load\_se}(\skel_\tgt)) \in \simskenv(\srel, \mrel)
+\\\quad
+& \caselabel{4} \; & \forall \srel, \mrel, \mrel',~ \mrel \sqsubseteq_\weak \mrel' \implies \simskenv(\srel, \mrel) \subseteq \simskenv(\srel, \mrel')
+\\\quad
+  %% & \caselabel{5} \; (& \forall \srel, \mrel, \skenv_\src, \skenv_\tgt, \val_\src, \val_\tgt,~ (\skenv_\src, \skenv_\tgt) \in \simskenv(\srel, \mrel) \land (\val_\src, \val_\tgt) \in \MREL.\texttt{vrel}(\mrel) \implies \\
+  %% &                   & \val_\src \in \textrm{ftns}(\skenv_\src) \iff \val_\tgt \in \textrm{ftns}(\skenv_\tgt))\\
+& \caselabel{5} \; & \forall \srel, \mrel, \skenv_\src, \skenv_\tgt,~ (\skenv_\src, \skenv_\tgt) \in \simskenv(\srel, \mrel) \implies \skenv_\src.\texttt{pubs} = \skenv_\tgt.\texttt{pubs} \; \land \;
+\\\quad
+&                   & \forall (v_\src, v_\tgt) \in \MREL.\texttt{vrel}(\mrel),~ v_\src \in \textrm{ftns}(\skenv_\src) \implies v_\tgt \in \textrm{ftns}(\skenv_\tgt)
+\\\quad
+& \caselabel{6} \; & \forall \srel, \srel', \mrel, \skel_\src, \skel_\tgt, \skenv_\src, \skenv_\tgt,~
+
+                     \srel \sqsubseteq \srel' \land (\skel_\src, \skel_\tgt) \in \simsk(\srel) \land (\skenv_\src, \skenv_\tgt) \in \simskenv(\srel', \mrel) \implies
+\\\quad
+&                   & (\skenv_\src \textbar_{\skel_\src}, \skenv_\tgt \textbar_{\skel_\tgt}) \in \simskenv(\srel, \mrel)
+\\\quad
+& \caselabel{7} \; & \forall \srel, \mrel, \skenv_\src, \skenv_\tgt, \args_\src, \args_\tgt,~ (\skenv_\src, \skenv_\tgt) \in \simskenv(\srel, \mrel) \land \args_\src \succsim_{\mrel{}} \args_\tgt \implies
+\\\quad
+  &                   & \forall e, \retv_\src,~ \textrm{external\_call} \; \skenv_\src \; \args_\src \; e \; \retv_\src \implies \exists \retv_\tgt,~ \textrm{external\_call} \; \skenv_\tgt \; \args_\tgt \; e \; \retv_\tgt \land
+                        \exists \mrel' \sqsupseteq \mrel,~ \retv_\src \succsim_{\mrel'} \retv_\tgt
+  }
+  \end{array}
+  \\
+  \end{stackTL}
+$
+\end{minipage}%
+\\
+\begin{minipage}{1\linewidth}
+  \mytitle{memory predicate}\\
+$
+  \begin{stackTL}
+  \begin{array}{l@{}l}
+  \MPRED \in \textrm{MemPred} = \span \\
+  \quad \setof{ (&\ty, \sqsubseteq, \sqsubseteq_\weak, \texttt{mpred}, \texttt{vpred}, \texttt{sepred}) \in (\textrm{Set} \times \powset{\ty \times \ty} \times \powset{\ty \times \ty}
+                                                                                                           \times (\ty \!\rightarrow\! \powset{\Memory}) 
+                                                                                                           \times (\ty \!\rightarrow\! \powset{\Val}) \times (\ty \!\rightarrow\! \powset{\Skenv})) \; | \\
+  & (\sqsubseteq \text{ is preorder}) \; \land \;
+  (\sqsubseteq \, \subseteq \, \sqsubseteq_\weak) \; \land \;
+  (\forall \mpred, \mpred',\; \mpred \sqsubseteq \mpred' \implies \texttt{vpred}(\mpred) \subseteq \texttt{vpred}(\mpred')) \; \land \; \\
+  & (\text{\texttt{sepred} should satisfy the unary version of $\simskenv$'s conditions where $\SREL{}.\!\!\sqsubseteq$ and $\simsk$ are the total relations})
+  }
+  \end{array}
+  \\
+  \begin{array}{r@{\;}l}
+  %% \texttt{mpred}(\mpred) & \defeq \setof{$\MPRED{}$.\texttt{mem}(\mpred)} \\
+
+  \texttt{cpred}(\mpred) & \defeq \{ \args \in \Args \suchthat \args.\texttt{m} \in \texttt{mpred}(\mpred) \land \args.\texttt{f} \in \texttt{vpred}(\mpred) \land
+                                                \args.\texttt{vs} \in \overrightarrow{\texttt{vpred}(\mpred)} \land \args.\texttt{rs} \in \overrightarrow{\texttt{vpred}(\mpred)} \} \\
+  \texttt{rpred}(\mpred) & \defeq \{ \retv \in \Retv \suchthat \retv.\texttt{m} \in \texttt{mpred}(\mpred) \land \retv.\texttt{v} \in \texttt{vpred}(\mpred) \land
+                                                \retv.\texttt{rs} \in \overrightarrow{\texttt{vpred}(\mpred)} \} \\
+  %% \args_\src \in \texttt{cpred}(\mpred) & \defeq \args_\src.\texttt{m} \in \texttt{mpred}(\mpred) \land \args_\src.\texttt{f} \in \texttt{vpred}(\mpred) \land
+  %%                                               \args_\src.\texttt{vs} \in \overrightarrow{\texttt{vpred}(\mpred)} \land \args_\src.\texttt{rs} \in \overrightarrow{\texttt{vpred}(\mpred)} \\
+  %% \retv_\src \in \texttt{rpred}(\mpred) & \defeq \retv_\src.\texttt{m} \in \texttt{mpred}(\mpred) \land \retv_\src.\texttt{v} \in \texttt{vpred}(\mpred) \land
+  %%                                               \retv_\src.\texttt{rs} \in \overrightarrow{\texttt{vpred}(\mpred)} \\
+
+  \end{array}
+  \end{stackTL}
+$
+%% \\
+%% \youngju{지금 2번쨰줄 아래가 짤리는데 왜인지 모르겠습니다}\\
+%% \youngju{pred 대신 prd?}\\
+\end{minipage}
+
+\caption{Three parameters for open simulations}
+\label{fig:simulation-parameters}
+\end{figure}

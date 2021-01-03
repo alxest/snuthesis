@@ -1,0 +1,132 @@
+\begin{figure}[t!]
+\footnotesize
+
+\begin{minipage}[t][0.98\textheight]{\linewidth}
+\begin{minipage}{\linewidth}
+\mytitle{sim:states}\\
+$
+  \begin{stackTL}
+  match\_states \in \textrm{open\_sim}(\msem_\src, \msem_\tgt, sound\_state) \defeq \\
+  \forall \mrel, \forall ((\memsrc, \stsrc), (\memtgt, \sttgt)) \in match\_states(\mrel), \cdashbox{myblue}{($\exists \mpred,~ (\memsrc, \stsrc) \in sound\_state(\mpred)$)} \implies \\
+  %% \mrel, 
+  {\begin{array}{l@{\;}l@{\;}l}
+  & \caselabel{STEP} & \msem_{\src}.\texttt{at\_external}(\memsrc, \stsrc) = \none \land \msem_{\src}.\texttt{halted}(\memsrc, \stsrc) = \none \; \land \\
+  & & \forall e, \memsrc', \stsrc',~ (\memsrc, \stsrc) \estep{e} (\memsrc',\stsrc') \implies \\[.5mm]
+  & & \exists \memtgt',\sttgt',~ (\memtgt,\sttgt) \estep{\tau}^{\raisebox{-1mm}{\scriptsize$\ast$}} \estep{e}\estep{\tau}^{\raisebox{-1mm}{\scriptsize$\ast$}} (\memtgt',\sttgt') \land{}\\[.5mm]
+  & & \cfbox{myred}{$\exists \mrel' \sqsupseteq \mrel$},~ ((\memsrc',\stsrc'), (\memtgt',\sttgt')) \in match\_states(\mrel') \\[1.2mm]
+  %% \lor & \caselabel{CALL} & \cfbox{myred}{$\exists \args_\src, \args_\tgt, \mrel{}' \sqsupseteq_\weak \mrel{},~ \args_\src \succsim_{\mrel{}'} \args_\tgt$} \land \msem_{\src}.\texttt{at\_external}(\memsrc, \stsrc) = \some{\args_\src} \land \msem_{\tgt}.\texttt{at\_external}(\memtgt, \sttgt) = \some{\args_\tgt} \; \land \; \\
+  \lor & \caselabel{CALL} & \cfbox{myred}{$\exists \mrel{}' \sqsupseteq_\weak \mrel{}$},~ \exists \args_\src, \args_\tgt,~ \cfbox{myred}{$\args_\src \succsim_{\mrel{}'} \args_\tgt$} \land \\
+  & & \msem_{\src}.\texttt{at\_external}(\memsrc, \stsrc) = \some{\args_\src} \land \msem_{\tgt}.\texttt{at\_external}(\memtgt, \sttgt) = \some{\args_\tgt} \; \land \; \\
+  & & \cdashbox{myred}{$\forall \mrel{}'' \sqsupseteq \mrel{}'$}, \forall \retv_\src, \retv_\tgt, \cdashbox{myred}{$\retv_\src \succsim_{\mrel{}''} \retv_\tgt$} \implies \\
+  & & \forall \memsrc', \stsrc',~ \msem_{\src}.\texttt{after\_external}(\stsrc, \retv_\src) = \some{(\memsrc', \stsrc')} \implies \\[.5mm]
+  & & \exists \memtgt', \sttgt',~ \msem_{\tgt}.\texttt{after\_external}(\sttgt, \retv_\tgt) = \some{(\memtgt', \sttgt')} \; \land \\
+  %% & & \cfbox{myred}{$\exists \mrel''', \mrel''' \sqsupseteq \mrel \land \mrel''' \sqsupseteq_\weak \mrel'' \land (\memsrc',\memtgt') \in \mathrm{mrel}(\mrel''')$} \land \\
+  & & \cfbox{myred}{$\exists \mrel''' \sqsupseteq_\weak \mrel'',~ \mrel''' \sqsupseteq \mrel$} \land ((\memsrc',\stsrc'), (\memtgt',\sttgt')) \in match\_states(\mrel''') \\[1.8mm]
+  \lor & \caselabel{RET} & \cfbox{myred}{$\exists \mrel{}' \sqsupseteq \mrel{}$}, \exists \retv_\src, \retv_\tgt, \cfbox{myred}{$\retv_\src \succsim_{\mrel{}'} \retv_\tgt$} \land \\
+       & & \msem_{\src}.\texttt{halted}(\memsrc, \stsrc) = \some{\retv_\src} \land \msem_{\tgt}.\texttt{halted}(\memtgt, \sttgt) = \some{\retv_\tgt} \\
+  \end{array}}\\
+  \end{stackTL}
+$
+%% \youngju{First line of (CALL) case is overflowed, we need to reduce text size somehow. I suggest to rollback $\msem$ into S}
+\end{minipage}
+\vspace{1mm}
+
+
+
+\begin{minipage}{1\linewidth}
+\mytitle{sim:modsem}\\
+$
+  \begin{stackTL}
+  \msem_{\src} \succsim_{\srel{}, sound\_state} \msem_{\tgt} ~\defeq~ \exists match\_states \in \textrm{open\_sim}(\msem_{src}, \msem_{tgt}, sound\_state),\\
+  \begin{array}{@{\quad}l@{\;}l@{\;}l}
+  & \caselabel{INIT}
+  & \forall \mrel{} \in \MREL{}.\texttt{t},~ \forall \args_\src, \args_\tgt,~ \cdashbox{myred}{$\args_\src \succsim_{\mrel{}} \args_\tgt$} \implies {} \\
+  && \args_\src.\texttt{f} \in \textrm{ftns}(\msem_\src.\texttt{senv}) \land \args_\tgt.\texttt{f} \in \textrm{ftns}(\msem_\tgt.\texttt{senv})
+    \implies \\
+  && \cdashbox{green}{$(\msem_{src}.\texttt{senv}, \msem_{tgt}.\texttt{senv}) \in \simskenv(\srel, \mrel)$} \implies \forall (\memsrc, \stsrc) \in \msem_{\src}.\texttt{init\_core}(\args_\src),\\
+  && \exists (\memtgt, \sttgt) \in \msem_{\tgt}.\texttt{init\_core}(\args_\tgt), \\
+  && \cfbox{myred}{$\exists \mrel{}' \sqsupseteq \mrel{}$},~ ((\memsrc, \stsrc), (\memtgt, \sttgt)) \in match\_states(\mrel') \\
+  %% & ((\memsrc, \stsrc), (\memtgt, \sttgt)) \in \textrm{match\_states}(, \mrel{}) \\
+  \end{array}
+  \end{stackTL}
+$
+\end{minipage}
+\vspace{1mm}
+
+
+
+
+\begin{minipage}{0.70\linewidth}
+\mytitle{sim:mod}\\
+$
+  \begin{stackTL}
+  \module_{\src} \succsim \module_{\tgt} ~\defeq~ \exists \srel{} \in \SREL{}.\texttt{t},~
+  \exists sound\_state: \MPRED{}.\texttt{t} \rightarrow \powset{\Memory \times \module_\src.\texttt{state}}, \\[1mm]
+  \begin{array}{l@{\;}l@{\;}l}
+  %% \qquad & ~ \span \\
+  & \caselabel{1} & \cfbox{green}{$(\module_{\src}.\texttt{scode}, \module_{\tgt}.\texttt{scode}) \in \simsk(\srel)$} \vspace{0.5mm}\\
+  \land & \caselabel{2} & \cfbox{myblue}{$\forall \skenv_{\src},~ sound\_state \in \text{open\_prsv}(\module_{\src}.\texttt{sem} \; \skenv_{\src})$} \vspace{0.5mm}\\
+  \land & \caselabel{3} & \forall \srel' \sqsupseteq \srel,~ \forall \mrel,~ \cdashbox{green}{$\forall (\skenv_\src, \skenv_\tgt) \in \simskenv(\srel', \mrel)$},~ \\
+        &               & \module_{\src}.\texttt{sem}\,(\skenv_{\src}) \succsim_{\srel{}, sound\_state} \module_{\tgt}.\texttt{sem}\,(\skenv_{\tgt}) \\
+  \end{array}
+  \end{stackTL}
+$
+\end{minipage}%
+\begin{minipage}{0.30\linewidth}
+\mbox{}\\[14mm]
+\mytitle{sim:prog}\\
+$
+  \begin{stackTL}
+  \Prg_{\src} \succsim \Prg_{\tgt} \defeq \\[1mm]
+  \quad \forall i \in \mathbb{N},~ \Prg_\src[i] \succsim \Prg_\tgt[i] \\
+  \end{stackTL}
+$
+\end{minipage}
+
+
+\vspace{1mm}
+\begin{minipage}{1\linewidth}
+\mytitle{preservation}\\
+$
+\begin{stackTL}
+sound\_state \in \textrm{open\_prsv}(\msem_\src) \defeq \\
+
+\begin{array}{l@{\;}l@{\;}l@{}l}
+
+& \caselabel{INIT} & \forall \mpred \in \MPRED.\ty, \cdashbox{blue}{$\forall \args_\src \in \texttt{cpred}(\mpred)$},~
+   \cdashbox{blue}{$\msem_\src.\texttt{senv} \in \texttt{sepred}(\mpred)$} \implies \forall (\memsrc, \stsrc) \in \msem_\src.\texttt{init\_core}(\args_\src), \span \\
+& & \cfbox{blue}{$\exists \mpred{}' \sqsupseteq \mpred{}$},~ (\memsrc, \stsrc) \in sound\_state(\mpred') \span \\[1mm]
+
+\land & \caselabel{STEP} & \forall \mpred,~ \forall (\memsrc, \stsrc) \in sound\_state(\mpred), \forall e, \memsrc', \stsrc',~ (\memsrc, \stsrc) \estep{e} (\memsrc', \stsrc') \implies \span \\
+& & \cfbox{blue}{$\exists \mpred{}' \sqsupseteq \mpred{}$},~ (\memsrc', \stsrc') \in sound\_state(\mpred') \span \\[1mm]
+
+\land & \caselabel{CALL} & \forall \mpred,~ \forall (\memsrc, \stsrc) \in sound\_state(\mpred), \forall \args_\src,~ \msem_\src.\texttt{at\_external}(\memsrc, \stsrc) = \some{\args_\src} \implies \span \\
+& & \cfbox{blue}{$\exists \mpred{}' \sqsupseteq_\weak \mpred{}$},~ \cfbox{blue}{$\args_\src \in \texttt{cpred}(\mpred')$} \; \land \; \span \vspace{0.5mm}\\
+& & & \cdashbox{blue}{$\forall \mpred'' \sqsupseteq \mpred{}',~ \forall \retv_\src \in \texttt{rpred}(\mpred'')$},~ \forall \memsrc', \stsrc',~
+       \msem_\src.\texttt{after\_external}(\stsrc, \retv_\src) = \some{(\memsrc', \stsrc')} \implies \vspace{0.5mm}\\
+& & & \cfbox{blue}{$\exists \mpred''' \sqsupseteq_\weak \mpred'',~ \mpred''' \sqsupseteq \mpred \land \exists \memsrc' \in \texttt{mpred}(\mpred''')$} \land (\memsrc', \stsrc') \in sound\_state(\mpred''')\\[1.5mm]
+
+\land & \caselabel{RET} & \forall \mpred,~ \forall (\memsrc, \stsrc) \in sound\_state(\mpred), \forall \retv_\src,~ \msem_\src.\texttt{halted}(\memsrc, \stsrc) = \some{\retv_\src} \implies \span \\
+& & \cfbox{blue}{$\exists \mpred{}' \sqsupseteq \mpred{}$},~ \cfbox{blue}{$\retv_\src \in \texttt{rpred}(\mpred')$} \span \\
+\end{array}\\
+\end{stackTL}
+$
+%% \youngju{open sim이랑 open prsv랑 function application 괄호 방식 다름}
+\end{minipage}
+\vspace*{3mm}
+\caption{Parameterized Open Simulations}
+\label{fig:full-sim}
+\end{minipage}
+\end{figure}
+
+%% \youngju{\cfbox{myred}{$\mrel''' \sqsupseteq \mrel''$} it appears in guarantee but not in rely. Remove fbox?}
+%% \\
+%% \youngju{Need tight box: vspace between two ``after\_external'' is too short}
+%% \\
+%% \youngju{Function application a(b) and (a b) is mixed. -- vrel(a) and (sc\_compat a b).}
+%% \\
+%% \youngju{$\msem_\src.\skenv$ is not very readable}
+%% \\
+%% \youngju{sound\_state is too long}
+%% \\
+%% \youngju{Need to add analysis developer's interface here}

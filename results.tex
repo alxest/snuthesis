@@ -1,0 +1,727 @@
+\section{\ccm{}}\label{sec:results}
+
+%% \subsection{Adequacy of Parameterized Open Simulation}
+%% \label{sec:main-verification:adequacy}
+
+Based on the theories we presented so far, we develop \ccm{}, an extension of \cc{} with the
+repaired interaction semantics and open simulations to support multi-language linking.  We state
+\ccm{}'s compositional correctness results (\Cref{sec:results:compiler}) and evaluate its
+verification efforts (\Cref{sec:results:evaluation}).  \ccm{} currently supports the x86 backend only.
+We do not currently see any technical problem with supporting other architectures.
+%% think our technique applies to as well.
+
+
+%% \youngju{Mention open simulation satisfies RUSC? @jeehoon said it will be said in overview somewhere.}
+%% \begin{enumerate}
+%% \item compositional compiler correctness
+%% \item lower bound
+%% \item upper bound
+  %% \begin{enumerate}
+  %% \item upperbonud\_A 유용함 이야기 (open spec -> closed spec)
+  %% \item (\ccc{}와 비교) undef value 넘어가면 UB/malloc,free 시 UB
+  %% \end{enumerate}
+%% \item corollary: sepcomp
+%% \end{enumerate}
+
+\subsection{Compositional Correctness}
+%% \subsection{Compositional Compiler Correctness}
+\label{sec:results:compiler}
+
+\ccm{} uses open simulations with three parameters:
+memory relations, symbol relations and memory predicates
+(see \Cref{sec:main-verification:opensim} for details).
+It supports $(i)$ the memory relations discussed in \Cref{sec:overview-verification:injection}:
+identity, extension and (enriched) injections with no or any given module-local invariant;
+$(ii)$ two symbol relations: one for keeping identical symbols in the source and target
+and the other for allowing elimination of global variables in the target (only allowed for memory injections), needed for \code{Unusedglob} and \code{Unreadglob};
+$(iii)$ two memory predicates: one for no analysis and the other for the value analysis of \cc{}.
+
+%% two symbol relations: \emph{identity} for keeping identical symbols in the source and target,
+%% and \emph{elimglob} for eliminating selected global variables in the target,
+%% which is needed for \code{Unusedglob} and \code{Unreadglob};
+%% and $(iii)$ two memory predicates: \emph{none} for 
+
+%% with different combinations of parameters.  As parameters, we
+%% use four memory relations: identity, extension, and injection for \cc{} optimizations, and injection
+%% with module-local invariants for \code{Unreadglob}; two symbol relations: ``drop'' for
+%% \code{Unusedglob} and \code{Unreadglob}, and identity for the other optimizations; and two memory
+%% predicates: one for value analysis, and the stub predicate for modeling the absence of analysis.
+
+
+%% \youngju{In overview we said elim-unread-glob, unify it}
+
+% Basically, all four cases use trivial relations for \textrm{SymbRel}, that asserts source/target
+% \Skel are equal, and \textrm{MemPred}, whose predicate is always true.  Nevertheless,
+% \textrm{SymbRel} has one variant (drop instance for Unusedglob and Unreadglob) and
+% \textrm{MemPred} also has one variant (unreach instance for value analysis).
+
+% We use four different \textrm{MemRel} instances (identity, extension, injection, injection with
+% private invariants).  Basically, all four cases use trivial relations for \textrm{SymbRel}, that
+% asserts source/target \Skel are equal, and \textrm{MemPred}, whose predicate is always true.
+% Nevertheless, \textrm{SymbRel} has one variant (drop instance for Unusedglob and Unreadglob) and
+% \textrm{MemPred} also has one variant (unreach instance for value analysis).
+
+Let $\rels$ be the set of open simulations with all possible parameters.
+To apply RUSC, we prove that the \ccm{} compiler $\mathcal{C}$ transforms the source module with
+a series of passes that are independently verified using open simulations in $\rels$.
+\begin{lemma}[Pass Correctness]\label{thm:results-passes}
+  For any \textrm{Clight} module $S$ and \textrm{Asm} module $T$, if $\mathcal{C}(S) = T$, then
+  there exist intermediate modules $M_0, M_1, \cdots, M_n$ such that:
+  \begin{enumerate}
+  \item $M_0 = S$ and $M_n = T$; and
+  \item $\forall i \in [0,n),~ \exists R \in \rels,~ (M_i, M_{i+1}) \in R$~.
+  \end{enumerate}
+  % \mbox{}\\
+  % $
+  % \forall \texttt{a.cl}, \texttt{a.s},~ \mathcal{C}(\texttt{a.cl}) = \texttt{a.s} \implies \\
+  % \exists \, \mathcal{T}_1, \ldots, \mathcal{T}_{n+1}, \texttt{a}_1\texttt{.il}, \ldots, \texttt{a}_n\texttt{.il}, r_1, \ldots, r_{n+1} \in \rels,~ \\
+  % \mathcal{T}_1(\texttt{a.cl}) = \texttt{a}_1\texttt{.il} \land \ldots \land
+  % \mathcal{T}_{n+1}(\texttt{a}_n\texttt{.il}) = \texttt{a.s} \land (\texttt{a.cl},
+  % \texttt{a}_1\texttt{.il}) \in r_1 \land \ldots \land (\texttt{a}_n\texttt{.il}, \texttt{a.s}) \in
+  % r_{n+1} $
+\end{lemma}
+
+%% To prove horizontal compositionality,
+We also prove all \textrm{Clight} and \textrm{Asm} modules are self-related.
+\begin{lemma}[Self-Relatedness]\label{thm:results-relatedness} For any \textrm{Clight} or \textrm{Asm}
+  module $M$, we have $M \in \self{\rels}$.
+% \mbox{}\\
+% $
+% %% (i) \forall \texttt{a.cl},~ \texttt{a.cl} \in \self{\rels} \qquad \quad (ii) \forall \texttt{a.s},~ \texttt{a.s} \in \self{\rels} \\
+%  \mbox{} \quad \mbox{} (i) ~ \textrm{Clight} \subseteq \self{\rels} \qquad \quad (ii) ~ \textrm{Asm} \subseteq \self{\rels} \\
+% $
+\end{lemma}
+\noindent
+\revision{Note that
+  since we define illegal interference from Asm
+  (\ie causing different behaviors in the source and target) as undefined behaviors (UBs)
+  as shown in \Cref{sec:overview-semantics},
+  every Asm module can be self-related.}
+
+From \Cref{thm:results-passes,thm:results-relatedness}, the RUSC relation for the compiler follows.
+\begin{theorem} [Modular Correctness]\label{thm:results-modular}
+  For any \textrm{Clight} module $S$ and \textrm{Asm} module $T$, if $\mathcal{C}(S) = T$:
+  \[
+    {S} \rusc_\rels {T} \quad\text{with}\quad S,T \in \self{\rels}~.
+  \]
+\end{theorem}
+
+% Note that for identity relation, we proved self simulation holds for arbitrary modules.
+
+% C self simulation requires its incoming pointer values (from other modules) to be well-aligned no
+% matter if its block size.  However, if the block size is zero, injection does not guarantee
+% well-alignedness to be preserved. (source can be well-aligned while target does not)
+% \youngju{Please take a look at : https://github.com/snu-sf/compcomp/issues/303}
+
+
+% \begin{lemma}[Compiler Correct, Just Different Name]\label{thm:results-passcorrect}
+% \mbox{}\\
+% $
+% \forall src \in \textrm{Clight}, \texttt{tgt} \in \textrm{Asm},~ \mathcal{C}(src) = tgt \implies \\
+% \exists \, \mathcal{T}_1, \ldots, \mathcal{T}_{n+1}, il_1, \ldots, il_n, r_1, \ldots, r_{n+1} \in \rels,~ \\
+% \mathcal{T}_1(src) = il_1 \land \ldots \land \mathcal{T}_{n+1}(il_n) = \texttt{tgt} \land (tgt, il_1) \in r_1 \land \ldots \land (il_n, \texttt{tgt}) \in r_{n+1}
+% $
+% \end{lemma}
+
+
+
+%% \begin{lemma}[Verification Conditions]\label{thm:results-veric}
+%% \mbox{}\\
+%% $
+%% \exists \rels \subseteq \textrm{OpenSim}, s.t. \\
+%% \begin{array}{@{\quad}ll}
+%%  \text{(PassCorrect)}     & \forall \mathcal{T}, \texttt{a.il1}, \texttt{a.il2},~ \mathcal{T}(\texttt{a.il1}) = \texttt{a.il2} \implies \exists r \in \rels, (\texttt{a.il1}, \texttt{a.il2}) \in r \\
+%%  \text{(EndProgSelf)}     &  (i) \forall \texttt{a.cl},~ \texttt{a.cl} \in \self{\rels} \qquad \quad (ii) \forall \texttt{a.s},~ \texttt{a.s} \in \self{\rels} \\
+%% \end{array}
+%% $
+%% \end{lemma}
+
+%% PassCorrect says that each translation $\mathcal{T}$ in \cc{} relates its source and target program with a relation in $\rels$.
+%% EndProgSelf says that every source (Clight) and target (x86-64 bit) program are self-related by $\rels$.
+
+%% Then, our compiler correctness theorem supports Clight and x86-64 bit assembly as source and target, respectively.
+
+%% \begin{theorem} [Compositional Compiler Correctness]
+%% \mbox{}\\
+%% $
+%% \begin{array}{@{\quad}ll}
+%%  \text{(CompilerCorrect)} & \forall \texttt{xs.cl} \in \overrightarrow{Clight}, \texttt{xs.s}, \texttt{hands.s} \in \overrightarrow{Asm},~ \\
+%%    &\overrightarrow{\cc{}}(\texttt{xs.cl}) = \texttt{xs.s} \implies \\
+%%    &\beh{\texttt{xs.cl} \llink \texttt{hands.s}} \supseteq \beh{\texttt{xs.s} \llink \texttt{hands.s}} \\
+%%  \text{(CompilerCorrect2)} & \forall \texttt{xs.c} \in \overrightarrow{C}, \texttt{xs.cl}, \texttt{ys.cl} \in \overrightarrow{Clight}, \texttt{xs.s}, \texttt{ys.s}, \texttt{hands.s} \in \overrightarrow{Asm},~ \\
+%%    &\overrightarrow{ClightGen}(\texttt{xs.c}) = \texttt{xs.cl} \implies \\
+%%    &\overrightarrow{\cc{}}(\texttt{xs.cl} \concat \texttt{ys.cl}) = \texttt{xs.s} \concat \texttt{ys.s} \implies \\
+%%    &\beh{\texttt{xs.c} \llink \texttt{ys.cl} \llink \texttt{hands.s}} \supseteq \beh{\texttt{xs.s} \llink \texttt{ys.s} \llink \texttt{hands.s}} \\
+%% \end{array}
+%% $
+%% \end{theorem}
+
+\noindent
+This theorem provides a truly compositional correctness
+thanks to the compositionality of RUSC (\Cref{thm:rusc}):
+%% The fact that the source and target are related by RUSC
+%% implies that they satisfy behavioral refinement by adequacy of RUSC, and moreover
+the relation can be freely (\ie vertically or horizontally) composed with any verification using RUSC
+including that against mathematical specifications.
+As an example, the following compositional correctness follows.
+\begin{corollary} [Compositional Correctness 1]\label{thm:results-compiler}
+  %% Let $S_1, \ldots, S_n$ be \textrm{Clight} modules, $T_1, \ldots, T_n$ be \textrm{Asm} modules, and
+  %% $C_1, C_2 \in \self{\rels}$ be self-related contexts.  If $\mathcal{C}(S_i) = T_i$
+  %% for all $i$, then:
+  %% \[
+  %%   {C_1 \llink S_1 \llink \cdots \llink S_n \llink C_2} \rusc_\rels {C_1 \llink T_1 \llink
+  %%     \cdots \llink T_n \llink C_2}~.
+  %% \]
+  Let $(S_1,T_1), \ldots, (S_n,T_n)$ be pairs of source and target modules.
+  If each pair is either compiled (\ie $\mathcal{C}(S_i) = T_i$ with $S_i$ \textrm{Clight} and $T_i$ \textrm{Asm}), or a self-related context (\ie $S_i = T_i \in \self{\rels}$), then
+  \[
+    \beh{S_1 \llink \cdots \llink S_n} \supseteq \beh{T_1 \llink \cdots \llink T_n}~.
+  \]
+% \mbox{}\\
+% open version \\
+%   %% \mbox{} \quad \mbox{} $ \forall \texttt{xs.cl} \in \overrightarrow{Clight}, \texttt{xs.s} \in \overrightarrow{Asm}, \texttt{ctx} \in \self{\rels},~ \overrightarrow{\cc{}}(\texttt{xs.cl}) = \texttt{xs.s} \implies $ \\
+%   %% \mbox{} \quad \mbox{} $ \beh{\texttt{xs.cl} \llink \texttt{ctx}} \supseteq \beh{\texttt{xs.s} \llink \texttt{ctx}} $
+%   \mbox{} \quad \mbox{} For any $srcs \in \overrightarrow{Clight}, ctx \in \self{\rels},~$ if each Clight module is compiled with \cc{}, \\
+%   \mbox{} \quad \mbox{} resulting in assembly modules $tgts$, then the following holds: $ \beh{srcs \llink ctx} \supseteq \beh{tgts \llink ctx} $
+% \mbox{}\\
+% closed version (corollary) \\
+%   %% \mbox{} \quad \mbox{} $ \forall \texttt{xs.cl} \in \overrightarrow{Clight}, \texttt{xs.s}, \texttt{hands.s} \in \overrightarrow{Asm},~ \overrightarrow{\cc{}}(\texttt{xs.cl}) = \texttt{xs.s} \implies $ \\
+%   %% \mbox{} \quad \mbox{} $ \beh{\texttt{xs.cl} \llink \texttt{hands.s}} \supseteq \beh{\texttt{xs.s} \llink \texttt{hands.s}} $
+%   \mbox{} \quad \mbox{} For any $srcs \in \overrightarrow{Clight}, asms \in \overrightarrow{Asm},~$ if each Clight module is compiled with \cc{}, \\
+%   \mbox{} \quad \mbox{} resulting in assembly modules $tgts$, then the following holds: $ \beh{srcs \llink asms} \supseteq \beh{tgts \llink asms} $
+\end{corollary}
+%
+\noindent This correctness theorem is compositional in the sense that behavior is refined in the
+presence of any self-related contexts such as arbitrary \textrm{Clight} and \textrm{Asm} modules
+(\Cref{thm:results-relatedness}).
+%% or even self-related specification modules in \Cref{sec:overview-modulelocal}.
+
+% (\texttt{ctx}) can be added to our correctness result.  We can put self-related spec
+% (\Cref{sec:results:verification}) or any hand-written assembly into the context (EndProgSelf of
+% \Cref{TODO}).  One can always ``close'' the context by putting an empty-context too.  \youngju{We
+% don't have ``empty'' program in our linking algebra, so it is not true. However, in our Coq
+% formalization it is true.}
+%% \youngju{\texttt{xs.s} <- space between letter and . is too wide}
+
+% The verification condition establishes the correctness results just as in
+% \Cref{sec:overview-verification:solution}.  We omit the details.
+
+%% \begin{itemize}
+%%   \item $\forall \texttt{a.cl}, \texttt{a.s},~ \cc{}(\texttt{a.cl}) = \texttt{a.s} \implies $ \\
+%%     $ \texttt{a.cl} \rusc_\rels \texttt{a.s}$ (by Inclusion and VerComp of \Cref{thm:rusc})
+%%   \item $\forall \texttt{xs.cl}, \texttt{xs.s},~ \overrightarrow{\cc{}}(\texttt{xs.cl}) = \texttt{xs.asm} \implies $ \\
+%%     $ \texttt{xs.cl} \rusc_\rels \texttt{xs.s}$ (by HorComp of \Cref{thm:rusc})
+%%   \item $\forall \texttt{xs.cl}, \texttt{xs.s}, \texttt{hands.s},~ \overrightarrow{\cc{}}(\texttt{xs.cl}) = \texttt{xs.asm} \implies $ \\
+%%     $\texttt{xs.cl} \llink \texttt{hands.s} \rusc_\rels \texttt{xs.s} \llink \texttt{hands.s}$ (by HorComp of \Cref{thm:rusc})
+%%   \item $\forall \texttt{xs.cl}, \texttt{xs.s}, \texttt{hands.s},~ \overrightarrow{\cc{}}(\texttt{xs.cl}) = \texttt{xs.asm} \implies $ \\
+%%     $\beh{\texttt{xs.cl} \llink \texttt{hands.s}} \supseteq \beh{\texttt{xs.s} \llink \texttt{hands.s}}$ (by Adequacy of \Cref{thm:rusc})
+%% \end{itemize}
+
+%% \youngju{give explicit formula?}
+
+Note that \textrm{Clight}, not \textrm{\cc{} C}, is the source language in the above theorems.  One of the
+reasons is that \textrm{Clight} is the source language for most verification frameworks based on
+\cc{}, such as VST~\cite{VST}, \ccc{}, and \ccx{}.  More importantly, we found that
+\textrm{\cc{} C} is incompatible with memory injections.  Specifically,
+\textrm{\cc{} C} imposes a strict alignment requirement on memory blocks of size zero, which, however,
+%% but the requirement
+is not preserved by memory injections.
+%% For this reason, we cannot achieve full horizontal compositionality
+%% in the presence of both \textrm{\cc{} C} modules and compiler passes verified using memory injections.
+In other words, \textrm{\cc{} C} modules are not always self-related by memory injections.\footnote{This problem
+  would be solved if one strengthens memory injections with more strict alignment requirements.}
+
+\myparagraph{Supporting \textrm{\cc{} C}}
+However, we can still prove a compositional correctness (not modular correctness as in \Cref{thm:results-modular}) for \textrm{\cc{} C}
+following \scc{}'s \emph{Level A} technique~\cite{kang:scc},
+which exploits the fact that all \textrm{CompCert C} modules are transformed to \textrm{Clight} modules
+by the same two passes.
+%% However, we still prove a stronger compositionality theorem including \textrm{\cc{} C} than that of
+%% prior work.
+%% Now we prove compositional correctness theorem for \textrm{\cc{} C} as a source language.
+%% We cannot apply RUSC because \textrm{\cc{} C} modules may not be self-related.
+%% Instead, we employ \scc{}'s ``Level A'' technique~\cite{kang:scc}, which exploits the fact that all
+%% \textrm{CompCert C} modules are transformed to \textrm{Clight} modules by the same pass.  Using the
+%% technique, we prove a lemma on that pass, \textrm{ClightGen}:
+Specifically, the first pass is verified using an open simulation with the memory identity
+and the second pass with memory injections, as done in the original \cc{}.
+Then the following lemma follows from horizontal compositionality and adequacy of
+open simulations (with memory identity and injection) and transitivity of behavioral refinement.
+
+\begin{lemma} [ClightGen Correctness]\label{thm:results-clightgen}
+  %% Let $S_1, \ldots, S_n$ be \textrm{\cc{} C} modules, $T_1, \ldots, T_n$ be \textrm{Clight}
+  %% modules, and $C_1, C_2 \in \self{\rels}$ be self-related contexts.  If
+  %% $\textrm{ClightGen}(S_i) = T_i$ for all $i$, then:
+  %% \[
+  %%   \beh{C_1 \llink S_1 \llink \cdots \llink S_n \llink C_2} \supseteq \beh{C_1 \llink T_1 \llink
+  %%     \cdots \llink T_n \llink C_2}~.
+  %% \]
+  Let $(S_1,T_1), \ldots, (S_n,T_n)$ be pairs of source and target modules.
+  If each pair is either translated (\ie $\textrm{ClightGen}(S_i) = T_i$ with $S_i$ \textrm{\cc{} C} and $T_i$ \textrm{Clight}), or a self-related context (\ie $S_i = T_i \in \self{\rels}$), then
+  \[
+    \beh{S_1 \llink \cdots \llink S_n} \supseteq \beh{T_1 \llink \cdots \llink T_n}~.
+  \]
+  % %% \mbox{} \quad \mbox{} $ \forall \texttt{xs.cl} \in \overrightarrow{Clight}, \texttt{xs.s} \in \overrightarrow{Asm}, \texttt{ctx} \in \self{\rels},~ \overrightarrow{\cc{}}(\texttt{xs.cl}) = \texttt{xs.s} \implies $ \\
+  % %% \mbox{} \quad \mbox{} $ \beh{\texttt{xs.cl} \llink \texttt{ctx}} \supseteq \beh{\texttt{xs.s} \llink \texttt{ctx}} $
+  % \mbox{} \quad \mbox{} For any $srcs \in \overrightarrow{C}, ctx \in \self{\rels},~$ if each C module is compiled with \textrm{ClightGen}, \\
+  % \mbox{} \quad \mbox{} resulting in \textrm{Clight} modules $tgts$, then the following holds: $ \beh{srcs \llink ctx} \supseteq \beh{tgts \llink ctx} $
+\end{lemma}
+%
+% Finally, we additionally support C as a source language, too.  slightly different composition
+% technique which is largely the same with that of \scc{}'s level A (\ie{} showing refinement in a
+% \emph{lock-step} style).  In the proof of this lemma, instead of applying RUSC, we employ slightly
+% different composition technique which is largely the same with that of \scc{}'s level A (\ie{}
+% showing refinement in a \emph{lock-step} style).
+%
+% Compared to the standard approach we discribed above, this approach is restricted in the sense that
+% it does not work when the actual compilation is not in lock-step.  Anyway, \textrm{ClightGen} is a
+% lock-step process so it is fine.  The extended result is as follows, which can be combined with
+% \Cref{thm:results-compiler} to support both C and Clight as a source language.
+
+% \begin{theorem} [ClightGen Correctness]\label{thm:results-clightgen}
+%   Let $S_1, \cdots, S_n$ be \textrm{\cc{} C} modules, $T_1, \cdots, T_n$ be \textrm{Clight}
+%   modules, and $c_1, \cdots, c_m \in \self{\rels}$ be self-related context modules.  If
+%   $\textrm{ClightGen}(S_i) = T_i$ for each $i$, we have:
+%   \[
+%     \beh{S_1 \llink \cdots \llink S_n \llink c_1 \llink \cdots \llink c_m} \supseteq \beh{T_1 \llink
+%       \cdots \llink T_n \llink c_1 \llink \cdots \llink c_m}~.
+%   \]
+%   % %% \mbox{} \quad \mbox{} $ \forall \texttt{xs.cl} \in \overrightarrow{Clight}, \texttt{xs.s} \in \overrightarrow{Asm}, \texttt{ctx} \in \self{\rels},~ \overrightarrow{\cc{}}(\texttt{xs.cl}) = \texttt{xs.s} \implies $ \\
+%   % %% \mbox{} \quad \mbox{} $ \beh{\texttt{xs.cl} \llink \texttt{ctx}} \supseteq \beh{\texttt{xs.s} \llink \texttt{ctx}} $
+%   % \mbox{} \quad \mbox{} For any $srcs \in \overrightarrow{C}, ctx \in \self{\rels},~$ if each C module is compiled with \textrm{ClightGen}, \\
+%   % \mbox{} \quad \mbox{} resulting in \textrm{Clight} modules $tgts$, then the following holds: $ \beh{srcs \llink ctx} \supseteq \beh{tgts \llink ctx} $
+% \end{theorem}
+
+By composing \Cref{thm:results-compiler}, \Cref{thm:results-clightgen} and \Cref{thm:results-relatedness}, we have the following theorem.
+\begin{theorem} [Compositional Correctness 2]\label{thm:results-compiler2}
+  %% Let $S_1, \ldots, S_n$ be \textrm{\cc{} C} or \textrm{Clight} modules, $T_1, \ldots, T_n$ be
+  %% \textrm{Asm} modules, and $C_1, C_2 \in \self{\rels}$ be self-related contexts.  If
+  %% $\mathcal{C}(S_i) = T_i$ for all $i$, then:
+  %% \[
+  %%   \beh{C_1 \llink S_1 \llink \cdots \llink S_n \llink C_2 } \supseteq \beh{C_1 \llink T_1 \llink
+  %%     \cdots \llink T_n \llink C_2 }~.
+  %% \]
+  Let $(S_1,T_1), \ldots, (S_n,T_n)$ be pairs of source and target modules.
+  If each pair is either compiled (\ie $\mathcal{C}(S_i) = T_i$ with $S_i$ \textrm{\cc{} C} or \textrm{Clight} and $T_i$ \textrm{Asm}), or a self-related context (\ie $S_i = T_i \in \self{\rels}$), then
+  \[
+    \beh{S_1 \llink \cdots \llink S_n} \supseteq \beh{T_1 \llink \cdots \llink T_n}~.
+  \]
+  % %% \mbox{} \quad \mbox{} $ \forall \texttt{xs.cl} \in \overrightarrow{Clight}, \texttt{xs.s} \in \overrightarrow{Asm}, \texttt{ctx} \in \self{\rels},~ \overrightarrow{\cc{}}(\texttt{xs.cl}) = \texttt{xs.s} \implies $ \\
+  % %% \mbox{} \quad \mbox{} $ \beh{\texttt{xs.cl} \llink \texttt{ctx}} \supseteq \beh{\texttt{xs.s} \llink \texttt{ctx}} $
+  % \mbox{} \quad \mbox{} For any $srcs \in \overrightarrow{C}, ctx \in \self{\rels},~$ if each C module is compiled with \textrm{ClightGen}, \\
+  % \mbox{} \quad \mbox{} resulting in \textrm{Clight} modules $tgts$, then the following holds: $ \beh{srcs \llink ctx} \supseteq \beh{tgts \llink ctx} $
+\end{theorem}
+
+%% Note that \Cref{thm:results-compiler2} is less general than \Cref{thm:results-modular}
+%% since the former is stated in terms of behavioral refinement while the latter RUSC.
+
+%% In order to bypass proving self-simulation for C programs, we show refinement in a lock-step style (like that of \scc{}'s level A).
+%% (compare it with the standard approach we described)
+%% Compared to the standard approach we discribed above, this approach is restricted in the sense that it does not work when the compilation is not in lock-step (\eg{} some of RTL optimizations can be turned on or off).
+%% Anyway, C to Clight translation (ClightGen) is always done in a lock-step (no translation has the same from/to language, so no translation can be turned off), so we take this approach.
+
+%% \youngju{say that C is not self-related?}
+
+%% \begin{theorem} [Compositional Compiler Correctness, extended]
+%% \mbox{}\\
+%% open version \\
+%%   \mbox{} \quad \mbox{} $ \forall \texttt{xs.c} \in \overrightarrow{C}, \texttt{xs.cl}, \texttt{ys.cl} \in \overrightarrow{Clight}, \texttt{xs.s}, \texttt{ys.s} \in \overrightarrow{Asm}, \texttt{ctx} \in \self{\rels},~ $ \\
+%%   \mbox{} \quad \mbox{} $ \overrightarrow{ClightGen}(\texttt{xs.c}) = \texttt{xs.cl} \implies$ \\
+%%   \mbox{} \quad \mbox{} $ \overrightarrow{\cc{}}(\texttt{xs.cl} \concat \texttt{ys.cl}) = \texttt{xs.s} \concat \texttt{ys.s} \implies $ \\
+%%   \mbox{} \quad \mbox{} $ \beh{\texttt{xs.c} \llink \texttt{ys.cl} \llink \texttt{ctx}} \supseteq \beh{\texttt{xs.s} \llink \texttt{ys.s} \llink \texttt{ctx}} $
+%% \end{theorem}
+%% \begin{proof}
+%%   By applying original Composiitonal Compiler Correctness theorem, it is sufficient to show that
+%%   $ \beh{\texttt{xs.c} \llink \texttt{ys.cl} \llink \texttt{ctx}} \supseteq \beh{\texttt{xs.cl} \llink \texttt{ys.s} \llink \texttt{ctx}} $. \\
+%%   To this end, we first decompose ClightGen into each translations. ($ClightGen = \mathcal{T}_2 \circ \mathcal{T}_1$) \\
+%%   Let $ \texttt{xs.il} \defeq \overrightarrow{\mathcal{T}_1}(\texttt{xs.c})$. \\
+%%   Then, $ \texttt{xs.c} \rusc_\rels \texttt{xs.il}$ and $ \texttt{xs.il} \rusc_\rels \texttt{xs.cl}$ (by unfolding the definition of RUSC). \\
+%%   Third, $ \texttt{xs.c} \rusc_\rels \texttt{xs.cl}$ (by VerComp of \Cref{thm:rusc}) \\
+%%   Fourth, $ (\texttt{xs.c} \llink \texttt{ys.cl} \llink \texttt{ctx}) \rusc_\rels (\texttt{xs.cl} \llink \texttt{ys.s} \llink \texttt{ctx}) $. (by HorComp of \Cref{thm:rusc}) \\
+%%   Note that HorComp rule requires either $p, q' \in \self{\rels}$ or $p', q \in \self{\rels}$. Here, we chose $\texttt{xs.cl}$ as $p'$ and others as $q$. \\
+%%   Finally, $ \beh{\texttt{xs.c} \llink \texttt{ys.cl} \llink \texttt{ctx}} \supseteq \beh{\texttt{xs.cl} \llink \texttt{ys.s} \llink \texttt{ctx}} $. (by Adequacy of \Cref{thm:rusc}) \\
+%% \end{proof}
+
+
+
+%% \begin{array}{@{\quad}l@{\quad}l}
+%%  \text{(TODO:name)} & \forall l_{1}, \ldots, l_{n} \in \texttt{Clight}, r_{1}, \ldots, r_{m} \in \texttt{Asm}, \texttt{x.cl}, \texttt{x.s},~ \\
+%%    &\cc{}(\texttt{x.cl}) = \texttt{x.s} \implies \\
+%%    &\beh{l_{1} \llink \ldots \llink l_{n} \llink \texttt{x.cl}
+%%       \llink r_{1} \llink \ldots r_{m}}
+%%     \supseteq
+%%     \beh{l_{1} \llink \ldots \llink l_{n} \llink \texttt{x.s}
+%%       \llink r_{1} \llink \ldots r_{m}} \\
+
+
+ %% \text{(CorrectCompiler)} &  \\
+
+%% \begin{theorem} [Compositional Compiler Correctness]
+%% \mbox{}\\
+%% $
+%% \begin{array}{@{\quad}ll}
+%%  \text{(CorrectCompiler)} & \forall \texttt{a.cl}, \texttt{a.asm},~ \cc{}(\texttt{a.cl}) = \texttt{a.asm} \implies \texttt{a.cl} \rusc_\rels \texttt{a.asm} \\
+%%  \text{(CorrectCompilerCompositional)}  & \forall \texttt{a.cl}, \texttt{a.asm},~ \cc{}(\texttt{a.cl}) = \texttt{a.asm} \implies \texttt{a.cl} \rusc_\rels \texttt{a.asm} \\
+%% \end{array}
+%% $
+%% \end{theorem}
+
+
+%% \begin{lemma} [Compiler Correctness - Single]
+%% \mbox{}\\
+%% $
+%%   \forall l_{1}.\texttt{cl}, \ldots, l_{n}.\texttt{cl}, \texttt{a.cl},
+%%     r_{1}.\texttt{s}, \ldots, r_{m}.\texttt{s}, \texttt{a.s},~
+%%     \cc{}(\texttt{a.cl}) = \texttt{a.s} \implies \\
+%%     \beh{l_{1}.\texttt{cl} \llink \ldots \llink l_{n}.\texttt{cl} \llink \texttt{a.cl}
+%%       \llink r_{1}.\texttt{s} \llink \ldots r_{m}.\texttt{s}}
+%%     \subseteq
+%%     \beh{l_{1}.\texttt{cl} \llink \ldots \llink l_{n}.\texttt{cl} \llink \texttt{a.s}
+%%       \llink r_{1}.\texttt{s} \llink \ldots r_{m}.\texttt{s}}
+%% $
+%% \end{lemma}
+
+%% \begin{lemma} [Compiler Correctness - Single]
+%% \end{lemma}
+
+\myparagraph{Adequacy w.r.t. Physical Semantics}
+
+%% Our compiler correctness is different from that of \cc{}, apart from stronger compositionality, in
+%% that we compose modules with logical linking ($\llink$), but \cc{} composes them with physical
+%% linking ($\plink$) that concatenates modules of the same languages~\cite{kang:scc}.  To get
+%% confidence in our semantics of logical linking, we prove it is compatible with physical linking.
+
+We show that the repaired interaction semantics is adequate w.r.t. the physical semantics of \cc{},
+where the former uses the language-independent linking $\llink$ and the latter the syntactic linking $\plink$
+concatenating modules of the same language.
+
+We prove that the physical semantics refines the repaired interaction semantics for \textrm{Asm} modules
+using a closed simulation of \cc{} with memory injections.
+\begin{theorem}[Adequacy w.r.t. Assembly]\label{thm:results-adequacy-asm}
+  Let $M_1, \cdots, M_n$ be \textrm{Asm} modules.  We have:
+  \[   \beh{M_1 \llink \ldots \llink M_n} \supseteq  \beh{M_1 \plink \ldots \plink M_n} ~.\]
+\end{theorem}
+\noindent
+\revision{This theorem allows us to carry verification results on the interaction semantics such as \Cref{thm:results-compiler2}
+down to \cc{}'s Asm semantics with syntactic linking.}
+
+%% To prove this theorem, we first repaired interaction semantics as discussed in
+%% \Cref{sec:overview-semantics}, and then apply \cc{}'s original proof techniques.
+
+%% This theorem allows us to carry the correctness proof down to \cc{}'s Asm, where modules are syntactically linked together.
+% \youngju{IMPORTANT: say that we strengthened \cc{}'s axiom for this (?)}
+
+% Say that we can prove it thanks to what we have done in \Cref{sec:overview-semantics}.  \cc{}'s
+% injection already relates junk pointer with an aribtrary target value, so we just used \cc{}'s
+% proof technique without modifying it.
+% \youngju{IMPORTANT: somewhere say about CompCertMC (lower level) --- we can add it to our pipeline seamlessly, thanks to lower bound!}
+
+Conversely, we prove that the repaired interaction semantics refines the physical semantics for \textrm{\cc{} C} modules
+using a closed simulation of \cc{} with memory identity.
+\begin{theorem}[Adequacy w.r.t C]\label{thm:results-adequacy-c}
+  Let $M_1, \cdots, M_n$ be \textrm{\cc{} C} modules.  We have:
+  \[  \beh{M_1 \plink \ldots \plink M_n} \supseteq \beh{M_1 \llink \ldots \llink M_n}  ~.\]
+\end{theorem}
+
+% Although this property is not as vital as lower bound - it is not related to soundness - it is
+% desirable for two reasons.
+%% We require each C modules to be type\mymathhyphen{}checked for a technical reason which will be addressed in \Cref{sec:overview:semantics}
+
+% First, although we give exactly the same intramodule steps as \cc{}, intermodule steps (wrapper)
+% are newly introduced ones and we need stress test for it.  Each language has its sensible lower
+% bound, as its compilation to something (\eg C to Clight, Clight to Asm, Asm to physical Asm) is
+% proven.  Also, each language has its sensible upper bound as it is compiled from something (\eg Asm
+% is compiled from Clight, Clight is compiled from C), except for C.  Therefore, we fill that one
+% omitting part by proving C wrapper semantics are bounded above by well-received semantics, namely
+% \cc{} C.
+
+% \begin{theorem} (Upper Bound)
+%   \[
+%   %% \forall \texttt{x}_1\texttt{.c}, \ldots, \texttt{x}_n\texttt{.c} \in type\mymathhyphen{}checked \; C,~
+%   %% \beh{\texttt{x}_1\texttt{.c} \plink \ldots \plink \texttt{x}_n\texttt{.c}} \supseteq \beh{\texttt{x}_1\texttt{.c} \llink \ldots \llink \texttt{x}_n\texttt{.c}}
+%   \forall p_1, \ldots, p_n \in \textrm{type-checked C},~ %type\mymathhyphen{}checked \; C,~
+%   \beh{p_1 \llink \ldots \llink p_n} \supseteq \beh{p_1 \plink \ldots \plink p_n}
+%   \]
+% \end{theorem}
+
+%% By composing \Cref{thm:results-compiler2,thm:results-adequacy-asm}, we have behavioral refinement
+%% from the interaction semantics of the source multi-languages modules
+%% down to the physical semantics of the target \textrm{Asm} modules.}
+
+%% \begin{theorem} [Compositional Correctness 3]\label{thm:results-compiler3}
+%%   Let $(S_1,T_1), \ldots, (S_n,T_n)$ be pairs of source and target modules.
+%%   If each pair is either compiled (\ie $\mathcal{C}(S_i) = T_i$ with $S_i$ \textrm{\cc{} C} or \textrm{Clight} and $T_i$ \textrm{Asm}), or a self-related \textrm{Asm} context (\ie $S_i = T_i \in \self{\rels}$ with $T_i$ \textrm{Asm}), then
+%%   \[
+%%     \beh{S_1 \llink \cdots \llink S_n} \rusc_\rels \beh{T_1 \plink \cdots \plink T_n}~.
+%%   \]
+%% \end{theorem}
+
+By composing \Cref{thm:results-compiler2,thm:results-adequacy-asm,thm:results-adequacy-c}, we obtain
+the same separate compilation correctness result of \scc{}~\cite{kang:scc}:
+
+% Second, upperbound, compositional compiler correctness, and lower bound together implies a stronger version of ``sepcompcert''s result.
+% It is stronger in the sense that it supports different versions of \cc{}.
+
+\begin{corollary}[Separate Compilation Correctness]
+  Let $S_1, \ldots, S_n$ be \textrm{\cc{} C} modules and $T_1, \ldots, T_n$ be \textrm{Asm} modules.
+  If $\mathcal{C}(S_i) = T_i$ for each $i$, we have:
+  \[
+    \beh{S_1 \plink \cdots \plink S_n} \supseteq \beh{T_1 \plink \cdots \plink T_n}~.
+  \]
+  % %% \mbox{} \quad \mbox{} $ \forall \texttt{xs.c} \in \overrightarrow{type\mymathhyphen{}checked \; C}, \texttt{xs.s} \in Asm,~ $ \\
+  % %% \mbox{} \quad \mbox{} $ \overrightarrow{\cc{}}(\texttt{xs.c}) = \texttt{xs.s} \implies $ \\
+  % %% \mbox{} \quad \mbox{} $ \beh{\texttt{x}_1\texttt{.c} \plink \ldots \plink \texttt{x}_n\texttt{.c}} \supseteq \beh{\texttt{x}_1\texttt{.s} \llink \ldots \llink \texttt{x}_n\texttt{.s}} $
+  % \mbox{} \quad \mbox{} $ \forall \texttt{x}_1\texttt{.c}, \ldots, \texttt{x}_n\texttt{.c} \in type\mymathhyphen{}checked \; C, \texttt{x}_1\texttt{.c}, \ldots, \texttt{x}_n\texttt{.c} \in Asm,~ $ \\
+  % \mbox{} \quad \mbox{} $ \cc{}(\texttt{x}_1\texttt{.c}) = \texttt{x}_1\texttt{.s}, \ldots, \cc{}(\texttt{x}_n\texttt{.c}) = \texttt{x}_n\texttt{.s} \implies $ \\
+  % \mbox{} \quad \mbox{} $ \beh{\texttt{x}_1\texttt{.c} \plink \ldots \plink \texttt{x}_n\texttt{.c}} \supseteq \beh{\texttt{x}_1\texttt{.s} \plink \ldots \plink \texttt{x}_n\texttt{.s}} $
+\end{corollary}
+  %% \item upperbonud\_A 유용함 이야기 (open spec -> closed spec)
+  %% \item (\ccc{}와 비교) undef value 넘어가면 UB/malloc,free 시 UB
+  %% \item typechecker
+
+\youngju{Just mention that \ccc{} does not satisfy upperbound, and explain it in appendix?}
+\youngju{here? or appendix?: To this end, we have strengthened \cc{}'s type checker in a number of
+  ways, ruling out trivially wrong (according to C standard) programs more than before.  We rule out
+  (i) a program that contains an identifier that is not declared in the module (ii) ``return''
+  (without value) statement used for non-void function (iii) ``return'' (with value) statement used
+  for void function (iv) function arguments containing void type.  (v) has duplicate (function or
+  global variable) identifiers (vi) A function argument with size bigger than INT\_MAX (\cc{}
+  already aborts on such programs)}
+
+
+%% \subsection{Modular Verification}
+%% \label{sec:results:verification}
+
+%% \jeehoon{Moved to \Cref{sec:overview-modulelocal}. Just summarize the results.}
+
+%% Correctness of \texttt{Unreadglob} is already included in \Cref{thm:veric}.
+
+%% Correctness of \texttt{mutual-sum} is as follows.
+
+%% \youngju{Current statement is somewhat weird. Minki is proving IdSim of AB, and I will rewrite it soon.}
+%% \begin{lemma}[Verification Conditions for \texttt{mutual-sum}]\label{thm:veric-mutual}
+%% \mbox{}\\
+%% $
+%% \exists \relS_m \subseteq \textrm{OpenSim}, s.t. \\
+%% \begin{array}{@{\quad}ll}
+%%  \text{(ACorrect)}     & \exists r \in \relS_m,~ (\texttt{a.spec}, \texttt{a.cl}) \in r \\
+%%  \text{(BCorrect)}     & \exists r \in \relS_m,~ (\texttt{b.spec}, \texttt{b.s}) \in r \\
+%%  \text{(EndProgSelf)}  &  (i) \forall \texttt{a.cl},~ \texttt{a.cl} \in \self{\relS_m} \qquad \quad (ii) \forall \texttt{a.s},~ \texttt{a.s} \in \self{\relS_m} \\
+%%                        &  (iii) \texttt{a.spec} \in \self{\relS_m} \; \land \; \texttt{b.spec} \in \self{\relS_m} \\
+%%  \text{(ABCorrect)}    & \texttt{ab.spec} \rusc_\emptyset \texttt{a.spec} \llink \texttt{b.spec} \\
+%% \end{array}
+%% $
+%% \end{lemma}
+
+%% By the RUSC theory (we omit boring details), the first three verification conditions imply separate compilation of each spec to its implementations.
+%% \youngju{We are not requiring EndProgSelf for \texttt{ab.spec}. Does it look weird?}
+%% Then, an (ABCorrect) condition, which is essentially the same as contextual equivalence, is applied to get the final result.
+%% The rest of compilation pipeline is supported by \Cref{thm:results-compiler}.
+
+%% \begin{theorem} [Spec Correctness]
+%% \mbox{}\\
+%% open version \\
+%%   \mbox{} \quad \mbox{} $ \forall \texttt{xs.cl} \in \overrightarrow{Clight}, \texttt{ys.s} \in \overrightarrow{Asm}, \texttt{ctx} \in \self{\relS_m},~ $ \\
+%%   \mbox{} \quad \mbox{} $ \beh{\texttt{ab.spec} \llink \texttt{xs.cl} \llink \texttt{ys.s} \llink \texttt{ctx}} \supseteq
+%%                           \beh{\texttt{a.cl}    \llink \texttt{b.s}    \llink \texttt{xs.cl} \llink \texttt{ys.s} \llink \texttt{ctx}} $
+%% \end{theorem}
+
+%% \subsection{Development}
+
+%% \jeehoon{I'm proposing to remove this subsection.  I think it's not that important to mention our
+%%   refactoring.  Also, how about discussing LOCs in introduction (briefly) and in
+%%   \Cref{sec:results:compiler}?}
+
+%% (i) CompCert refactoring 한 것들 나열 --- semantics는 하나도 안변했다
+%% \begin{enumerate}
+%% \item guarantee condition 증명한거
+%% \item Callstate 정의 바꾼거
+%% \item senv 분리한거
+%% \end{enumerate}
+
+
+%% \youngju{IMPORTANT: Parser is not included in lower version (2.1) which is 34565 SLOC. Is it fair?}
+
+\subsection{Evaluation of Verification Efforts}\label{sec:results:evaluation}
+
+\begin{table}[t]
+\footnotesize
+%% \scriptsize
+%% [1.25pt]
+
+\parbox{\linewidth}{
+%% \resizebox{\columnwidth}{!}{%
+\caption{SLOC of \ccm{} and related works --- compared to its baseline \cc{}, respectively}
+\begin{tabu}{@{}l@{\hspace{1.55pt}}|[1.25pt]@{\hspace{1.55pt}} r @{\hspace{1.55pt}}|@{\hspace{1.55pt}} r @{\hspace{1.55pt}}|@{\hspace{1.55pt}} r @{\hspace{1.55pt}}|[1.25pt]@{\hspace{1.55pt}} r @{\hspace{1.55pt}}|@{\hspace{1.55pt}} r @{\hspace{1.55pt}}|[1.25pt]@{\hspace{1.55pt}} r @{\hspace{1.55pt}}|@{\hspace{1.55pt}} r @{}}
+Portion     & \shortstack{\cc{} \\ 3.5} & \ccr{} 3.5        & \ccm{} pack                                               & \shortstack{\cc{}\\ 2.1} & \ccc{}                             & \shortstack{\cc{} \\ 3.0} & \ccx{}             \\
+\hline
+Pass Proofs & 34,376    & 35,893 (+4.41\%)  & \newrevision{4,923(+14.32\%)}                                          & 21,215    & 52,140 (+145.77\%)  & 26,466    & 30,572 (+15.51\%)  \\
+The Rest    & 85,617    & 87,965 (+2.74\%)  & \newrevision{25,558(+29.85\%)}  & 59,365    & 107,910 \hspace{.6mm} (+81.77\%)                 & 82,312    & 121,532 (+47.65\%) \\
+Total       & 119,993   & 123,858 (+3.22\%) & \newrevision{30,481(+25.40\%)}                                         & 80,580    & 160,050 \hspace{.6mm} (+98.62\%)                 & 108,778   & 152,104 (+39.83\%) \\
+\end{tabu}
+%% }
+\label{table:evaluation-ours}
+%% \end{table}
+}
+    
+%% \youngju{Table is fixed -- by jeehoonkang}
+%% \begin{table}[t]
+%% \footnotesize
+\parbox{0.38\linewidth}{
+\vspace{1mm}
+\caption{\mbox{Breakdown of \ccm{} pack}}
+\begin{tabu}{@{}l | l@{}}
+Portion                          & SLOC                                                                                                     \\
+\hline
+\revision{Proofs about Intermodule Steps} & \newrevision{4,923}                                                                                                    \\
+Interaction Semantics/Properties & 1,940                                                                                                    \\
+Language Semantics/Properties    & 1,701                                                                                                    \\
+Self Simulations                 & \newrevision{5,593}                                                                                                    \\
+\cc{}  Metatheory Extension      & \newrevision{4,688}                                                                                                    \\
+\ccm{} Metatheory                & \newrevision{7,656}                                                                                                    \\
+Mixed Simulation                 & 1,090                                                                                                    \\
+Adequacy w.r.t. Asm              & 2,890                                                                                                    \\
+\end{tabu}
+\label{table:evaluation-breakdown}
+}
+\hfill
+\parbox{0.59\linewidth}{
+\vspace{1mm}
+\caption{SLOC of additional developments}
+\begin{tabu}{@{}l @{\;} |[1.25pt] @{\;} r @{\;} | @{\;} r @{\;} | @{\;} r @{\;} | @{\;} r @{\;} | @{\;} r @{}}
+Portion                          & \shortstack{\texttt{Unreadglob} \\ 3.5} & \shortstack{\texttt{Unreadglob} \\ pack} & \texttt{mutual-sum} & \texttt{utod} & \shortstack{Adequacy \\ w.r.t. C} \\
+\hline
+Pass Proofs                      & 1,842                   & 338                      & 3,088               & 361           & -             \\
+The Rest                         & 260                     & 1,933                    & 2,707               & 424           & 4,044         \\
+Total                            & 2,102                   & 2,271                    & 5,795               & 785           & 4,044         \\
+\end{tabu}
+\label{table:evaluation-others}
+}%
+\end{table}
+
+\youngju{There are two ``unreadglob'' columns, one for \cc{} and one for pack. Simplify it}
+\youngju{How about reducing caption text size?}
+\jeehoon{``Per-pass'', ``Metatheory'', and ``Total'' instead of ``Pass Proofs'', ``The Rest'', and ``Whole''}
+%% \gil{Remind the reader what is CompCertR.}
+
+%% \ccm{} is more lightweight than prior work on compositional correctness in the context of \cc{}.  To
+%% validate this claim, we compare significant lines of code (SLOC) of \ccm{}, \ccc{}, and \ccx{} with
+%% that of their own baseline \cc{} versions 3.5, 2.1, and 3.0, respectively.
+To demonstrate that \ccm{} is lightweight,
+we compare significant lines of code (SLOC) of \ccm{}, \ccc{}, and \ccx{} with
+those of their baseline \cc{} versions 3.5, 2.1, and 3.0, respectively.
+Overall, \ccm{} adds less code to \cc{} than \ccc{} and \ccx{} do,
+and in particular significantly less code than \ccc{} for the proofs of compiler passes.%
+\footnote{\revision{Note that \ccc{} allows horizontal compositionality between any intermediate languages (ILs)
+  while \ccm{} only between Clight and Asm since self-relatedness is proven only for the two.
+  Though practically unnecessary, supporting linking between arbitrary ILs in \ccm{} would increase SLOC to prove self-relatedness for the other ILs.}}
+%% especially for per-pass specifications and proofs.
+%% Result:
+\newrevision{Also note that \ccr{} uses the enriched memory injections of \Cref{sec:overview-verification:injection:dynamic} instead of the original memory injections
+in order to give reusable main lemmas for both closed and open simulations.
+Since \ccr{}'s pass proofs are only 4.41\% larger than \cc{}'s, 
+the overhead due to handling the private memory components of enriched memory injections is, roughly speaking, at most 4.41\%.}
+
+\Cref{table:evaluation-ours} summarizes the comparison.
+For each compiler (\ie each column),
+the rows report SLOC for the proofs of all compiler passes (Pass Proofs),
+the rest of the development (The Rest),
+and their summation (Total).
+Note that \ccm{} is split into \ccr{} and \ccm{} pack, for which the former is our refactoring
+of \cc{} and the latter is an additional package to support multi-language linking.
+%% per-pass, metatheory, and total code;
+%% the \ccr{} column for \ccr{}, our refactoring of \cc{}; the \ccm{} pack column for
+%% additional code for \ccm{}; and the other columns are similar.
+We counted SLOC reported by
+\code{coqwc}.\footnote{Concretely, we counted ``spec'' and ``proof'' lines reported by \code{coqwc}.
+  Because we use a different criteria for line numbers, they are different from those reported in
+  prior work~\cite{stewart:ccc,gu:dscal,wang:saccx}.}  When counting SLOC, we excluded the following
+code for fair comparison: $(i)$ code for other architectures than x86 because all three projects support
+only x86; $(ii)$ code for the parser and type checker introduced in later versions of \cc{}; and $(iii)$ code for \textrm{ClightGen}, which is not supported by both \ccx{} and
+\ccc{}.  We also excluded \ccc{}'s legacy proofs for the original compiler correctness.  We used the
+latest development branches for the three projects.\footnote{Development as of November 8, 2019, available at: \url{https://github.com/snu-sf/compcertr}, \url{https://github.com/snu-sf/compcertm}, \url{https://github.com/PrincetonUniversity/compcomp}, \url{https://github.com/DeepSpec/dsss17/tree/master/CAL}}
+
+% didn't support ClightGen (C to Clight translations), we excluded corresponding files from each
+% baseline \cc{}.
+
+% Numbers might be different from other papers, so we explain how we counted it.
+% We counted with \texttt{coqwc} tool and added ``spec'' and ``proof'' of its result.
+% ``Pass Proofs'' stands for per-pass correctness proofs.
+
+% We exactly followed official \cc{}'s
+% classification. \footnote{http://compcert.inria.fr/doc/index.html, Correctness proof} ``The Rest''
+% is basically the rest, but with some modifications.
+
+% as all three extensions we are comparing only support x86 architecture, we excluded other
+% architectures from each baseline \cc{}.  Also, in recent versions only, some features that are not
+% part of main compiler pipeline (\eg{} C typechecker, C parser) were added in baseline \cc{}.  We
+% excluded them for fair comparison.
+
+% Also, as both \ccx{} and \ccc{} didn't support ClightGen (C to Clight translations), we excluded corresponding files from each baseline \cc{}.
+
+% Note that, \ccc{} actually re-implemented each per-pass proof, so their repository actually contains two proofs for each translation: one for the original correctness result,
+% and the other for their result, which does not necessarily imply the former. \youngju{Is it too aggressive?}
+% We excluded the former proofs for fair comparison.
+% Anyway we want to note that while our implementation (thanks to the refactoring) implies both results, they do not.
+
+% The code we used for counting are as follows:\footnote{https://github.com/PrincetonUniversity/compcomp, https://github.com/DeepSpec/dsss17/tree/master/CAL}.
+% Note that \ccx{}'s ``layer calculus library'' (which actually does the composition) is not publicly available and above is the best source we could found.
+% We have included our SLOC counting script in our supplementary material.
+
+
+
+
+
+
+
+\Cref{table:evaluation-breakdown} analyzes the \newrevision{30,481} SLOC for \ccm{} pack.
+%% which is the shaded part in \Cref{table:evaluation-ours}.
+\revision{The pass proofs consist of \newrevision{4,923} SLOC for reasoning about intermodule steps, which is
+  sometimes nontrivial since they perform the logical instrumentation presented in \Cref{sec:overview-semantics}.
+  Note that \ccr{} provides proofs for intramodule steps as main lemmas, which are reused in \ccm{}.
+}
+%% \revision{Pass proofs of CompCertR cover simulation of module internal steps for all passes, and those of CompCertM cover that of interaction steps between modules.
+%%   These interaction steps are sometimes nontrivial because they perform the logical instrumentation presented in Section 3.}
+The rest consists of
+1,940 SLOC for the repaired interaction semantics and its properties;
+1,701 SLOC for properties of each language such as determinism and receptiveness;
+5,576 SLOC for self-relatedness (\Cref{thm:results-relatedness});
+4,687 SLOC for extending the metatheory of CompCert;
+7,569 SLOC for open simulations and other metatheory for \ccm{};
+1,090 SLOC for mixed simulation; and
+2,890 SLOC for adequacy w.r.t. assembly (\Cref{thm:results-adequacy-asm}).
+
+\Cref{table:evaluation-others} shows SLOC for the new optimization pass and the verification examples
+given in the paper.  Note that \code{Unreadglob} 3.5 adds the optimization to \ccr{} proving closed simulation
+and \code{Unreadglob} pack to \ccm{} proving open simulation, which reuses the proof of \code{Unreadglob} 3.5 for intramodule steps.
+%% column reports SLOC for the specification and proof of \code{Unreadglob} in \ccr{}; the \code{Unreadglob} pack for the \ccm{} pack;
+%% and the other columns are similar.
+As the verification of \code{mutual-sum} and \code{utod} show, directly proving
+open simulation between programs and specifications is costly. 
+%% For the purpose of reducing verification cost,
+We believe that program logics like VST~\cite{VST} can be used to prove such simulation,
+which could significantly reduce the verification cost.
+%% Integration of \ccm{} with program logics like VST~\cite{VST} is left as future work.
+
+% \todo{Mention that asm verification is hard. -- later say that VST is needed.}
+
+% ``Pass Proof'' is actually easy --- merely proving trivial things for four primitive cases and some boilerplate code.
+% ``Interaction Semantics'' is ... \youngju{currently splitting some files}
+
+% ``Language Semantics'' is ... 11 languages. Defining four primitives, boilerplate codes, and proving determinate/receptive.
+
+% ``Self Simulation'' is easy.
+
+% ``CompCert Meta'' is \todo{break it down}
+% ``CompCertM Meta'' contains some lemmas about argument passing, definiton of open sim and its instantiations, its property (adequacy).
+% ``Mixed Simulation'' is mixed sim.
+% ``Adq. w.r.t. C'' is quite long because C language has too many cases.
+
+
+
+
+
+%%% Local Variables:
+%%% mode: latex
+%%% TeX-master: "main"
+%%% End:
