@@ -1,0 +1,469 @@
+\newcommand{\revisioncmd}{}%{\color{blue}}
+\newcommand{\revision}[1]{#1}%{{\color{blue}{#1}}}
+\newcommand{\newrevisioncmd}{}%{\color{blue}}
+\newcommand{\newrevision}[1]{#1}%{{\color{blue}{#1}}}
+\newcommand{\newnewrevisioncmd}{}%{\color{blue}}
+\newcommand{\newnewrevision}[1]{#1}%{{\color{blue}{#1}}}
+\newcommand{\hide}[1]{}
+\newcommand{\unhide}[1]{#1}
+\newcommand{\markline}[1]{\textbf{\mbox{[#1]}}}
+\newcommand{\smarkline}[1]{(#1)}
+% \newcommand{\todo}[1]{{\textcolor{green!50!black}{TODO: #1}}}
+\newcommand{\todo}[1]{}
+\newcommand{\note}[1]{{\textcolor{green!50!black}{NOTE: #1}}}
+%% \newcommand{\todo}[1]{{\textcolor{green!50!black}{\textbf{TODO: #1}}}}
+%% \newcommand{\todo}[1]{{\textcolor{purple!80!black}{\textbf{TODO: #1}}}}
+\newcommand{\numtodo}[1]{{\textcolor{green!90!black}{\textbf{Num(#1)}}}}
+% \newcommand{\gil}[1]{{\textcolor{blue}{\textbf{Gil: #1}}}}
+% \newcommand{\jeehoon}[1]{{\textcolor{green!60!black}{\textbf{Jeehoon: #1}}}}
+\newcommand{\gil}[1]{}
+\newcommand{\jeehoon}[1]{}
+\newcommand{\youngju}[1]{}
+%% \newcommand{\youngju}[1]{{\textcolor{pink!60!black}{\textbf{YoungJu: #1}}}}
+\newcommand{\cmt}[1]{{\textcolor{brown!60!white}{\textbf{#1 }}}}
+
+\newcommand{\textproof}[1]{\textcolor{gray}{#1}}
+\newcommand{\textcode}[1]{\colorbox{gray!30}{#1}}
+
+\newcommand{\myparagraph}[1]{\paragraph{\hspace*{-3.8mm}\bfseries{#1}}}
+\newcommand{\myitem}[1]{\smallskip \noindent\textbf{#1:}~ }
+
+\newcommand{\ctrans}{\mathcal{T}}
+
+%% \newcommand{\cc}{\textsc{CompCert}}
+%% \newcommand{\scc}{\textsc{SepCompCert}}
+%% \newcommand{\ccc}{\textsc{Compositional CompCert}}
+%% \newcommand{\ccx}{\textsc{CompCertX}}
+%% \newcommand{\saccx}{\textsc{Stack-Aware CompCertX}}
+\newcommand{\load}{{\uparrow}}
+\newcommand{\ustep}{%
+  \ensuremath{\mathrel{%
+      \hbox{\ooalign{%
+          \hfil{$\hookrightarrow$}\hfil\cr%
+          \hfil{$\circ$}\hfil}}}}}
+\newcommand{\eustep}[1]{\stackrel{#1}{\ustep}}
+\newcommand{\xstep}{%
+  \ensuremath{\mathrel{%
+      \hbox{\ooalign{%
+          \hfil{$\hookrightarrow$}\hfil\cr%
+          \hfil{$\bullet$}\hfil}}}}}
+\newcommand{\exstep}[1]{\stackrel{#1}{\xstep}}
+\newcommand{\step}{\hookrightarrow}
+\newcommand{\estep}[1]{\stackrel{#1}{\step}}
+\newcommand{\iestep}[1]{\stackrel{#1}{\twoheadrightarrow}}
+\newcommand{\dstep}[1]{\stackrel{#1}{\twoheadrightarrow}}
+%\newcommand{\steps}[1]{\stackrel{#1}{\hookrightarrow}}
+\newcommand{\steps}[1]{\hookrightarrow^{#1}}
+\newcommand{\Prgs}[1]{\textrm{Prog}(#1)}
+\newcommand{\Prg}{\textrm{Prog}}
+%% \newcommand{\Prg}{\ensuremath{P\hspace*{-1pt}r\hspace*{-1pt}g}}
+\newcommand{\States}[1]{\textrm{State}(#1)}
+\newcommand{\Memory}{\textrm{Mem}}
+\newcommand{\ty}{\texttt{t}}
+\newcommand{\Val}{\textrm{Val}}
+\newcommand{\val}{\textrm{v}}
+\newcommand{\Events}{\textrm{Event}}
+\newcommand{\powset}[1]{\mathcal{P}(#1)}
+
+\newcommand{\nip}{non-info-passing}
+\newcommand{\ccm}{CompCertM}
+\newcommand{\ccr}{CompCertR}
+\newcommand{\cc}{CompCert}
+\newcommand{\certikos}{CertiKOS}
+\newcommand{\scc}{SepCompCert}
+\newcommand{\cccfull}{Compositional CompCert}
+\newcommand{\ccc}{CompComp}%% {Compositional CompCert}
+\newcommand{\cascc}{CASCompCert}
+\newcommand{\ccx}{CompCertX}
+\newcommand{\saccx}{Stack-Aware CompCertX}
+\newcommand{\iptr}{\textit{imaginary pointer}}
+%% \newcommand{\mrel}{\textit{memory relation}}
+%% \newcommand{\fsim}{\textit{forward simulation}}
+%% \newcommand{\bsim}{\textit{backward simulation}}
+\newcommand{\fsim}{forward simulation}
+\newcommand{\bsim}{backward simulation}
+%% \newcommand{\xsim}{\textit{mixed simulation}}
+\newcommand{\xsim}{mixed simulation}
+\newcommand{\lbound}{\textit{bounded below}}%% {\textit{lower bound}}
+\newcommand{\ubound}{\textit{bounded above}}%% {\textit{upper bound}}
+\newcommand{\vst}{\textsc{VST}}
+\newcommand{\erhl}{ERHL}
+
+\newcommand{\src}{\texttt{src}}
+\newcommand{\tgt}{\texttt{tgt}}
+\newcommand{\psrc}{p_{\src{}}}
+\newcommand{\ptgt}{p_{\tgt{}}}
+%\newcommand{\st}{st} already defined!
+%\newcommand{\state}{st} already defined!
+\newcommand{\stt}{s}
+%% \newcommand{\istt}{is}
+%% \newcommand{\sttp}{S'}
+\newcommand{\mem}{m}
+\newcommand{\ms}{ms}
+\newcommand{\memsrc}{\mem{}_{\src{}}}
+\newcommand{\memtgt}{\mem{}_{\tgt{}}}
+\newcommand{\stsrc}{\stt{}_{\src{}}}
+\newcommand{\sttgt}{\stt{}_{\tgt{}}}
+\newcommand{\mssrc}{\ms{}_{\src{}}}
+\newcommand{\mstgt}{\ms{}_{\tgt{}}}
+\newcommand{\module}{M}
+\newcommand{\Module}{\textrm{Module}}
+
+%% \newcommand{\stpsrc}{\sttp{}_{\src{}}}
+%% \newcommand{\stptgt}{\sttp{}_{\tgt{}}}
+
+\newcommand{\ie}{\textit{i.e.}, }
+\newcommand{\cf}{\textit{cf.} }
+\newcommand{\eg}{\textit{e.g.}, }
+\newcommand{\nb}{\textit{N.B.}}
+\newcommand{\etal}{\textit{et al.}}
+
+\newcommand{\cmark}{\ding{51}}%
+\newcommand{\xmark}{\ding{55}}%
+
+
+\makeatletter
+\providecommand{\@thefnmark}{\the\@fnmark}
+\makeatother
+
+\makeatletter
+%\let\orgdescriptionlabel\descriptionlabel
+%\renewcommand*{\descriptionlabel}[1]{%
+%  \let\orglabel\label
+%  \let\label\@gobble
+%  \phantomsection
+%  \edef\@currentlabel{#1}%
+%  %\edef\@currentlabelname{#1}%
+%  \let\label\orglabel
+%  \orgdescriptionlabel{#1}%
+%}
+\makeatother
+
+\definecolor{light-gray}{gray}{0.8}
+\definecolor{grey}{rgb}{0.5,0.5,0.5}
+\definecolor{red}{rgb}{1,0,0}
+\definecolor{darkgreen}{rgb}{0.0,0.7,0.0}
+
+\definecolor{StringRed}{rgb}{.637,0.082,0.082}
+\definecolor{CommentGreen}{rgb}{0.0,0.55,0.3}
+\definecolor{KeywordBlue}{rgb}{0.0,0.3,0.55}
+\definecolor{LinkColor}{rgb}{0.55,0.0,0.3}
+\definecolor{CiteColor}{rgb}{0.55,0.0,0.3}
+\definecolor{HighlightColor}{rgb}{0.0,0.0,0.0}
+\newcommand{\commentcode}[1]{{\color{teal}~\texttt{/\!\!/}\,{#1}}}
+
+\hypersetup{%
+  linktocpage=true, pdfstartview=FitV,
+  breaklinks=true, pageanchor=true, pdfpagemode=UseOutlines,
+  plainpages=false, bookmarksnumbered, bookmarksopen=true, bookmarksopenlevel=3,
+  hypertexnames=true, pdfhighlight=/O,
+  colorlinks=true,linkcolor=LinkColor,citecolor=CiteColor,
+  urlcolor=LinkColor
+}
+
+\newcommand{\Invopen}{\{}
+\newcommand{\Invclose}{\}}
+\newcommand{\PostInvopen}{\{}
+\newcommand{\PostInvclose}{\}}
+\newcommand{\svdots}{{\cdot\raisebox{2pt}{$\hspace*{-2.8pt}\cdot$}\raisebox{-2pt}{$\hspace*{-2.8pt}\cdot$}}}
+
+\newcommand{\some}[1]{\ensuremath{\mathtt{Some}\ {#1}}}
+\newcommand{\beh}[1]{\ensuremath{\mathtt{Beh}({#1})}}
+\newcommand{\sem}[1]{\ensuremath{\llbracket {#1} \rrbracket}}
+\newcommand{\seminv}[3]{\ensuremath{{#1},{#2}~\vdash~{#3}}}
+\newcommand{\seminvg}[5]{\ensuremath{{#1},{#2},{#3},{#4}~\vdash~{#5}}}
+\newcommand{\defeq}{\ensuremath{\stackrel{\text{def}}{=}}}
+\newcommand{\semlang}[3]{\ensuremath{{#1} \stackrel{#3}{\rightarrow} {#2}}}
+\newcommand{\semcall}[3]{\ensuremath{{#1} \stackrel{#3}{\Rightarrow} {#2}}}
+\newcommand{\semassn}[4]{\ensuremath{\sem{#1}_{#2}({#3}, {#4})}}
+\newcommand{\meminj}[3]{\ensuremath{{#2}\sim_{#1}{#3}}}
+\newcommand{\hoare}[4]{\ensuremath{\{{#1}\}~{#2}\sim{#3}~\{{#4}\}}}
+\newcommand{\viewshift}[2]{\ensuremath{{#1} \Rrightarrow {#2}}}
+\newcommand{\checker}[2]{\ensuremath{{#1} \sim {#2}}}
+
+\newcommand{\code}[1]{\texttt{#1}}
+\newcommand{\addassoc}{\code{assoc-add}}
+\newcommand{\loadload}{\code{load-load}}
+\newcommand{\loadstore}{\code{load-store}}
+\newcommand{\dse}{\code{dead-store-elim}}
+\newcommand{\shiftmerge}{\code{shift-merge}}
+\newcommand{\foldphi}{\code{fold-$\phi$}}
+\newcommand{\instcombine}{\code{instcombine}}
+\newcommand{\memtoreg}{\code{mem2reg}}
+\newcommand{\sroa}{\code{sroa}}
+\newcommand{\gvn}{\code{gvn}}
+\newcommand{\licm}{\code{licm}}
+\newcommand{\Undef}{\code{undef}}
+\newcommand{\poison}{\code{poison}}
+\newcommand{\lessdefsymbol}{\ensuremath{\sqsupseteq}}
+\newcommand{\lessdef}[2]{\ensuremath{{#1} \lessdefsymbol {#2}}}
+\newcommand{\injectsymbol}{\ensuremath{\succsim}}
+\newcommand{\inject}[3]{\ensuremath{{#1} \injectsymbol_{#3} {#2}}}
+\newcommand{\unique}{\textrm{Uniq}}
+\newcommand{\uniq}[1]{\ensuremath{\unique({#1})}}
+\newcommand{\priv}[1]{\ensuremath{\textrm{Priv}({#1})}}
+\newcommand{\noali}[2]{\ensuremath{{#1} \perp {#2}}}
+\newcommand{\noalias}[3]{\ensuremath{{#1} \perp_{#3} {#2}}}
+\newcommand{\uniqueness}[2]{\ensuremath{\textrm{Uniq}_{#2}({#1})}}
+\newcommand{\privacy}[2]{\ensuremath{\textrm{Priv}_{#2}({#1})}}
+\newcommand{\ghost}[1]{\ensuremath{\hat{#1}}}
+\newcommand{\previous}[1]{\ensuremath{\bar{#1}}}
+\newcommand{\transition}[3]{\ensuremath{{#1} \stackrel{#3}{\rightarrow} {#2}}}
+
+\newcommand{\colorinit}[1]{\textcolor{red!80!black}{#1}}
+\newcommand{\colorentry}[1]{\textcolor{gray!80!white}{#1}}
+\newcommand{\colorleft}[1]{\textcolor{green!60!black}{#1}}
+\newcommand{\colorexit}[1]{\textcolor{blue!100!black}{#1}}
+\newcommand{\colorright}[1]{\textcolor{cyan}{#1}}
+
+\newcommand{\coloral}[1]{%% \textcolor{red!80!black}
+{#1}}
+\newcommand{\colorld}[1]{\textcolor{red!80!black}{#1}}
+%{\textcolor{blue!100!white}{#1}} 
+\newcommand{\colorst}[1]{\textcolor{blue!100!white}{#1}}
+
+\newcommand{\coloret}[1]{\textcolor{red!80!black}{#1}}
+\newcommand{\colorvt}[1]{\textcolor{green!50!black}{#1}}
+\newcommand{\colorct}[1]{\textcolor{blue!100!black}{#1}}
+
+\newcommand{\vnx}{\textrm{\ding{172}}}
+\newcommand{\vny}{\textrm{\ding{173}}}
+
+\newcommand{\proofbox}[1]{\fbox{#1}%\dashbox{#1}
+}
+
+\newcommand{\setof}[1]{\{\, #1 \,\}}
+\newcommand{\setofz}[1]{\{ #1 \}}
+\newcommand{\suchthat}{\;|\;}
+
+\newcommand{\maydiffname}{\textrm{MD}}
+\newcommand{\maydiff}[1]{\maydiffname(#1)}
+\newcommand{\equal}[1]{\textrm{Eq}(#1)}
+
+\newcommand{\postinv}[3]{\ensuremath{\code{postinv}({#1},{#2},{#3})}}
+\newcommand{\checkf}[3]{\ensuremath{\code{check}({#1},{#2},{#3})}}
+\newcommand{\remove}[3]{\ensuremath{\code{remove}({#1},{#2},{#3})}}
+\newcommand{\add}[3]{\ensuremath{\code{add}({#1},{#2},{#3})}}
+\newcommand{\auto}[1]{\ensuremath{\code{auto}({#1})}}
+\newcommand{\apply}[2]{\ensuremath{\code{apply}({#1},{#2})}}
+\newcommand{\reduce}[1]{\ensuremath{\code{reduce}({#1})}}
+\newcommand{\impliesf}[2]{\ensuremath{\code{implies}({#1},{#2})}}
+\newcommand{\inst}{\ensuremath{\code{i}}}
+\newcommand{\somef}[1]{\ensuremath{\code{Some}~{#1}}}
+\newcommand{\none}{\ensuremath{\code{None}}}
+\newcommand{\true}{\ensuremath{\code{true}}}
+\newcommand{\false}{\ensuremath{\code{false}}}
+
+\newcommand{\bool}{\ensuremath{\code{bool}}}
+%% \newcommand{\option}[1]{\ensuremath{\code{option}~{#1}}}
+\newcommand{\statex}{\ensuremath{\textsl{State}}}
+\newcommand{\infrule}{\ensuremath{\textsl{InfRule}}}
+\newcommand{\inv}{\ensuremath{\textsl{Inv}}}
+\newcommand{\instruction}{\ensuremath{\textsl{Instr}}}
+
+%\newcommand{\src}{{\textsl{src}}}
+\newcommand{\dst}{{\textsl{dst}}}
+%\newcommand{\tgt}{{\textsl{tgt}}}
+\newcommand{\insrc}[1]{\ensuremath{#1_\src}}
+\newcommand{\insrcs}[1]{\ensuremath{#1_\src}}
+
+\newcommand{\indst}[1]{\ensuremath{#1_\dst}}
+\newcommand{\intgt}[1]{\ensuremath{#1_\tgt}}
+\newcommand{\intgts}[1]{\ensuremath{#1_\tgt}}
+\newcommand{\wletter}{{\textsl{side}}}
+\newcommand{\inw}[1]{\ensuremath{{#1}_\wletter}}
+
+\newcommand{\skipi}{\ensuremath{\code{lnop}}}
+\newcommand{\assigni}[2]{\ensuremath{{#1} := {#2}}}
+\newcommand{\trarrow}{\ensuremath{\rightsquigarrow}}
+
+\newcommand{\inarr}[1]{\begin{array}{@{}l@{}}#1\end{array}}
+\newcommand{\inarrII}[2]{\begin{array}{@{}l@{~~}||@{~~}l@{}}\inarr{#1}&\inarr{#2}\end{array}}
+\newcommand{\inarrIId}[2]{\begin{array}{@{}l@{~}||@{~}l@{}}\inarr{#1}&\inarr{#2}\end{array}}
+\newcommand{\inarrIII}[3]{\begin{array}{@{}l@{~~}||@{~~}l@{~~}||@{~~}l@{}}\inarr{#1}&\inarr{#2}&\inarr{#3}\end{array}}
+\newcommand{\inarrIIId}[3]{\begin{array}{@{}l@{~}||@{~}l@{~}||@{~}l@{}}\inarr{#1}&\inarr{#2}&\inarr{#3}\end{array}}
+\newcommand{\inarrIV}[4]{\begin{array}{@{}l@{~~}||@{~~}l@{~~}||@{~~}l@{~~}||@{~~}l@{}}\inarr{#1}&\inarr{#2}&\inarr{#3}&\inarr{#4}\end{array}}
+\newcommand{\inpar}[1]{\left(\inarr{#1}\right)}
+\newcommand{\inparII}[2]{\begin{array}{@{}l@{~~}||@{~~}l@{}}\inarr{#1}&\inarr{#2}\end{array}}
+\newcommand{\inparIII}[3]{\begin{array}{@{}l@{~~}||@{~~}l@{~~}||@{~~}l@{}}\inarr{#1}&\inarr{#2}&\inarr{#3}\end{array}}
+\newcommand{\inparIV}[4]{\begin{array}{@{}l@{~~}||@{~~}l@{~~}||@{~~}l@{~~}||@{~~}l@{}}\inarr{#1}&\inarr{#2}&\inarr{#3}&\inarr{#4}\end{array}}
+\newcommand{\inparaII}[2]{\begin{array}{@{}l@{\qquad\qquad}l@{}}\inarr{#1}&\inarr{#2}\end{array}}
+\newcommand{\inarraII}[2]{\begin{array}{@{}l@{~~}@{~~}l@{}}\inarr{#1}&\inarr{#2}\end{array}}
+\newcommand{\inarraIII}[3]{\begin{array}{@{}l@{~~}@{~~}l@{~~}@{~~}l@{}}\inarr{#1}&\inarr{#2}&\inarr{#3}\end{array}}
+\colorlet{tgreen}{green!30}
+\colorlet{tred}{red!30}
+\colorlet{tyellow}{yellow!30}
+%% https://tex.stackexchange.com/questions/153872/text-doesnt-wrap-correctly-inside-an-mdframed-frame-in-tufte-book?utm_medium=organic&utm_source=google_rich_qa&utm_campaign=google_rich_qa
+\newcommand{\colorparagraph}[2]{\begin{mdframed}[hidealllines=true,backgroundcolor=#1] \sloppy #2 \end{mdframed}}
+%% https://tex.stackexchange.com/questions/20053/custom-command-inside-soul-packages-hl/20055?utm_medium=organic&utm_source=google_rich_qa&utm_campaign=google_rich_qa
+%% \soulregister{\llvm}{0}
+%% \soulregister{\vellvm}{0}
+\newcommand{\removedraw}[1]{\colorbox{tred}{#1}}%{\removed{#1}}
+%% \newcommand{\removed}[1]{{\sethlcolor{tred}\hl{#1}}}
+\newcommand{\removed}[1]{{\color{red}\st{#1}}}%{}
+\newcommand{\addedraw}[1]{\colorbox{tgreen}{#1}}%{#1}
+\newcommand{\added}[1]{{\sethlcolor{tgreen}\hl{#1}}}%{#1}
+\newcommand{\movedraw}[1]{\colorbox{tyellow}{#1}}%{#1}
+\newcommand{\moved}[1]{{\sethlcolor{tyellow}\hl{#1}}}%{#1}
+\newcommand{\bgcolorlines}[3]{%
+\noindent\begin{minipage}[t][0pt]{\columnwidth}
+\sethlcolor{#1}\noindent
+\multido{\i=1+1}{#2}{\hl{\mbox{$\hspace*{\textwidth}$}}\\[-1.6pt]}
+\end{minipage}\\[#3]%
+}
+
+
+
+%https://tex.stackexchange.com/questions/194798/change-vertical-space-in-overset
+\makeatletter
+\newcommand{\oset}[3][0ex]{%
+  \mathrel{\mathop{#3}\limits^{
+    \vbox to#1{\kern-2\ex@
+    \hbox{$\scriptstyle#2$}\vss}}}}
+\makeatother
+
+
+
+\algrenewcommand\algorithmicindent{1.0em}
+
+\algnewcommand\algorithmicmatch{\textbf{match}}
+\algnewcommand\algorithmicwith{\textbf{with}}
+%% \algnewcommand\algorithmicmcase[1]{$\mid$ #1 $\RightArrow$}
+\algnewcommand\Match[1]{\State \algorithmicmatch\ #1\ \algorithmicwith}
+\algnewcommand\EndMatch{\State \algorithmicend\ \algorithmicmatch}
+\algnewcommand\IfNRFS[1]{\algorithmicif{} \textbf{not} {#1} \textbf{then return false}}
+\algnewcommand\IfNRF[1]{\State \IfNRFS{#1}}
+\algnewcommand\IfRTS[1]{\algorithmicif{} {#1} \textbf{then return true}}
+\algnewcommand\IfRT[1]{\State \IfRTS{#1}}
+
+%% \algdef{SE}[MATCH]{Match}{EndMatch}[1]{\algorithmicmatch\ #1\ \algorithmicwith}{\algorithmicend\ \algorithmicmatch}%
+\algdef{SE}[MCASE]{MCase}{EndMCase}[1]{$\mid$\ #1\ $\Rightarrow$}{ XX }%
+
+\algtext*{EndMCase}%
+
+
+\newsavebox{\topprooftreebox}
+\newlength{\topprooftreewidth}
+
+\NewDocumentEnvironment{topprooftree}{m}%
+  {\begin{lrbox}{\topprooftreebox}\ignorespaces}%
+  {\DisplayProof\end{lrbox}\begin{center}\settowidth{\topprooftreewidth}%
+    {\topprooftreebox}\makebox[\topprooftreewidth]{%
+    \minibox{{#1}\\\usebox{\topprooftreebox}}}\end{center}}
+
+
+%%% Local Variables:
+%%% mode: latex
+%%% TeX-master: "main"
+%%% End:
+
+\newsavebox{\fminipagebox}
+\NewDocumentEnvironment{fminipage}{m O{\fboxsep}}
+ {\par\kern#2\noindent\begin{lrbox}{\fminipagebox}
+  \begin{minipage}{#1}\ignorespaces}
+ {\end{minipage}\end{lrbox}%
+  \makebox[#1]{%
+    \kern\dimexpr-\fboxsep-\fboxrule\relax
+    \fbox{\usebox{\fminipagebox}}%
+    \kern\dimexpr-\fboxsep-\fboxrule\relax
+  }\par\kern#2
+ }
+
+ \def\mymathhyphen{{\hbox{-}}}
+
+%https://tex.stackexchange.com/questions/443815/how-to-insert-normal-font-text-inside-verbatim
+\newcommand{\mycommentstyle}{\normalfont\itshape}
+
+\newcommand{\lesim}{\preccurlyeq}
+\newcommand{\llink}{\ensuremath{\oplus}}
+\newcommand{\identity}{\texttt{id}}
+\newcommand{\plink}{\ensuremath{\circ}}
+%% \newcommand{\rusc}{\ensuremath{\geq}}
+\newcommand{\rusc}{\ensuremath{\succcurlyeq}}
+\newcommand{\rels}{\mathcal{R}}
+\newcommand{\self}[1]{\mathrm{Self}(#1)}
+%% \newcommand{\p1}{P}
+%% \newcommand{\p2}{Q}
+
+%% \colorlet{myred}{red!80!black}
+%% \colorlet{myblue}{blue!100!white}
+%% http://latexcolor.com/
+\definecolor{myred}{rgb}{1.0, 0.44, 0.37} %bittersweet
+\definecolor{myblue}{rgb}{0.19, 0.55, 0.91} %bleudefrance
+
+\newcommand{\MREL}{{\color{myred}\text{MR}}}
+\newcommand{\SREL}{{\color{darkgreen}\text{SR}}}
+\newcommand{\MPRED}{{\color{myblue}\text{MP}}}
+
+\newcommand{\mrel}{w}
+\newcommand{\srel}{d}
+\newcommand{\mpred}{u}
+\newcommand{\link}{}%{\_link}
+%% \newcommand{\sound}[2]{\ensuremath{\llbracket #1 \rrbracket_{#2}}}
+%% \newcommand{estar}[1]{\estep{\tau}^{\raisebox{-1mm}{\scriptsize$\ast$}} \estep{#1}\estep{\tau}^{\raisebox{-1mm}{\scriptsize$\ast$}}}
+
+\newcommand{\caselabel}[1]{{\color{grey}{(\textsc{#1})}}}
+\newcommand{\Msem}{\textrm{ModSem}}
+%% \newcommand{\msem}{S}
+\newcommand{\msem}{s\hspace{-0.25mm}e\hspace{-0.25mm}m}
+\newcommand{\Args}{\textrm{CallData}}
+\newcommand{\Retv}{\textrm{RetData}}
+\newcommand{\args}{c}
+\newcommand{\retv}{r}
+\newcommand{\Skel}{\textrm{Scode}}
+\newcommand{\skel}{s\hspace{-0.25mm}c}
+\newcommand{\Skenv}{\textrm{Senv}}
+\newcommand{\skenv}{s\hspace{-0.25mm}e}
+\newcommand{\simsk}{\texttt{screl}}
+\newcommand{\simskenv}{\texttt{serel}}
+%% \newcommand{\pub}{\texttt{pub}}
+\newcommand{\weak}{\texttt{prv}}
+\newcommand{\dom}[1]{\textrm{dom(}#1\textrm{)}}
+\newcommand{\mytitle}[1]{{\small \vspace{1mm} \textsc{(#1)} \vspace{0.5mm}}}
+
+
+\newenvironment{stackAux}[2]{%
+  \setlength{\arraycolsep}{0pt}
+  \begin{array}[#1]{#2}}{
+  \end{array}}
+\newenvironment{stackCC}{
+  \begin{stackAux}{c}{c}}{\end{stackAux}}
+\newenvironment{stackCL}{
+  \begin{stackAux}{c}{l}}{\end{stackAux}}
+\newenvironment{stackTL}{
+  \begin{stackAux}{t}{l}}{\end{stackAux}}
+\newenvironment{stackTR}{
+  \begin{stackAux}{t}{r}}{\end{stackAux}}
+\newenvironment{stackBC}{
+  \begin{stackAux}{b}{c}}{\end{stackAux}}
+\newenvironment{stackBL}{
+  \begin{stackAux}{b}{l}}{\end{stackAux}}
+
+\newcommand{\cfbox}[2]{%
+    \colorlet{currentcolor}{.}%
+    {\color{#1}%
+    \fbox{\color{currentcolor}#2}}%
+}
+\newcommand{\cdashbox}[2]{%
+    \colorlet{currentcolor}{.}%
+    {\color{#1}%
+    \dashbox{\color{currentcolor}#2}}%
+}
+\newcommand{\nextop}{\qquad}
+
+\newcommand{\truenum}[1]{\textbf{#1}}
+\newcommand{\concat}{\mathbin\Vert}
+\newcommand{\cons}{::}
+%% \newcommand{\option}[1]{{#1}^{?}}
+%% \newcommand{\option}[1]{Option\;#1}
+\newcommand{\option}[1]{\ensuremath{\mathtt{Option}\ {#1}}}
+%% \newcommand{\Some}[1]{Some(#1)}
+%% \newcommand{\None}{None}
+\newcommand{\tl}{tl}
+\newcommand{\genv}{SL}
+\newcommand{\Genv}{\textrm{MSList}}
+\newcommand{\Reg}{\textrm{Reg}}
+\newcommand{\reg}{rg}
+\newcommand{\myif}{\textbf{\;if\;}}
+\newcommand{\Code}{\textrm{CodeSet}}
+\newcommand{\myst}{\texttt{state}}
