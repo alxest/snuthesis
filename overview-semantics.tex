@@ -1,9 +1,9 @@
-\section{Repaired Interaction Semantics}
+\chapter{\;\;\;\;Repaired Interaction Semantics}
 \label{sec:overview-semantics}
 
 We briefly review interaction semantics (\Cref{sec:overview-semantics:background}), discuss the problems (\Cref{sec:overview-semantics:problems}) and present our solutions (\Cref{sec:overview-semantics:solution}).
 
-\subsection{Background}
+\section{Background}
 \label{sec:overview-semantics:background}
 
 We give a brief overview of interaction semantics of \ccc{}, which
@@ -73,7 +73,7 @@ duplicated at each invocation of a module.
 %% One can lift a \cc{} language semantics into a core semantics by providing the interfaces:
 %% Note that it is possible to define a core semantics using a mathematical specification.
 
-\subsection{Problems}
+\section{Problems}
 \label{sec:overview-semantics:problems}
 
 The problems with the interaction semantics of \ccc{} are that it does
@@ -119,7 +119,7 @@ illegal interference and make it undefined behavior~(UB).
 %% interaction semantics deviate from the actual assembly semantics.
 %%
 
-\subsection{Our Solution}
+\section{Our Solution}
 \label{sec:overview-semantics:solution}
 
 We identify the sources of inadequacy w.r.t. assembly as violations of
@@ -154,7 +154,7 @@ handle them without changing the underlying language semantics.
 %% \Cref{sec:overview-semantics-register} and one on memory
 %% values in \Cref{sec:overview-semantics-memory}.
 
-\subsubsection{Assumptions on the Registers}
+\subsection{Assumptions on the Registers}
 \label{sec:overview-semantics-register}
 %
 The two problematic assumptions on the registers are that
@@ -241,8 +241,8 @@ define those illegal behaviors of (b) as undefined behavior~(UB).
 We present our model making the illegal behaviors UBs
 in stages, explaining at each stage why naive models do not work.
 %% \jeehoon{What's the difference between ``stage'' and ``state''?}
-%% \jeehoon{We have ``Our Solution'' paragraph inside ``Our Solution'' subsection. How about moving
-%%   counterexample to the problems subsection, and giving a paragraph to each stage?}
+%% \jeehoon{We have ``Our Solution'' paragraph inside ``Our Solution'' section. How about moving
+%%   counterexample to the problems section, and giving a paragraph to each stage?}
 
 First, in order to enforce the preservation of callee-save register
 values, we store the initial values of the callee-save registers at
@@ -349,7 +349,7 @@ assembly modules, where we should do backward simulation.
 %% In the latter case, if $\texttt{g(\%rbx)}$ returns \texttt{0},
 %% also no UB happens and 
 
-\subsubsection{Assumptions on the Stack}
+\subsection{Assumptions on the Stack}
 \label{sec:overview-semantics-memory}
 %
 The problematic assumption on the stack is that the
@@ -554,7 +554,7 @@ When $S_3'$ returns, similarly with call case, the return value is passed to $S_
 
 \todo{Discuss advantages of interaction semantics, here or intro?}
 
-\subsection{Semantic Techniques}\label{sec:background:ub}
+\section{Semantic Techniques}\label{sec:background:ub}
 
 Common compiler optimizations are not always correct in general for
 all well-typed C programs because the syntactic type checking cannot
@@ -649,7 +649,7 @@ blocks are of size 1.
 
 \hide{
 
-\subsection{Applications}
+\section{Applications}
 
 %% The root cause of such overhead is that their verification technique
 %% was not flexible: a single memory relation is enforced for every
@@ -780,15 +780,15 @@ we successfully reused existing proof.
 
 
 
-\subsection{Defining a Sound and General Semantics}\label{sec:overview:semantics}
-In this subsection, we describe challenges on defining a sound and general multi-language semantics for C and assembly, and show our solution.
+\section{Defining a Sound and General Semantics}\label{sec:overview:semantics}
+In this section, we describe challenges on defining a sound and general multi-language semantics for C and assembly, and show our solution.
 By \textit{sound}, we mean its behavior contains actual behavior when ran on the machine.
 By \textit{general}, we mean it should support arbitrary program.
 %% that is \textit{general}, \eg{} supporting \textit{arbitrary}
 We elide some technical subtleties for the sake of simplicity.
 In \Cref{TODO}, we provide technically more complete argument for a curious reader.
 
-\subsection{Register (tentative)}\label{sec:overview:register}
+\section{Register (tentative)}\label{sec:overview:register}
 \myparagraph{Problem (tentative)}
 %% \input{compiler}
 %% \input{unsoundall}
@@ -1021,7 +1021,7 @@ Therefore, we developed a novel trick called \textit{junk pointer} to address th
 \section{Overview}\label{sec:overview}
 In this section, we show an outline of our development, key ideas of our semantics and proof technique, motivating each one by comparing with \ccc{}.
 
-\subsection{Development Outline}\label{sec:overview:outline}
+\section{Development Outline}\label{sec:overview:outline}
 %% \todo{we will explain why our strategy is extensible in both axis}
 
 
@@ -1090,7 +1090,7 @@ In contrast, we compose in \textit{behavior} level, which is as simple as transi
 
 
 
-%% \subsection{Bounding Semantics}
+%% \section{Bounding Semantics}
 \myparagraph{Lower Bound}
 Lower bound is a part of soundness condition that multi-language semantics should satisfy, stating its behavior should at least contain \textit{actual behavior}.
 It is formalized as follows.
@@ -1171,9 +1171,9 @@ Contrary to the aforementioned upper bound theorem, upper bound compression lemm
 
 
 
-\subsection{Semantics}\label{sec:overview:semantics}
+\section{Semantics}\label{sec:overview:semantics}
 Similar to \ccc{}, we build multi-language semantics by instantiating interaction semantics, but with substantially different ingredients.
-In this subsection, we will describe why \ccc{}'s semantics fails to satisfy desiderata, and lead you to our solution step by step.
+In this section, we will describe why \ccc{}'s semantics fails to satisfy desiderata, and lead you to our solution step by step.
 
 \myparagraph{Interaction Semantics}
 Intuitively, the idea behind interaction semantics is to model multi-language semantics by gluing together each languages’ existing semantics, while considering them as a black box.
@@ -1296,7 +1296,7 @@ In contrast, statically proving the absence of undefined value is much harder pr
 
 
 
-\subsection{Proof}\label{sec:overview:proof}
+\section{Proof}\label{sec:overview:proof}
 
 In this section, we show the fundamental ideas of our proof technique, and explain why it allows lightweight development.
 
@@ -1374,7 +1374,7 @@ Constructing a simulation relation that is suitable for Unusedglob break other p
 
 
 
-\subsection{ETC}
+\section{ETC}
 \myparagraph{Extensibility - Unwroteglob, Removing Axiom, Dummy Stack}
 \myparagraph{Removing Axiom}
 .
@@ -1449,7 +1449,7 @@ As a consequence, they failed to reuse existing \cc{}'s proof, and reimplemented
 
 
 
-\subsection{Searching for Sound Semantics}\label{sec:introduction:semantics}
+\section{Searching for Sound Semantics}\label{sec:introduction:semantics}
 \cmt{Why hasn't it been solved before? (Or, what's wrong with previous proposed solutions? How does mine differ?)}
 
 %% Now, we will briefly explain \ccc{}(\cccfull\cite{stewart:ccc}), a state-of-the-art towards such multi-language semantics, and why it fails to satisfy desiderata.
@@ -1522,7 +1522,7 @@ The last one is desirable because, the first two can be trivially bypassed if we
 Clearly, that semantics is not at all useful, as we cannot reason anything with it: \eg{} no program logic will hold.
 
 
-\subsection{Request for Lightweight and Extensible Proof}\label{sec:introduction:proof}
+\section{Request for Lightweight and Extensible Proof}\label{sec:introduction:proof}
 
 
 \todo{Put some proper intro}
@@ -1669,10 +1669,10 @@ simulations~\cite{TODO}.
 
 
 
-%Then have a final paragraph or subsection: "Summary of Contributions". It should list the major contributions
+%Then have a final paragraph or section: "Summary of Contributions". It should list the major contributions
 %in bullet form, mentioning in which sections they can be found. This material doubles as an outline of the
 %rest of the paper, saving space and eliminating redundancy.
-\subsection{Summary of Contributions}\label{sec:introduction:summary}
+\section{Summary of Contributions}\label{sec:introduction:summary}
 
 In short, our contributions are as follows.
 \begin{itemize}
@@ -1693,7 +1693,7 @@ In short, our contributions are as follows.
 %% To this end, we developed novel concept called \iptr{} and \xsim{}.
 
 %% %Beginning, if it can be short yet detailed enough, or if it's critical to take a strong defensive stance
-%% %about previous work right away. In this case Related Work can be either a subsection at the end of the
+%% %about previous work right away. In this case Related Work can be either a section at the end of the
 %% %Introduction, or its own Section 2.
 
 %% Multilanguage (Mixing C and Asm) is needed.
@@ -1762,10 +1762,10 @@ In short, our contributions are as follows.
 
 
 
-%% \subsection{Translation Example}
+%% \section{Translation Example}
 %% \label{sec:overview:example}
 
-%% \subsection{Proof Validation}
+%% \section{Proof Validation}
 %% \label{sec:overview:validation}
 
 

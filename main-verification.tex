@@ -1,4 +1,4 @@
-\section{Formalization of Verification Techniques}
+\chapter{\;\;\;\;Formalization of Verification Techniques}
 \label{sec:main-verification}
 
 %% \todo{slight difference in math and coq dev ?}
@@ -14,7 +14,7 @@ relations, and memory predicates.  We present the three parameters
 %% Then we introduce mixed simulation that allows forward
 %% reasoning in the presence of nondeterminism (\Cref{sec:main-verification:mixedsim}).
 
-\subsection{Parameters for Open Simulations}
+\section{Parameters for Open Simulations}
 \label{sec:main-verification:parameter}
 
 \Cref{fig:simulation-parameters} presents
@@ -147,7 +147,7 @@ The well-formedness conditions are self-explanatory.
 %%       그러니까 우리가 이 문제를 처음으로 tackle 하는}
 
 
-\subsection{Open Simulations with Parameters}
+\section{Open Simulations with Parameters}
 \label{sec:main-verification:opensim}
 
 \input{fig-sim}
@@ -331,7 +331,7 @@ to that of the module semantics simulation and the \caselabel{STEP},
 %% \]
 }
 
-\subsection{Horizontal Compositionality and Adequacy}
+\section{Horizontal Compositionality and Adequacy}
 \label{sec:main-verification:theorems}
 
 To use open simulations in RUSC, we prove their horizontal compositionality and adequacy.  Let $P$
@@ -707,7 +707,7 @@ establish.
 %%   \\
 %%   \\
 %%   %% \input{fig-sim}
-%%   %% 이 parameter들이 overview 에서 이야기한 structural simulation과의 주된 차이이고, 각각의 정확한 정의는 subsection에서 더 자세히 설명할 것이다.\\
+%%   %% 이 parameter들이 overview 에서 이야기한 structural simulation과의 주된 차이이고, 각각의 정확한 정의는 section에서 더 자세히 설명할 것이다.\\
 %% }
   %% 이렇게 parameterize 되어있음에도, 우리가 quantify한 minimal한 성질들만 있으면, open simulation은 RUSC의 성질 두가지를 만족한다. \\
   %% (i) horizontal composition: \Cref{fig:simmod}를 보자. program 사이의 relation은 각 module 사이에 pairwise relation으로 되어있다. 따라서 by definition 성립한다. \\

@@ -1,4 +1,4 @@
-\section{Module-Local Invariants and Specification Modules}
+\chapter{\;\;\;\;Module-Local Invariants and Specification Modules}
 \label{sec:overview-modulelocal}
 
 In \Cref{sec:overview-verification} we presented how to achieve compositional compiler correctness
@@ -17,7 +17,7 @@ mathematical specification modules (\Cref{sec:overview-modulelocal:program} and 
 first, in the context of \cc{}, that is capable of verifying
 the \emph{mutually recursive} example presented in \Cref{sec:overview-modulelocal:program}.}
 
-\subsection{Advanced Optimizations with Module-Local Invariants}
+\section{Advanced Optimizations with Module-Local Invariants}
 \label{sec:overview-modulelocal:compiler}
 
 \begin{figure}[t]
@@ -114,7 +114,7 @@ example with mutual recursion.
 %% module-local invariants.  The reason is it disallows mutual recursion, thereby preventing the
 %% complicated interaction among multiple modules as in \Cref{fig:overview-modulelocal:compiler}.
 
-\subsection{Verification against Specification Modules}
+\section{Verification against Specification Modules}
 \label{sec:overview-modulelocal:program}
 
 \begin{figure}[t]
@@ -338,7 +338,7 @@ Finally, we prove $\texttt{ab.spec} \rusc_\rels \texttt{a.spec} \llink
 %% \Cref{sec:utod-verification} for details.
 
 {\revisioncmd
-\subsection{Verification of \texttt{utod}}
+\section{Verification of \texttt{utod}}
 \label{sec:overview-modulelocal:utod}
 
 \verb|__compcert_i64_utod| is one of the \cc{}'s internal handwritten

@@ -1,4 +1,4 @@
-\section{Verification Techniques}
+\chapter{\;\;\;\;Verification Techniques}
 \label{sec:overview-verification}
 
 We review the notions of closed and open simulations
@@ -9,7 +9,7 @@ with open simulations
 We also discuss the memory relations used by \ccm{} in \Cref{sec:overview-verification:injection}
 and present mixed simulations in \Cref{sec:overview-verification:mixedsim}.
 
-\subsection{Background}
+\section{Background}
 \label{sec:overview-verification:background}
 
 \myparagraph{\cc{}'s Verification}
@@ -211,7 +211,7 @@ structured simulation that relates $\module$ and $\module'$:
   then $\beh{\module} \supseteq \beh{\module'}$.
 \end{itemize}
 
-\subsection{Problems}
+\section{Problems}
 \label{sec:overview-verification:problems}
 %% \myparagraph{Problems}
 %
@@ -278,8 +278,8 @@ compositionality even for a single relation and $(ii)$ horizontal
 compositionality between different relations (\ie with different
 rely/guarantee conditions).
 
-%\subsection{Refinement Under Self-related Contexts (RUSC)}
-\subsection{Our Solution}
+%\section{Refinement Under Self-related Contexts (RUSC)}
+\section{Our Solution}
 \label{sec:overview-verification:solution}
 
 %% \myparagraph{Our Solution at High Level}
@@ -576,7 +576,7 @@ sensible relations will rule out such bad contexts and give us a sensible (bette
 
 % BEGIN REVISION
 {\revisioncmd
-\subsection{Memory Relations of \ccm{}}
+\section{Memory Relations of \ccm{}}
 \label{sec:overview-verification:injection}
 
 \ccm{} uses the original memory identity and extension of \cc{}
@@ -596,7 +596,7 @@ such as static variables of C by allowing module-local invariants on those stati
 %% (\Cref{sec:overview-verification:injection:static}).
 %% Structured injections of \ccc{} can be compared to our first generalization
 
-\subsubsection{Memory Relations of \cc{}}
+\subsection{Memory Relations of \cc{}}
 \label{sec:overview-verification:injection:original}
 %
 \cc{}'s memory model consists of a finite set of blocks of finite size
@@ -619,7 +619,7 @@ only equivalent%
 values (\ie equivalent non-pointer values or corresponding addresses) should be stored .
 All the areas that are not on the injection map are considered as \emph{private} areas of the source and target memories.
 
-\subsubsection{Enriched Memory Injection}
+\subsection{Enriched Memory Injection}
 \label{sec:overview-verification:injection:dynamic}
 %
 For open modules, reasoning about dynamically allocated local memory
@@ -771,7 +771,7 @@ the current private memory \texttt{a[1]} is disjoint from the area specified by 
 
 %% Explain open simulation
 
-\subsubsection{Memory Injection with Module-Local Invariants}
+\subsection{Memory Injection with Module-Local Invariants}
 \label{sec:overview-verification:injection:static}
 %
 For open modules, reasoning about statically allocated local memory
@@ -790,7 +790,7 @@ disjoint from $w.m^\weak_\src$, $w.m^\weak_\tgt$ and $w.\iota$.
 We give examples using module-local invariants in \Cref{sec:overview-modulelocal}.
 } %%% END REVISION
 
-\subsection{Mixed Simulation}
+\section{Mixed Simulation}
 \label{sec:overview-verification:mixedsim}
 
 While the target language of \cc{} is deterministic (more precisely,
