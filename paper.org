@@ -1,0 +1,28 @@
+* Overview
+** CompCertX, CompComp 비교
+
+
+* RUSC - Background (Verification Techniques)
+** small-step semantics
+** closed sim
+** interaction semantics
+** open sim
+** problems with open sim
+* RUSC (톡 흐름대로)
+** RUSC
+
+
+* Compiler - Background
+** UB
+** Memory Model
+** problems
+* Complier Verif
+** Reparing Interaction Semantics
+** 기존 최적화 증명 어떻게 adapt 했는지
+** TODO open prsv 설명 더 자세히
+
+
+* Program - Background
+** problems (mutual dependence, step indexing)
+* Program Verif
+** future directions
