@@ -26,11 +26,14 @@
 
 Modern software systems are large and complex; they are composed of
 multiple modules written in different languages such as C and
-handwritten assembly.  Moreover, each module is then compiled down to
-machine code by multi-pass compilers utilizing complex translations.
+handwritten assembly.
+%% Moreover, each module is then compiled down to machine code by multi-pass compilers utilizing complex translations.
+Moreover, each module is then compiled down to machine code by possibly different compilers, each utilizing multiple optimizations.
 To verify such a system, it is critically important to have a modular
 verification technique that allows proof engineers to focus on a
 single module and its single translation at a time.
+
+
 %% Then, to run this system, each module is compiled down to machine code by multi-pass compilers utilizing complex translations.
 %% composition in both axes -- horizontal and vertical.
 %% The former concerns composing verifications of each module, and the latter concerns that of each translations.

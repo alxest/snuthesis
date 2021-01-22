@@ -1,0 +1,45 @@
+
+
+
+
+
+
+
+
+
+
+
+
+
+To overcome this limitation, two extensions of \cc{}, namely \ccx{}
+\cite{gu:dscal,wang:saccx} and Compositional CompCert (shortly, \ccc{}) \cite{beringer:isem,stewart:ccc}, have
+been developed. Interestingly, they take different approaches to
+\emph{two key challenges}:
+\begin{enumerate}
+\item how to modularly verify each translation of each
+module using a different relational memory invariant (shortly, memory relation) and compose the proofs all
+together; and
+\item how to deal with illegal interference from
+arbitrary (handwritten) assembly modules that can invalidate compiler
+translations of C modules (\eg not preserving the
+callee-save register values).
+\end{enumerate}
+CCX, CCC, separation logic, etc.
+
+
+
+
+In this dissertation, we develop a novel lightweight verification technique,
+called RUSC (Refinement Under Self-related Contexts), and demonstrate
+how RUSC can solve the problem without any restrictions but still with
+low verification overhead. For this, we develop CompCertM, a full
+extension of the latest version of CompCert supporting multi-language
+linking. Also, we demonstrate the power of RUSC as a program
+verification technique by modularly verifying interesting programs
+consisting of C and handwritten assembly against their mathematical
+specifications.
+
+
+
+
+

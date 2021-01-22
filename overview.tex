@@ -2,6 +2,63 @@
 
 %% \jeehoon{In title, maybe no space before colon?}
 
+Modern software systems are complex, and modularity is the crucial tool for coping with such complexity.
+That is, software systems are typically broke up into multiple modules so that software developers can focus on a single module at a time.
+Moreover, instead of directly writing each module in assembly, they are mostly written in high-level languages such as C.
+Then compilers translate such high-level languages into assembly via multiple translation passes.
+
+
+
+
+To verify such a system end-to-end, it is critically important to have a modular verification technique.
+Specifically, the verification can be divided into two parts, compiler verification and program verification,
+where the former is about proving the generated assembly code behaves as specified by the semantics of the source program,
+and the latter is about proving desired properties about the behaviors of the source program.
+In compiler verification, we want to focus on a single compiler and its single translation at a time, even though each modules are written in different languages and compiled with different compilers.
+Similarly, in program verification, we want to focus on a single module and its single abstraction at a time, assuming interfaces of other modules.
+
+
+
+
+However, none of the existing approaches are satisfactory.
+For compiler verification, there are two state-of-the-art frameworks, \ccx{} \cite{gu:dscal,wang:saccx} and Compositional CompCert (shortly, \ccc{}) \cite{beringer:isem,stewart:ccc},
+supporting modular verification of multi-language systems. %heterogeneous systems.
+The former simplifies the problem by
+imposing restrictions that the source modules should have no mutual
+dependence and be verified against certain well-behaved
+specifications. On the other hand, the latter develops a new
+verification technique that directly solves the problem but at the
+expense of significantly increasing the verification cost.
+For program verification, higher-order separation logic has shown great success, but it only proves partial correctness and does not support gradual abstraction.
+
+
+
+
+
+
+
+
+In this dissertation, we develop a novel modular verification technique, called RUSC (Refinement
+Under Self-related Contexts) (\Cref{sec:rusc}), and demonstrate its usefulness by applying it to
+both compiler verification (\Cref{sec:compiler}) and program verification (\Cref{sec:program}).
+%% Specifically, RUSC solves the problem without aforementioned restrictions but still with low verification overhead.
+Specifically, we develop CompCertM, a full
+extension of the latest version of CompCert supporting multi-language
+linking, and show how RUSC enables modular compiler verification without any restrictions but still with low verification overhead.
+Moreover, we demonstrate the power of RUSC as a program
+verification technique by modularly verifying interesting programs
+consisting of C and handwritten assembly against their mathematical
+specifications. Compared to higher-order separation logic, our approach
+supports full functional correctness and allows gradual abstraction, but its verification overhead is relatively high.
+We leave it as a future work to adopt the core ideas and automations from higher-order separation logic.
+
+%% \paragraph{\Cref{sec:rusc}: RUSC theory}
+%% \paragraph{\Cref{sec:compiler}: Compiler Verification: CompCertM}
+%% \paragraph{\Cref{sec:program}: Program Verification}
+
+This dissertation draws heavily on the work and writing in the following paper: \cite{song:compcertm}
+
+\section{Prior Work in Compiler Verification}\label{sec:overview:compiler}
 \cc{} \cite{CompCert, Compcert-CACM}, the first \emph{verified}
 \emph{optimizing} compiler for \emph{the C programming language}, has
 served as a backend in end-to-end verified
@@ -180,20 +237,6 @@ examples and their specification modules.  Specifically, we develop:
   whose verification for \emph{open} modules requires
   a new kind of memory relation, \emph{memory injection with module-local
   invariants};
-\item \texttt{mutual-sum}: an example consisting of $(i)$ C and
-  handwritten assembly modules that mutually recursively compute
-  summation up to a given integer, performing memoization using
-  module-local static variables, and $(ii)$ correctness proofs
-  against their specification modules using open simulations with the
-  new memory relation, memory injection with module-local invariants;
-\item Verification of \texttt{utod}: providing a correctness proof
-  against its specification module using an open simulation,
-  %% with the original memory injection,
-  where \texttt{utod} is a handwritten
-  assembly function casting unsigned long to double, whose correctness
-  against its specification is axiomatized in \cc{} but not any more
-  in \ccm{}.
-  % (see \Cref{sec:utod-verification} for details).
 \end{itemize}
 \medskip
 
@@ -280,210 +323,53 @@ interaction semantics in the correctness proofs of all passes, which amount to
 metatheory including interaction semantics and RUSC, which
 amounts to 29.85\% of the original metatheory in \cc{}.
 
-The three applications, \texttt{Unreadglob}, \texttt{mutual-sum} and
-verification of \texttt{utod}, show the flexibility of our framework:
-allowing arbitrary memory relations and mathematical specification
-modules. In particular, to the best of our knowledge, our work is the
-first verification, in the context of \cc{}, that reasons about module-local static
-variables with private invariants that can be modified across external function calls (due to
-mutual dependence between multiple modules) .
-
-The Coq development is available at:
-\[ \text{\url{https://sf.snu.ac.kr/compcertm}} \]
-
-The remainder of the dissertation is structured as follows.
-We give a high-level overview of the main ideas in
-\Cref{sec:overview-verification}-\Cref{sec:overview-modulelocal};
-the main results of \ccm{} and an analysis of its development in \Cref{sec:results};
-its formal details in \Cref{sec:main-semantics}-\Cref{sec:main-verification};
-and a comparison to related work in \Cref{sec:related}.
-
-%% \todo{Intro:
-%%   make three points about sound semantics.
-%% }
-
-%% \ccc{}'s verification was costly: while baseline \cc{} comprises 112K
-%% lines of Coq, they developed \emph{additional} 122K (109.1\% compared
-%% to the baseline) lines of Coq. What is worse is that majority of such
-%% overhead is caused not by metatheory but by \emph{re-implementation}
-%% of each language's semantics and each passes' proof (77K lines of Coq,
-%% 125.8\% compared to the corresponding baseline). This is indeed
-%% problematic because a compiler evolves over time (modifying, adding
-%% optimizations and sometimes adding a new source/target language) and
-%% keeping the development up-to-date is a significant overhead.
-
-%% \todo{
-%%   - our solutions:
-%%     + change semantics:
-%%       (1) essential: justified by calling convention.
-%%       (2) challenging: require new (nontrivial) semantics and proof techniques
-%%       (3) justify: upper bound.
-%%     + lightweight verification
-%%       (1) truly modular verification technique (in the setting of CompCert languages)
-%%           name: end-language contextual refinement (ELCR), local sim:
-%%           compcert refactor with local sim: 3.9\%
-%%           local sim => end-language contextual refinement.
-%%           compositionality of ELCR => correctness of multicomp
-%%       (2) supporting nondeterminism in CompCert
-%%           name: mixed simulation
-%%           compcert's limitation : determinism, relax mixed-simulation
-%%           nondeterminism is essential for our semantics
-%%           forward/backward.
-%%       (3) developing a verification technique for modular analysis.
-%%           name: ...
-%%           client can use it for zero overhead.
-%%    - contributions are:
-%%      ELCR
-%%      supporting nondeterminism in CompCert
-%%      analysis framework
-%%      sound interaction semantics
-%%      end-to-end lightweight verification of compcert supporting C and assembly
-%% }
-
-%% In this paper, we show that none of these shortcomings are essential.
-%% Our contributions are as follows.
-%% \begin{itemize}
-%%   \item We present the first general and sound multi-language semantics that supports C and assembly. %% for languages like C and assembly.
-%%   %% \item To this end, we develop a novel idea called \iptr{}.
-%%   \item We propose new desiderata for multi-language semantics, namely, being \lbound{} and \ubound{}, and proved it for proposed semantics.
-%%   \item We proved the whole latest \cc{} translations are sound under the proposed semantics.
-%%     %% extended the whole latest \cc{}'s proof to support the proposed semantics.
-%%   \item We developed proof techniques that let development lightweight and easily extensible.
-%%   \item We show how our semantics and proof technique can be used to reduce the trusted computing base of \cc{}.
-%% \end{itemize}
-
-%% : closed simulations with memory identity or extension are
-%% shown to be included in those with memory injection---it only holds
-%% due to the closedness---which are in turn shown to be closed under
-%% compositions---the proof is easy also due to the closedness.
-
-%% compiler correctness for \emph{multi-language programs}
-%% (\ie consisting of multiple modules written in different languages)
-
-%% \todo{Maybe simply drop this: For example,
-%%   constant-time implementations of crypto algorithms.  First,
-%%   low-level features that are missing in high-level languages, such as
-%%   direct access to hardware, are crucial for implementing software
-%%   like device drivers.  Second, to avoid side-channel attacks and to
-%%   achieve higher performance, it is widely used in the security domain
-%%   \todo{cite OpenSSL}.  Finally, code size is a critical factor in
-%%   embedded systems where the resource is highly
-%%   confined. \todo{memory? citation?}  }
-
-%% \ccx{} assumes that all the input modules (either in C or assembly)
-%% are verified against certain specifications, called \emph{Certified
-%%   Abstraction Layers (CALs)}, and proves that the compiled assembly
-%% modules also satisfy the same specifications.
-%% The restrictions imposed by the assumption, for
-%% example, include that modules should not mutually depend on each other
-%% mutually dependent modules (\ie modules using each other) are not allowed
-%% and every function should terminate.
-
-%% Since this assumption implies the assumption required for
-%% \emph{closed} simulations---the simple verification technique used by
-%% the original \cc{}---\ccx{} can use the same technique. More specifically,
-
-%% However, by taking advantage of the assumption, the verification of
-%% \ccx{} could be made essentially the same as verifying translations of
-%% \emph{closed} programs thereby mostly reusing the original proofs of
-%% \cc{}.
-
-%% In order to model interactions between modules written in different
-%% languages such as C, assembly and \cc{}'s intermediate languages, \ccc
-%% develops a logical semantics, called \emph{interaction semantics}.
-
-%% For this, \ccc{} defines a model
-%% for inter-operations between different languages, called
-%% \emph{interaction semantics}, which gives a sensible semantics to
-%% programs composed of C, assembly and even intermediate languages of
-%% \cc{}, and then proves that \ccc{} preserves the interaction
-%% semantics. However, to establish this more general result, it employs
-%% a more heavyweight technique thereby making the verification of \ccc{}
-%% much bigger(?). Moreover, \ccc{} does not show the soundness of the
-%% interaction semantics, and indeed ...
-
-%% ---via the register file and the function arguments area of the stack---
-%% shared resources that exist in assembly but not in C
+%% The three applications, \texttt{Unreadglob}, \texttt{mutual-sum} and
+%% verification of \texttt{utod}, show the flexibility of our framework:
+%% allowing arbitrary memory relations and mathematical specification
+%% modules. In particular, to the best of our knowledge, our work is the
+%% first verification, in the context of \cc{}, that reasons about module-local static
+%% variables with private invariants that can be modified across external function calls (due to
+%% mutual dependence between multiple modules) .
+Finally, a newly added optimization, \texttt{Unreadglob}, shows the flexibility of our framework:
+allowing arbitrary memory relations.
 
 
-%% First, \ccx{} uses a more lightweight verification technique but
-%% provides a less general verification result. To be more specific,
-%% \ccx{} reuses most of the original proofs of \cc{} since the
-%% underlying verification technique provides essentially the same
-%% reasoning principles as those used by \cc{}. However, to make this
-%% possible, \ccx{} makes an important assumption---namely that every
-%% input module, either in C or assembly, is \emph{verified} against a
-%% \emph{closed} module specification, called \emph{Certified Abstraction
-%%   Layer (CAL)}. In other words, the correctness of \ccx{} is valid
-%% only for those verified against CAL specifications and moreover, due
-%% to the closedness condition, the input modules cannot be mutually
-%% dependent. See \Cref{sec:?}  for more details.
-
-%% The \cc{} \cite{CompCert, Compcert-CACM} project, a monumental work in compiler verification research, has been successful in academia and also beginning to be adopted in the industry.
-%% \cc{} compiler translates a large subset of C into assembly, where the soundness of each translation is verified in Coq.
-%% As a verified compiler, it paved the way to formally reason \cite{CompCert-ERTS-2018} and verify \cite{appel:plcc} realistic C programs.
-%% Consequently, now it plays a central role in the end-to-end fully-verified system\footnote{https://deepspec.org/main}.
-%% Also, as a bug-free compiler\cite{le:emi}, it is adopted in safety-critical domains like avionics and nuclear plants \footnote{https://www.absint.com/compcert/index.htm}.
 
 
-%% However, \cc{}'s verification is restricted in several ways and extending \cc{} to overcome such restrictions is a significant research problem.
-%% For instance, \cc{}'s soundness theorem used to assume the input program is a \textit{whole program}.
-%% In other words, using \cc{} for verification projects effectively prohibited \textit{separate compilation}.
-%% Kang \etal{} \cite{kang:scc} extended \cc{} to address this problem, which also resulted in the discovery of a new bug.
 
+\section{Prior Work in Program Verification}\label{sec:overview:program}
+\todo{WRITE THIS SECTION}
+Hoare logic -- 지금 mutual sum도 Hoare style이라고 우길 수 있을 듯
+Separation Logic
+Future work: resource . pattern .
+\todo{Iris jfp 도 full functional, contextual refinement 지원한다고 써놓기는 했는데 이게 total weakestpre라서 invariant 못쓸거임}
 
-%% One of the essential extension remaining is to support program which uses both C and assembly.
-%% This extension is crucial for verifying a realistic system that uses handwritten assembly.
-%% %% A few of them are as follows.
-%% These assembly programs are often indispensable for a number of reasons.
-%% First, low-level features that are missing in high-level languages, such as direct access to hardware, are crucial for implementing software like device drivers.
-%% Second, to avoid side-channel attacks and to achieve higher performance, it is widely used in the security domain \todo{cite openSSL}. %openssl
-%% Finally, code size is a critical factor in embedded systems where the resource is highly confined. \todo{memory? citation?}
+\begin{itemize}
+\item \texttt{mutual-sum}: an example consisting of $(i)$ C and
+  handwritten assembly modules that mutually recursively compute
+  summation up to a given integer, performing memoization using
+  module-local static variables, and $(ii)$ correctness proofs
+  against their specification modules using open simulations with the
+  new memory relation, memory injection with module-local invariants;
+\item Verification of \texttt{utod}: providing a correctness proof
+  against its specification module using an open simulation,
+  %% with the original memory injection,
+  where \texttt{utod} is a handwritten
+  assembly function casting unsigned long to double, whose correctness
+  against its specification is axiomatized in \cc{} but not any more
+  in \ccm{}.
+  % (see \Cref{sec:utod-verification} for details).
+\end{itemize}
+\medskip
 
-%% The closest state-of-the-art towards this goal is \ccc{}(\cccfull\cite{stewart:ccc}).
-%% %% Beringer \etal{} suggested a general notion of multi-language semantics called \textit{interaction semantics}, which models a program written in possibly different languages as long as they share the same memory model \cite{beringer:isem}.
-%% \ccc{} is built on top of \textit{interaction semantics} \cite{beringer:isem} which models a program written in multiple languages, as long as they share the same memory model and implement a few protocols.
-%% A distinguishing feature of interaction semantics is that it is \textit{modular}; \ie{} one can add a new language by implementing protocols while completely ignoring other existing languages. %% outside world.
-%% %% By \textit{general}, we mean the semantics should give proper meaning to arbitrary input programs.
-%% %% \todo{why good? it is extensible.}
-%% \ccc{} instantiated it with \cc{} languages from Clight to assembly, and proved \cc{}'s translations are sound under the proposed semantics.
+\lipsum[1-2]
 
+\bigskip
+All our results are formalized in Coq, and it is available at: \[ \text{\url{https://sf.snu.ac.kr/compcertm}} \]
 
-%% %% There is a prior work towards this goal, namely \ccc{}(\cccfull\cite{stewart:ccc}), but severe shortcomings made it inadequate for production level usage.
-%% While \ccc{} is a magnificent pioneering work showing great potential on interaction semantics approach, severe shortcomings made it inadequate for production level usage.
-%% %% However, severe shortcomings made \ccc{} inadequate for production level usage.
-%% %% By \textit{general}, we mean it supports arbitrary input program, without imposing restrictions like prohibiting callback or stack allocated data.
-%% %% However, this generality was costly to achieve.
-%% First and foremost, their semantics is not sound, as it does not refine the actual behavior of a program when ran on a machine.
-%% %% Second, they failed to obtain truly modular development, which resulted in a re-implementation of \cc{} with significant effort
-%% %% Second, their development was costly
-%% Second, their development was not truly modular and therefore was costly
-%% : its SLOC is actually bigger than that of the vanilla \cc{}. %% its size is 105K SLOC, which is actually bigger than the vanilla \cc{} at the time, whose size is 100K SLOC.
-%% They re-defined each language's semantics (\textit{step} relation, exactly) into what is called \textit{effectful semantics}. %%For vertical compositionality,
-%% Also, they introduced a new memory relation called \textit{structured injection} which is much more sophisticated than the ones vanilla \cc{} was using, and re-proved each translation with it.
-%% %% As a consequence, their porting was very costly. %% which also resulted in incomplete development.
-%% Last but not least, their development is outdated for five years.
-%% Meanwhile, \cc{} underwent a number of nontrivial updates, including the addition of Unusedglob pass and value analysis, and it is unclear whether their technique will scale well.
-%% %% and it leaves an open question of porting these passes.
-%% %% and it is unclear whether their techniques will scale well with new features.
-
-%% ...
-%% 첫번째 문제는, 그들의 semantics가 sound하지 않다는 것이다.
-%% 그들은 자신들이 정의한 interaction semantics와 물리적 행동과의 관계를 증명 안했고, 실제로 둘의 행동이 다르다.
-%% 두번째 문제는, 개발이 costly 하다는 것이다.
-%% 그들의 proof technique은 flexible 하지 않아서, 기존 증명을 재활용하지 못하고 새롭게 복잡한 증명을 했어야 했다.
-%% 실제로 당시 \cc{}의 LOC는 109K LOC인데, 그들이 새로 짠 코드는 140K LOC이다.
-
-%% 우리는 이 문제들을 해결했다.
-%% 첫째로, semantics를 sound하게 수정했고 실제로, interaction semantics가 물리적 행동을 포섭한다는 명제 (LowerBound)를 서술하고 증명했다.
-%% verification 중에 크게 두가지 문제를 만났는데, 컴파일러가 임의의 assembly와의 linking을 지원하려면 본질적으로 발생하는 문제였다.
-%% 임의의 assembly는 잘못된 행동을 할 수 있고, 이걸 semantics가 정확히 포착해서 잘못된 행동을 주어야 하는데 그것이 어렵다.
-%% 우리는 UB, nondeterminism 등의 semantic technique들을 활용해서 이 문제를 해결했다.
-%% 둘쨰로, 우리는 기존 증명을 재사용할 수 있는 flexible한 증명 테크닉을 개발했고, 결과적으로 개발이 훨씬 lightweight하다.
-
-%% upper bound 어디?
-
-%%% Local Variables:
-%%% mode: latex
-%%% TeX-master: "main"
-%%% End:
+%% The remainder of the dissertation is structured as follows.
+%% We give a high-level overview of the main ideas in
+%% \Cref{sec:overview-verification}-\Cref{sec:overview-modulelocal};
+%% the main results of \ccm{} and an analysis of its development in \Cref{sec:results};
+%% its formal details in \Cref{sec:main-semantics}-\Cref{sec:main-verification};
+%% and a comparison to related work in \Cref{sec:related}.

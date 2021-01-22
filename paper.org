@@ -1,6 +1,11 @@
 * Overview
 ** CompCertX, CompComp 비교
 
+** TODO overview가 너무 짧은데 여기 쓸만한 내용이 뭐가 있나? Background인데 앞으로 빼면 좋은거
+** RUSC 파트는 next 700 생각하면 background 별로 없이 설명 가능해야 할 것 같음...
+** Prior Work on Compiler Verification
+** Prior Work on Program Verification
+*** step-indexing...
 
 * RUSC - Background (Verification Techniques)
 ** small-step semantics

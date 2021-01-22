@@ -1,0 +1,49 @@
+\section{Problems}
+\label{sec:rusc:problems}
+
+As discussed in the introduction, verification using structured
+simulations is significantly more costly than that using closed
+simulations.  The reasons are twofold.
+
+First, \revision{while closed simulations freely allow arbitrary memory relations---%
+therefore \cc{} uses three different kinds of memory relations to simply proofs---%
+%% ---thereby \cc{} uses three relations, \emph{memory identity, extension and injection}---
+structured simulations only allow a single type of memory relations
+called \emph{structured injections} due to horizontal compositionality.}
+%
+The reason is that, as discussed above,
+%% in the background section,
+allowing different memory relations would introduce
+different rely/guarantee conditions
+thereby breaking simulation after linking (\ie horizontal
+compositionality) due to the mismatch between different rely/guarantee
+conditions.
+%% To see the reason, recall that, as we have seen in the
+%% background section, the rely/guarantee conditions are determined by the
+%% memory (and value) relations and the same rely/guarantee conditions
+%% should be used globally to preserve simulations after linking
+%% modules (\ie to prove horizontal compositionality).
+%% Therefore allowing different memory relations for verifying
+%% different modules would be problematic for proving horizontal
+%% compositionality together with adequacy.
+
+\revision{Second,
+%% the notion of structured injection of \ccc{} is more complex than that of
+%% \emph{memory injection} of \cc{} and, as far as we understand, such
+%% complexity is needed for vertical compositionality.
+%% It is well known that
+proving vertical compositionality for \emph{open} simulations is in general
+very technical and involved~\cite{ICFP19,neis:pilsner}. Indeed the
+proof for structured simulations is about 5,000 SLOC in Coq.
+Moreover, vertical compositionality also introduces unnecessary complexities
+in structured simulations of \ccc{} such as \emph{effect annotations}
+and \emph{closedness under restriction} \cite{stewart:ccc}.}
+%% which makes correctness proofs of compiler passes more involved
+%% (see \Cref{sec:overview-verification:injection} for discussion).}
+
+To sum up, although it is quite straightforward to prove horizontal
+compositionality and adequacy for a single relation (\ie with the same
+rely/guarantee conditions), it is challenging to prove $(i)$ vertical
+compositionality even for a single relation and $(ii)$ horizontal
+compositionality between different relations (\ie with different
+rely/guarantee conditions).
