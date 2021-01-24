@@ -338,8 +338,86 @@ allowing arbitrary memory relations.
 
 
 \section{Prior Work in Program Verification}\label{sec:overview:program}
+
+
+%% Since its origination in 1960s,
+Hoare logic has shown great success and modularity is at the heart of it success.
+In Hoare logic, for a given program $prog$, verifier tries to establish the following formula $\hoare{P}{prog}{Q}$.
+This is called {\it Hoare triple} and means that if the $prog$ starts in a state satisfying the {\it precondition} $P$,
+its returning state should satisfy the {\it postcondition} $Q$. Then, the following {\it sequence} (or sequential composition) rule is sound.
+
+\[
+\infer
+    {\hoare{P}{c_{0} ; c_{1}}{R}}
+    {\deduce{\hoare{P}{c_{0}}{Q} \;\;\;\;\;\; \hoare{Q}{c_{1}}{R}}
+      {\textsc{(Sequence)}}}
+    %% {\deduce{\viewshift{Q'}{Q''}}
+    %%   {\deduce{\viewshift{Q}{Q'}}
+    %%     {\deduce{\textsc{(Trans)}\phantom{aa}}{\phantom{a}}}}}
+\]
+
+\noindent Thanks to this sequence rule, the verifier can modularly verify each instruction of the program and then compose them to establish whole program correctness.
+\todo{probably need to say sth about while rule}
+
+
+
+However, Hoare logic also has few drawbacks.
+First, it has poor support for termination proof.
+Most variants of Hoare logic proves only the {\it partial correctness} which guarantees the postcondition {\it if} the program terminates (returns), but it does not say anything about termination.
+Therefore, for {\it total correctness}, which guarantees both the postcondition and termination, one usually proves termination separately using another tool.
+There are also some variants of Hoare logic which proves total correctness, but it is too stringent to be realistic. Consider the verification of library code where clients are unknown.
+Using total Hoare logic here will rule out potential non-terminating clients (e.g., operating system).
+Second, \todo{whole-program verif} it mandates all the modules to be verified with same Hoare logic...
+Third, \todo{gradual abstraction} ...
+
+
+
+%%% plcc 120p
+%%% VC 40p
+Modern higher-order variants of Hoare logic\cite{VST, appel:plcc} also supports yet another modular reasoning principle, but justifying it accompanies much complexity and it only works for partial correctness.
+\[
+\infer
+    %% {\hoare{P_{f}}{f}{Q_{f}} \;\;\;\;\;\;\; \hoare{P_{g}}{g}{Q_{g}}}
+    %% {\infer
+    %%   {\hoare{P_{g}}{g}{Q_{g}}}
+    %%   {\hoare{P_{f}}{f}{Q_{f}}}
+    %%   \;\;\;\;\;\;
+    %%  \infer
+    %%   {\hoare{P_{f}}{f}{Q_{f}}}
+    %%   {\hoare{P_{g}}{g}{Q_{g}}}}
+    {\deduce{\hoare{P_{g}}{g}{Q_{g}}}{\hoare{P_{f}}{f}{Q_{f}}}}
+    {\deduce{\hoare{P_{f}}{f}{Q_{f}} \implies \hoare{P_{g}}{g}{Q_{g}}}
+            {\hoare{P_{g}}{g}{Q_{g}} \implies \hoare{P_{f}}{f}{Q_{f}}}
+    }
+    %% {\deduce{(\hoare{P_{f}}{f}{Q_{f}} \land \hoare{P_{g}}{g}{Q_{g}}) \implies \hoare{P_{g}}{g}{Q_{g}}}
+    %%         {(\hoare{P_{f}}{f}{Q_{f}} \land \hoare{P_{g}}{g}{Q_{g}}) \implies \hoare{P_{f}}{f}{Q_{f}}}
+    %% }
+\]
+
+\noindent When verifying two mutually recursive functions $f$ and $g$, this reasoning principle allows one to verify $f$ assuming the specification of $g$ and vice versa.
+The principle is seemingly unsound because it is a circular reasoning, but (with a little fix \todo{is this fix essential?}) it is indeed sound. %%because we are proving only the partial correctness.
+In order to justify the principle, a technique called {\it step-index} is employed.
+With this, it is sufficient to verify that $f$'s specification holds until $k+1$ steps assuming the specification of $g$ holds until $k$ steps and vice versa.
+Then, by using induction on the step-index $k$, one can show that $f$ and $g$'s specifications hold for any finite number of steps, which is sufficient for proving partial correctness.
+\footnote{Actually, the principle is unsound for total correctness. For an instance, given $f \defeq g()$ and $g \defeq f()$, one would be able to prove \hoare{True}{f}{r . r = 42} and \hoare{True}{g}{r . r = 42}.
+  These triples mean $f$ and $g$ terminates with return value $42$, and these are wrong. }
+\todo{step-index complicates underlying model, spec is very hard to understand, etc...}
+
+
+
+\todo{We don't have such drawbacks - total correctness, don't mandate user, no complexity from step-index, gradual abstraction, ... }
+
+\todo{contributions - itemize}
+
+\todo{future works: separation logic is good (resource algebra) - and pattern/automation}
+
+
+
+\includegraphics[width=1\linewidth]{fig-program-verif.png}
+
 \todo{WRITE THIS SECTION}
-Hoare logic -- 지금 mutual sum도 Hoare style이라고 우길 수 있을 듯
+
+variant separation logic, -- 지금 mutual sum도 Hoare style이라고 우길 수 있을 듯
 Separation Logic
 Future work: resource . pattern .
 \todo{Iris jfp 도 full functional, contextual refinement 지원한다고 써놓기는 했는데 이게 total weakestpre라서 invariant 못쓸거임}
