@@ -377,23 +377,23 @@ Modern higher-order variants of Hoare logic\cite{VST,appel:plcc} supports anothe
     %%  \infer
     %%   {\hoare{P_{f}}{f}{Q_{f}}}
     %%   {\hoare{P_{g}}{g}{Q_{g}}}}
-    {\deduce{\hoare{P_{g}}{g}{Q_{g}}}{\hoare{P_{f}}{f}{Q_{f}}}}
-    {\deduce{\hoare{P_{f}}{f}{Q_{f}} \implies \hoare{P_{g}}{g}{Q_{g}}}
-            {\hoare{P_{g}}{g}{Q_{g}} \implies \hoare{P_{f}}{f}{Q_{f}}}
+    {\deduce{\hoare{P_{g}}{\code{g}}{Q_{g}}}{\hoare{P_{f}}{\code{f}}{Q_{f}}}}
+    {\deduce{\hoare{P_{f}}{\code{f}}{Q_{f}} \implies \hoare{P_{g}}{\code{g}}{Q_{g}}}
+            {\hoare{P_{g}}{\code{g}}{Q_{g}} \implies \hoare{P_{f}}{\code{f}}{Q_{f}}}
     }
     %% {\deduce{(\hoare{P_{f}}{f}{Q_{f}} \land \hoare{P_{g}}{g}{Q_{g}}) \implies \hoare{P_{g}}{g}{Q_{g}}}
     %%         {(\hoare{P_{f}}{f}{Q_{f}} \land \hoare{P_{g}}{g}{Q_{g}}) \implies \hoare{P_{f}}{f}{Q_{f}}}
     %% }
 \]
 
-\noindent When verifying two mutually recursive functions $f$ and $g$, this reasoning principle allows one to verify $f$ assuming the specification of $g$ and vice versa.
-The principle is seemingly unsound because it is a circular reasoning, but (with a little fix %% \todo{is this fix essential?}
+\noindent When verifying two mutually recursive functions \code{f} and \code{g}, this reasoning principle allows one to verify \code{f} assuming the specification of \code{g} and vice versa.
+The principle is seemingly unsound because it is a circular reasoning, but (with a little fix%% \todo{is this fix essential?}
 ) it is indeed sound. %%because we are proving only the partial correctness.
 In order to justify the principle, a technique called {\it step-index} is employed.
-With this, it is sufficient to verify that $f$'s specification holds until $k+1$ steps assuming the specification of $g$ holds until $k$ steps and vice versa.
+With this, it is sufficient to verify that \code{f}'s specification holds until $k+1$ steps assuming the specification of \code{g} holds until $k$ steps and vice versa.
 Then, by using induction on the step-index $k$, one can show that $f$ and $g$'s specifications hold for any finite number of steps, which is sufficient because Hoare triple requires only the {\it partial correctness}.
-\footnote{Actually, the principle is unsound for total correctness. For an instance, given $f \defeq g()$ and $g \defeq f()$, one would be able to prove \hoare{True}{f}{r . r = 42} and \hoare{True}{g}{r . r = 42}.
-  These triples mean $f$ and $g$ terminates with return value $42$, and these are wrong. }
+\footnote{Actually, the principle is unsound for total correctness. For an instance, given $\code{f} \defeq \code{g()}$ and $\code{g} \defeq \code{f()}$, one would be able to prove \hoare{True}{\code{f}}{r . r = 42} and \hoare{True}{\code{g}}{r . r = 42}.
+  These triples mean \code{f} and \code{g} terminates with return value $42$, and these are wrong. }
 Partial correctness means that Hoare triple guarantees postcondition {\it if} it happens to terminate and does not say anything about termination itself.
 
 
@@ -416,7 +416,7 @@ Moreover, consider verification of an web server or an operating system; it is n
 Our approach supports modular reasoning principle in the presence of mutual recursion, but does not suffer from aforementioned drawbacks.
 %% Now, we will explain what our approach is
 First, we write its specification as a {\it module}, not in C but in abstract mathematical state transition system. %%simpler, abstract
-For an instance, if we have a C module computing Fibonacci number employing dynamic programming technique, its specification module directly returns $Fib(n)$ for an argument $n$ where $Fib$ is a Gallina function.
+For an instance, if we have a C module computing Fibonacci number employing dynamic programming technique, its specification module directly returns $\mathrm{Fib}(\code{n})$ for an argument \code{n} where $\mathrm{Fib}$ is a Gallina function.
 Then, each implementation module (written in C or assembly) is verified against its specification module using open simulations, thus implying RUSC relation.
 The key challenge here is: How to utilize the specifications of other modules even though what we are proving is RUSC, which quantifies over an arbitrary context.
 Our key idea is that, instead of directly assuming the specifications of other modules, we carefully write the specification module to give an illusion as if we are assuming them.
