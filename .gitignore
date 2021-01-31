@@ -1,5 +1,4 @@
 *.out
-*.pdf
 *.aux
 *.bbl
 *.blg
@@ -9,6 +8,6 @@
 *.toc
 *.pyg
 
-*.pdf
+main.pdf
 
 *.swp
