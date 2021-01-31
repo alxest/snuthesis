@@ -29,7 +29,10 @@ dependence and be verified against certain well-behaved
 specifications. On the other hand, the latter develops a new
 verification technique that directly solves the problem but at the
 expense of significantly increasing the verification cost.
-For program verification, higher-order separation logic has shown great success, but it only proves partial correctness and does not support gradual abstraction.
+For program verification, higher-order separation logic has shown great success, but it also has shortcomings:
+its underlying model (and thus soundness result) is esoteric, it proves partial correctness instead of total correctness,
+and its soundness theorem is applicable only when the whole program is verified with the same logic.
+%does not support gradual abstraction.
 
 
 
@@ -45,12 +48,16 @@ both compiler verification (\Cref{sec:compiler}) and program verification (\Cref
 Specifically, we develop CompCertM, a full
 extension of the latest version of CompCert supporting multi-language
 linking, and show how RUSC enables modular compiler verification without any restrictions but still with low verification overhead.
-Moreover, we demonstrate the power of RUSC as a program
-verification technique by modularly verifying interesting programs
-consisting of C and handwritten assembly against their mathematical
-specifications. Compared to higher-order separation logic, our approach
-supports full functional correctness and allows gradual abstraction, but its verification overhead is relatively high.
-We leave it as a future work to adopt the core ideas and automations from higher-order separation logic.
+Moreover, we verify interesting programs using RUSC as a program verification technique, and demonstrate that it does not suffer from aforementioned drawbacks of higher-order separation logic.
+Although the results are promising, RUSC as a program verification technique is still on its early stage and we discuss future research directions.
+%% Moreover, we demonstrate the power of RUSC as a program
+%% verification technique by modularly verifying interesting programs
+%% consisting of C and handwritten assembly against their mathematical
+%% specifications.
+%% Compared to higher-order separation logic, our approach does not suffer from aforementioned drawbacks, but 
+%%% %has clearer specification, supports full functional correctness, and allows gradual abstraction,
+%% but its verification overhead is relatively high.
+%%We leave it as future work to adopt the core ideas and automation from higher-order separation logic to lower the verification overhead.
 
 %% \paragraph{\Cref{sec:rusc}: RUSC theory}
 %% \paragraph{\Cref{sec:compiler}: Compiler Verification: CompCertM}
@@ -58,7 +65,7 @@ We leave it as a future work to adopt the core ideas and automations from higher
 
 This dissertation draws heavily on the work and writing in the following paper: \cite{song:compcertm}
 
-\section{Prior Work in Compiler Verification}\label{sec:overview:compiler}
+\section{Compiler Verification}\label{sec:overview:compiler}
 \cc{} \cite{CompCert, Compcert-CACM}, the first \emph{verified}
 \emph{optimizing} compiler for \emph{the C programming language}, has
 served as a backend in end-to-end verified
@@ -208,11 +215,8 @@ except on the return address) between assembly modules.
 %
 In this dissertation, we develop a new framework achieving both the
 flexibility of \ccx{} and the generality of \ccc{}.  We demonstrate
-its power as a compiler verification framework by applying it to \cc{}
-but also as a program verification framework with interesting
-examples, for which we write mathematical specifications as abstract
-modules in interaction semantics and prove refinement between the
-examples and their specification modules.  Specifically, we develop:
+its power as a compiler verification framework by applying it to \cc{}.
+Specifically, we develop:
 \begin{itemize}
 \item Open (Mixed) Simulations: a simpler version of structured simulations,
   $(i)$ allowing arbitrary memory relations including memory identity, extension and injection,
@@ -337,11 +341,14 @@ allowing arbitrary memory relations.
 
 
 
-\section{Prior Work in Program Verification}\label{sec:overview:program}
+\section{Program Verification}\label{sec:overview:program}
+
+
+\todo{what is program verification? compare it with compiler verification}
 
 
 %% Since its origination in 1960s,
-Hoare logic has shown great success and modularity is at the heart of it success.
+Since its origination in 1960s, Hoare logic has shown great success as a program verification technique and modularity is at the heart of it success.
 In Hoare logic, for a given program $prog$, verifier tries to establish the following formula $\hoare{P}{prog}{Q}$.
 This is called {\it Hoare triple} and means that if the $prog$ starts in a state satisfying the {\it precondition} $P$,
 its returning state should satisfy the {\it postcondition} $Q$.
@@ -402,7 +409,8 @@ Partial correctness means that Hoare triple guarantees postcondition {\it if} it
 However, Hoare logic also has few drawbacks.
 First, step-index complicates the underlying model, and this in turn makes soundness result (or even the meaning of a Hoare triple) esoteric.
 Second, it has poor support for termination proof.
-Most variants of Hoare logic proves only the partial correctness.\footnote{\todo{Iris jfp 도 full functional, contextual refinement 지원한다고 써놓기는 했는데 이게 total weakestpre라서 invariant 못쓸거임}}
+Most variants of Hoare logic proves only the partial correctness.
+%% \footnote{\cite{jung:irisjfp} \todo{Iris jfp 도 full functional, contextual refinement 지원한다고 써놓기는 했는데 이게 total weakestpre라서 invariant 못쓸거임}}
 Thus, for proving {\it total correctness}, which guarantees both the postcondition and termination, one usually proves termination separately using another tool.
 \footnote{There are also some variants of Hoare logic which proves total correctness, but it is too stringent to be realistic. Consider the verification of library code where clients are unknown.
 Using total Hoare logic here will rule out potential non-terminating clients (e.g., web server).}
@@ -415,11 +423,11 @@ Moreover, consider verification of an web server or an operating system; it is n
 
 Our approach supports modular reasoning principle in the presence of mutual recursion, but does not suffer from aforementioned drawbacks.
 %% Now, we will explain what our approach is
-First, we write its specification as a {\it module}, not in C but in abstract mathematical state transition system. %%simpler, abstract
+First, we write a specification as a {\it module}, not in C but in abstract mathematical state transition system. %%simpler, abstract
 For an instance, if we have a C module computing Fibonacci number employing dynamic programming technique, its specification module directly returns $\mathrm{Fib}(\code{n})$ for an argument \code{n} where $\mathrm{Fib}$ is a Gallina function.
 Then, each implementation module (written in C or assembly) is verified against its specification module using open simulations, thus implying RUSC relation.
-The key challenge here is: How to utilize the specifications of other modules even though what we are proving is RUSC, which quantifies over an arbitrary context.
-Our key idea is that, instead of directly assuming the specifications of other modules, we carefully write the specification module to give an illusion as if we are assuming them.
+The challenge here is: How to utilize the specifications of other modules even though what we are proving is RUSC, which quantifies over an arbitrary context?
+Our key idea is that, instead of directly assuming the specifications of other modules, we carefully write each specification module to give an illusion as if we are assuming specifications of other modules.
 Specifically, in $f_{spec}$, it calls $g$ and then check if $g$ returns the expected value. If so, it will proceed, but if not, it will trigger UB.
 As a result, when verifying $f_{spec} \rusc_\rels f_{impl}$ one needs to proceed the simulation proof only when $g$ behaves as expected, because otherwise the proof is trivial.
 Finally, after each module's verification is over, we can {\it merge} these modules to form $fg_{spec}$ and remove the potential source of UB.
@@ -432,8 +440,13 @@ Second, we trivially support total correctness because the notion of behavior is
 Third, we don't impose any restrictions on the client module because RUSC quantifies over an arbitrary context.
 
 
-\todo{write something}
-We have formalized our idea with the following examples:
+%% We have formalized our idea with the following examples:
+
+We demonstrate RUSC's power as a program verification framework with interesting
+examples, for which we write mathematical specifications as abstract
+modules in interaction semantics and prove refinement between the
+examples and their specification modules.  Specifically, we develop:
+%% We have applied our idea to verify the following examples:
 \begin{itemize}
 \item Verification of \texttt{utod}: providing a correctness proof
   against its specification module using an open simulation,
@@ -452,12 +465,26 @@ We have formalized our idea with the following examples:
 \end{itemize}
 \medskip
 
+Although the results are promising, RUSC as a program verification technique is still on its early stage and we will discuss future research directions in \todo{\ref{TODO}}.
+%% First, we extend
+%% The most advanced variants of Hoare logic today are ``higher-order concurrent separation logic''.
+%% As the name implies,
+%% As discussed above, using RUSC as a program verification technique shows promising results but its verification overhead is relatively high.
+%% As discussed above, using RUSC as a program verification technique shows promising results but further research is needed to lower the verification overhead.
+%% Specifically, modern extension of 
+%% The reason is twofold. First, unlike compiler verification, program verification needs 
+
+%Despite the promising results, verification overhead of our approach is relatively high, so further research is needed. %to lower the verification overhead.
+%%% program verification 에서만 문제가 있고 compiler verification 과는 다르다는 것을 좀 더 이야기해야 함
+
+
+
 
 %% variant separation logic, -- 지금 mutual sum도 Hoare style이라고 우길 수 있을 듯
 %% Separation Logic
 %% Future work: resource . pattern .
 %% \todo{}
-\todo{future works: separation logic is good (resource algebra) - and pattern/automation}
+%% \todo{future works: separation logic is good (resource algebra) - and pattern/automation}
 
 \bigskip
 All our results are formalized in Coq, and it is available at: \[ \text{\url{https://sf.snu.ac.kr/compcertm}} \]
