@@ -1,2 +1,23 @@
 \section{Problems}
 \label{sec:compiler:problems}
+
+The problems with the interaction semantics of \ccc{} are that it does
+not satisfy two adequacy properties. First, the adequacy w.r.t. C says
+that for any C modules $M_1,\ldots,M_n$, the behaviors of the linked
+program according to interaction semantics $\beh{M_1 \llink
+  \ldots \llink M_n}$ should \emph{be included in} those according to the
+physical semantics $\beh{M_1 \plink \ldots\plink M_n}$.  The reason for
+failure was quite simple and we could easily fix it: unlike \ccc{}, we allow passing
+the \texttt{undef} value to an external module since the C semantics
+does so, while we turn ill-typed values into \texttt{undef} when they
+are passed to an external module.
+
+Second, the failure of the adequacy w.r.t. assembly is more serious.
+Adequacy says that for any assembly modules $M_1,\ldots,M_n$,
+the behaviors of the linked program according to interaction
+semantics $\beh{M_1 \llink \ldots \llink M_n}$ should \emph{include}
+those according to the physical semantics $\beh{M_1 \plink \ldots\plink M_n}$.
+Note that the direction is opposite since assembly is the target language.
+As discussed before, the reason for failure is that
+the interaction semantics of \ccc{} does not have a mechanism to detect
+illegal interference and make it undefined behavior~(UB).
