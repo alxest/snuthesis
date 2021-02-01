@@ -1,3 +1,21 @@
+내용 추가할만한 것들 
+- utod figure
+- parameter instances, 직관 더 설명
+- future works for program verif
+- 리뷰 읽고 거기 답했던거 중에 건질거 있나 보자  
+  + Also, all the reviewers agree that if one is not already an expert on the nuances of CompCert specifications, this paper is very difficult to follow.
+- dummy stack
+- Ctyping?
+- 피규어 더 찢고 확대
+
+TODO: broken reference 고치기
+TODO: 맞춤법 한번 싹 돌리기
+
+
+
+
+
+
 * Overview
 ** CompCertX, CompComp 비교
 
