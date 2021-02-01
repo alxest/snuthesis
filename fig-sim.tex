@@ -2,8 +2,9 @@
 \footnotesize
 
 \vspace*{-20mm}
-\begin{minipage}[t][0.98\textheight]{\linewidth}
-\begin{minipage}{\linewidth}
+\makebox[\linewidth]{\makebox[1.2\linewidth]{
+\begin{minipage}[t][0.98\textheight]{1.2\linewidth}
+\begin{minipage}{1.2\linewidth}
 \mytitle{sim:states}\\
 $
   \begin{stackTL}
@@ -34,7 +35,7 @@ $
 
 
 
-\begin{minipage}{1\linewidth}
+\begin{minipage}{1.2\linewidth}
 \mytitle{sim:modsem}\\
 $
   \begin{stackTL}
@@ -86,7 +87,7 @@ $
 
 
 \vspace{1mm}
-\begin{minipage}{1\linewidth}
+\begin{minipage}{1.2\linewidth}
 \mytitle{preservation}\\
 $
 \begin{stackTL}
@@ -118,6 +119,7 @@ $
 \caption{Parameterized Open Simulations}
 \label{fig:full-sim}
 \end{minipage}
+}}
 \\
 \\
 \\
