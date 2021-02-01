@@ -17,53 +17,6 @@ mathematical specification modules (\Cref{sec:overview-modulelocal:program} and 
 first, in the context of \cc{}, that is capable of verifying
 the \emph{mutually recursive} example presented in \Cref{sec:overview-modulelocal:program}.}
 
-\section{Advanced Optimizations with Module-Local Invariants}
-\label{sec:overview-modulelocal:compiler}
-
-\begin{figure}[t]
-\begin{Verbatim}
-static int x = 0;       static int x = 0;                   |  static int y = 0;
-int f() {               int f() {              int f() {    |  void g() {
-  g();           [CP]     g();          [UG]     g();       |    if (y == 0) {
-  x = 1;        ----->    x = 1;       ----->               |      y = 1; f();
-  return x;               return 1;              return 1;  |    }
-}                       }                      }            |  }
-\end{Verbatim}  
-\caption{An example of \texttt{Unreadglob} optimization}
-\label{fig:overview-modulelocal:compiler}
-\end{figure}
-
-We developed a new optimization \texttt{Unreadglob} eliminating all
-unread static variables and instructions writing to them.
-\Cref{fig:overview-modulelocal:compiler} shows an example
-optimization, where $(i)$ the first program is optimized to the second
-one by constant propagation~(CP) replacing \texttt{return x} by
-\texttt{return 1}; and $(ii)$ the second one is optimized to the third
-one by \texttt{Unreadglob}~(UG) eliminating the unread static variable
-\texttt{x} and the command \texttt{x = 1}.  It is important to note
-that across the function call \texttt{g()}, the static variable
-\texttt{x} may be updated from \texttt{0} to \texttt{1} because the
-function \texttt{g} can indirectly update it by calling \texttt{f} as shown in
-the fourth program in \Cref{fig:overview-modulelocal:compiler}.
-
-\revision{In verification of the optimization \texttt{UG} above,
-we have to use memory injections $w$ with module-local invariants
-introduced in \Cref{sec:overview-verification:injection:static}.
-The reason is that the static variable \texttt{x} in the source cannot reside
-$(i)$ in the injection map $w.\iota$ since \texttt{x} does not exist in the target; or
-$(ii)$ in the source private $w.m^\weak_\src$ since \texttt{x} can be modified
-during the external call \texttt{g()}.
-To verify \texttt{UG} above, we can impose the trivial invariant
-\texttt{Top} on the eliminated static variable \texttt{x}, meaning
-that \texttt{x} can be modified arbitrarily, which is sufficient
-because \texttt{x} is unread.}
-
-Note that \ccx{} may be
-able to verify \texttt{Unreadglob} using memory injections because it
-assumes no mutual dependency among modules, so that no static
-variables can be accessed via external function calls, unlike the above
-example with mutual recursion.
-
 %% one has to assume that the static variable \texttt{x} resides in a private area
 %% of the memory since it does not exist in the optimized code.
 %% However, since the memory
