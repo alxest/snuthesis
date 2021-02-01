@@ -176,18 +176,30 @@ the same separate compilation correctness result of \scc{}~\cite{kang:scc}:
 
 \parbox{\linewidth}{
 \caption{SLOC of \ccm{} and related works --- compared to its baseline \cc{}, respectively}
-\begin{tabu}{@{}l@{\hspace{1.55pt}}|[1.25pt]@{\hspace{1.55pt}} r @{\hspace{1.55pt}}|@{\hspace{1.55pt}} r @{\hspace{1.55pt}}|@{\hspace{1.55pt}} r @{\hspace{1.55pt}}|[1.25pt]@{\hspace{1.55pt}} r @{\hspace{1.55pt}}|@{\hspace{1.55pt}} r @{\hspace{1.55pt}}|[1.25pt]@{\hspace{1.55pt}} r @{\hspace{1.55pt}}|@{\hspace{1.55pt}} r @{}}
-Portion     & \shortstack{\cc{} \\ 3.5} & \ccr{} 3.5        & \ccm{} pack                                               & \shortstack{\cc{}\\ 2.1} & \ccc{}                             & \shortstack{\cc{} \\ 3.0} & \ccx{}             \\
+\begin{tabu}{@{}l@{\hspace{1.55pt}}|[1.25pt]@{\hspace{1.55pt}} c @{\hspace{1.55pt}}|@{\hspace{1.55pt}} c @{\hspace{1.55pt}}|@{\hspace{1.55pt}} c @{\hspace{1.55pt}}|[1.25pt]@{\hspace{1.55pt}} c @{\hspace{1.55pt}}|@{\hspace{1.55pt}} c @{\hspace{1.55pt}}|[1.25pt]@{\hspace{1.55pt}}}
+Portion     & \shortstack{\cc{} \\ 3.5} & \ccr{} 3.5        & \ccm{} pack                                               & \shortstack{\cc{}\\ 2.1} & \ccc{} \\
 \hline
-Pass Proofs & 34,376    & 35,893 (+4.41\%)  & \newrevision{4,923(+14.32\%)}                                          & 21,215    & 52,140 (+145.77\%)  & 26,466    & 30,572 (+15.51\%)  \\
-The Rest    & 85,617    & 87,965 (+2.74\%)  & \newrevision{25,558(+29.85\%)}  & 59,365    & 107,910 \hspace{.6mm} (+81.77\%)                 & 82,312    & 121,532 (+47.65\%) \\
-Total       & 119,993   & 123,858 (+3.22\%) & \newrevision{30,481(+25.40\%)}                                         & 80,580    & 160,050 \hspace{.6mm} (+98.62\%)                 & 108,778   & 152,104 (+39.83\%) \\
+Pass Proofs & 34,376    & 35,893 (+4.41\%)  & \newrevision{4,923(+14.32\%)}                                          & 21,215    & 52,140 (+145.77\%) \\
+The Rest    & 85,617    & 87,965 (+2.74\%)  & \newrevision{25,558(+29.85\%)}  & 59,365    & 107,910 \hspace{.6mm} (+81.77\%) \\
+Total       & 119,993   & 123,858 (+3.22\%) & \newrevision{30,481(+25.40\%)}                                         & 80,580    & 160,050 \hspace{.6mm} (+98.62\%) \\
+\end{tabu}
+\\
+\begin{tabu}{@{}l@{\hspace{1.55pt}}|[1.25pt]@{\hspace{1.55pt}} c @{\hspace{1.55pt}}|@{\hspace{1.55pt}} c @{\hspace{1.55pt}}|[1.25pt]@{\hspace{1.55pt}}}
+Portion     & \shortstack{\cc{} \\ 3.0} & \ccx{}             \\
+\hline
+Pass Proofs & 26,466    & 30,572 (+15.51\%)  \\
+The Rest    & 82,312    & 121,532 (+47.65\%) \\
+Total       & 108,778   & 152,104 (+39.83\%) \\
 \end{tabu}
 \label{table:evaluation-ours}
 }
+
+%% \parbox{\linewidth}{
+%% \label{table:evaluation-ours}
+%% }
     
 \parbox{0.38\linewidth}{
-\vspace{1mm}
+\vspace{4mm}
 \caption{\mbox{Breakdown of \ccm{} pack}}
 \begin{tabu}{@{}l | l@{}}
 Portion                          & SLOC                                                                                                     \\
@@ -204,15 +216,22 @@ Adequacy w.r.t. Asm              & 2,890                                        
 \label{table:evaluation-breakdown}
 }
 \hfill
-\parbox{0.59\linewidth}{
-\vspace{1mm}
+\parbox{0.45\linewidth}{
+\vspace{4mm}
 \caption{SLOC of additional developments}
+%% \begin{tabu}{@{}l @{\;} |[1.25pt] @{\;} r @{\;} | @{\;} r @{\;} | @{\;} r @{\;} | @{\;} r @{\;} | @{\;} r @{}}
+%% Portion                          & \shortstack{\texttt{Unreadglob} \\ 3.5} & \shortstack{\texttt{Unreadglob} \\ pack} & \texttt{mutual-sum} & \texttt{utod} & \shortstack{Adequacy \\ w.r.t. C} \\
+%% \hline
+%% Pass Proofs                      & 1,842                   & 338                      & 3,088               & 361           & -             \\
+%% The Rest                         & 260                     & 1,933                    & 2,707               & 424           & 4,044         \\
+%% Total                            & 2,102                   & 2,271                    & 5,795               & 785           & 4,044         \\
+%% \end{tabu}
 \begin{tabu}{@{}l @{\;} |[1.25pt] @{\;} r @{\;} | @{\;} r @{\;} | @{\;} r @{\;} | @{\;} r @{\;} | @{\;} r @{}}
-Portion                          & \shortstack{\texttt{Unreadglob} \\ 3.5} & \shortstack{\texttt{Unreadglob} \\ pack} & \texttt{mutual-sum} & \texttt{utod} & \shortstack{Adequacy \\ w.r.t. C} \\
+Portion                          & \shortstack{\texttt{Unreadglob} \\ 3.5} & \shortstack{\texttt{Unreadglob} \\ pack} & \shortstack{Adequacy \\ w.r.t. C} \\
 \hline
-Pass Proofs                      & 1,842                   & 338                      & 3,088               & 361           & -             \\
-The Rest                         & 260                     & 1,933                    & 2,707               & 424           & 4,044         \\
-Total                            & 2,102                   & 2,271                    & 5,795               & 785           & 4,044         \\
+Pass Proofs                      & 1,842                   & 338                      & -             \\
+The Rest                         & 260                     & 1,933                    & 4,044         \\
+Total                            & 2,102                   & 2,271                    & 4,044         \\
 \end{tabu}
 \label{table:evaluation-others}
 }%
