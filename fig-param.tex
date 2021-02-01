@@ -1,7 +1,8 @@
 \begin{figure}[t!]
 \footnotesize
 
-\begin{minipage}{1\linewidth}
+\makebox[\linewidth]{\makebox[1.2\linewidth]{
+\begin{minipage}{1.2\linewidth}
   \mytitle{memory relation}\\
 $
   %% \[
@@ -73,8 +74,10 @@ $
 %% \youngju{\texttt{vrel} should be $\MREL{}$.\texttt{vrel}. (1) change? note that Former (and overview) is textrm but latter is texttt (2) specify $\MREL{}$ only when it is confusing (e.g. \ty)}
 \\
 \end{minipage}%
+}}
 \\
-\begin{minipage}{1\linewidth}
+\makebox[\linewidth]{\makebox[1.2\linewidth]{
+\begin{minipage}{1.2\linewidth}
   \mytitle{symbol relation}\\
 $
   \begin{stackTL}
@@ -123,8 +126,10 @@ $
   \end{stackTL}
 $
 \end{minipage}%
+}}
 \\
-\begin{minipage}{1\linewidth}
+\makebox[\linewidth]{\makebox[1.2\linewidth]{
+\begin{minipage}{1.2\linewidth}
   \mytitle{memory predicate}\\
 $
   \begin{stackTL}
@@ -159,6 +164,7 @@ $
 %% \youngju{지금 2번쨰줄 아래가 짤리는데 왜인지 모르겠습니다}\\
 %% \youngju{pred 대신 prd?}\\
 \end{minipage}
+}}
 
 \caption{Three parameters for open simulations}
 \label{fig:simulation-parameters}
