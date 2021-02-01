@@ -93,6 +93,7 @@ directly updated to \texttt{1}. Therefore, it makes sense to
 define those illegal behaviors of (b) as undefined behavior~(UB).
 
 \myparagraph{Our Model}
+\label{sec:compiler:solution:model}
 %
 We present our model making the illegal behaviors UBs
 in stages, explaining at each stage why naive models do not work.
@@ -292,3 +293,99 @@ already exists in the \cc{} semantics, so that we do not
 need to strengthen it. In the above example again,
 the update by \texttt{g} will raise UB since the original argument area pointed
 to by \texttt{leak} has no access permission.
+
+
+\subsection{Mixed Simulation}
+\label{sec:overview-verification:mixedsim}
+
+While the target language of \cc{} is deterministic (more precisely,
+the source is receptive and the target is determinate) thereby mostly
+using forward simulations, the repaired interaction semantics of
+\ccm{} is inherently nondeterministic to handle illegal interference from assembly modules
+%% enforce the assembly calling conventions
+(\Cref{sec:compiler:solution:model}) thus preventing the
+use of forward simulation.
+%% While it is theoretically possible to convert the \cc{}
+%% verification from forward to backward simulations, it would incur a
+%% significant cost since a compiler pass typically compiles a single
+%% instruction in the source down to several instructions in the target.
+%% %% due to the nature of source and target languages and the size of verification.
+%% For this reason, determinism
+%% has been considered ``instrumental for the simulation proofs of the compiler passes and its absence
+%% is a show stopper''~\cite{besson:intptr}.
+% Extending \cc{}'s semantics with such nondeterministic features can potentially cause significant
+% overhead, as it invalidates forward simulation and enforces one to use backward simulation, which
+% effectively means one should re-establish simulation proof from the scratch.  In literature, it is
+% even said that
+
+In order to recover the ability to use forward simulation in the occasional presence of nondeterminism,
+we adopt the idea of \emph{mixed (forward-backward) simulation} from \cite{neis:pilsner}.
+%% To embrace nondeterminism with low verification cost, we develop more general simulations, called
+%% \emph{mixed simulations}, that (mostly) allow forward reasoning in the (occasional) presence of
+%% nondeterminism.
+The key observation is that
+the requirement for using forward simulations (\ie determinism of the target) is a per-state property,
+not a per-language property: as long as a particular target machine state is \emph{locally deterministic} (\ie its next state is unique),
+one can do forward simulation at that state.
+%% conversion from backward to forward simulations
+%% requires only the current target \emph{machine state}, not the entire target \emph{language}, to be
+%% deterministic.
+Based on this observation, mixed simulations selectively allow forward
+simulation when the target is locally deterministic, in addition to
+the default backward simulation.
+%% for each pair of related machine states, we allow the verifier to
+%% \emph{choose} to perform either forward or backward reasoning, requiring that forward reasoning is
+%% used only for locally deterministic target machine states.
+%
+Specifically, we say that a relation $R$ is a (closed) mixed simulation if
+for all $(\mssrc, \mstgt) \in R$,
+%% \makebox[\linewidth]{\makebox[1.2\linewidth]{
+%% \begin{minipage}{1.2\linewidth}
+\begin{enumerate}
+\item
+  $\forall e, \mstgt',~ \mstgt \estep{e} \mstgt' \implies {} $ \\
+  $ \exists \mssrc',~ \mssrc \estep{\tau}^{\raisebox{-1mm}{\scriptsize$\ast$}} \estep{e}\estep{\tau}^{\raisebox{-1mm}{\scriptsize$\ast$}} \mssrc' \land (\mssrc', \mstgt') \in R$; or
+\item
+  $\forall e, \mssrc',~ \mssrc \estep{e} \mssrc' \implies {} $ \\
+  $ \exists \mstgt',~ \mstgt \eustep{\tau}^{\raisebox{-1mm}{\scriptsize$\ast$}} \eustep{e}\eustep{\tau}^{\raisebox{-1mm}{\scriptsize$\ast$}} \mstgt' \land (\mssrc', \mstgt') \in R$\\
+\end{enumerate}
+%% \end{minipage}
+%% }}
+where $\ms \eustep{e} \ms'$ denotes that $\ms$ is locally deterministic and $\ms \estep{e} \ms'$.
+
+\Cref{fig:mixedsim} visualizes this formulation of mixed simulation, where
+%% presents an example of mixed simulations, where $R$ is a simulation relation; red and blue circle represent source and
+%% target machine states, respectively;
+solid and dotted arrows represent universally and existentially
+quantified steps, respectively, and double circles represent locally
+deterministic target states. In this figure,
+since the first three target machine states are deterministic,
+we can do forward simulation as shown in the figure;
+then, since the following target state is nondeterministic,
+we should do backward simulation as shown in the figure.
+%% the first three target machine states are deterministic.  The
+%% first three target steps are deterministic and reasoned in a forward manner (from source to target),
+%% and the last target step is nondeterministic and reasoned in a backward manner (from target to
+%% source).  Later, those part of simulations that are reasoned in a forward manner is converted to
+%% backward reasoning, thereby proving backward simulation and thus behavior refinement.
+
+Note that the repaired interaction semantics is nondeterministic only
+at the initial step of a module invocation, so that we can do
+forward simulation everywhere else using mixed simulations.
+
+In order to support \cc{}'s condition for forward simulation,
+we also add the following to the above formulation of mixed simulation:
+\begin{enumerate}[resume]
+\item or, $\mssrc$ is receptive and\\
+  $\forall e, \mssrc',~ \mssrc \estep{e} \mssrc' \implies {} $ \\
+  $ \exists \mstgt',~ \mstgt \exstep{\tau}^{\raisebox{-1mm}{\scriptsize$\ast$}} \exstep{e}\exstep{\tau}^{\raisebox{-1mm}{\scriptsize$\ast$}} \mstgt' \land (\mssrc', \mstgt') \in R$\\
+  where $\ms \exstep{e} \ms'$ denotes that $\ms$ is locally determinate and $\ms \estep{e} \ms'$.
+\end{enumerate}
+Also we apply this mechanism of mixed simulation to our open simulations.
+
+\begin{figure}[t]%% {0.43\textwidth}
+\includegraphics[width=0.7\textwidth]{images/mixed-sim-bold.pdf}
+%% \includegraphics[width=0.7\textwidth]{images/mixed-sim.pdf}
+\caption{A visualized example of mixed simulations}
+\label{fig:mixedsim}
+\end{figure}
