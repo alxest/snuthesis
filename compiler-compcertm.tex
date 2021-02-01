@@ -137,15 +137,23 @@ down to \cc{}'s Asm semantics with syntactic linking.}
 
 Conversely, we prove that the repaired interaction semantics refines the physical semantics for \textrm{\cc{} C} modules
 using a closed simulation of \cc{} with memory identity.
+This result is useful because we want to allow separate compilation (of C modules) on the compiler side, and on the program verification side, we want to hide complexities from inter-module steps.
 \begin{theorem}[Adequacy w.r.t C]\label{thm:results-adequacy-c}
   Let $M_1, \cdots, M_n$ be \textrm{\cc{} C} modules.  We have:
   \[  \beh{M_1 \plink \ldots \plink M_n} \supseteq \beh{M_1 \llink \ldots \llink M_n}  ~.\]
 \end{theorem}
 
 
+In some sense, the \Cref{thm:results-compiler2,thm:results-adequacy-asm,thm:results-adequacy-c} together forms a strong stress-test for a language-independent linking, and our results show strong evidence that our repaired interaction semantics is indeed adequate.
+Specifically, if one of the three desiderata is missing, it is trivial to find language-independent linking satisfying the others.
+Without \Cref{thm:results-adequacy-asm}, one can define interaction semantics to always execute UB; then, the other theorems become trivial.
+Without \Cref{thm:results-adequacy-c}, one can define the behavior of interaction semantics to an empty set.
+Without \Cref{thm:results-compiler2}, one can define $\llink \defeq \plink$.
+
+%% These results mean that the repaired interaction semantics does not give too few behaviors to assembly programs (e.g., missing physically observable behaviors), nor does it give too many behaviors to well-typed C programs (e.g., giving UB to them).
 
 
-By composing \Cref{thm:results-compiler2,thm:results-adequacy-asm,thm:results-adequacy-c}, we obtain
+Interestingly, by composing \Cref{thm:results-compiler2,thm:results-adequacy-asm,thm:results-adequacy-c}, we obtain
 the same separate compilation correctness result of \scc{}~\cite{kang:scc}:
 
 \begin{corollary}[Separate Compilation Correctness]

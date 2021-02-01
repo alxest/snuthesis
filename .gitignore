@@ -11,3 +11,4 @@
 main.pdf
 
 *.swp
+.DS_Store
