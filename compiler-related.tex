@@ -1,0 +1,424 @@
+\section{Related Work}
+\label{sec:compiler:related}
+
+We discuss related work on compositional compiler correctness for \cc{} and other higher-order languages.
+
+\subsection{Compositional Correctness for CompCert}
+
+\myparagraph{\ccc{}} Besides what we have discussed, \ccc{}
+introduces self-relatedness as a part of the notion of well-defined
+context and shows refinement under well-defined contexts as a result
+of the compiler correctness proof, whereas we uses such refinement as
+a method to prove compiler correctness.  Also, the PhD thesis of
+\cite{StewartThesis} observed, with a counterexample, one of the
+three reasons for inadequacy of interaction semantics at assembly
+level: not enforcing the assumption on the outgoing arguments area of
+the stack. It informally concludes that assembly contexts should
+respect the compiler's assumption without giving a formal solution.
+Our repaired interaction semantics gives a formal way to enforce the
+assumption by giving UB to those behaviors violating it.  The thesis
+also suggests \emph{closed} specification modules (\ie without making
+external calls) written in Coq's Gallina language, which foreshadows
+our \emph{open} specification modules and verification against them.
+
+\myparagraph{\ccx{}} Besides what we have discussed, the latest
+version of \ccx{} \cite{wang:saccx} supports two features that \ccm{}
+currently does not support. First, it proves that \ccx{} preserves the
+stack consumption by instrumenting the languages' semantics to record
+the size of the concrete stack frames. Second, it carries the compiler
+correctness down to assembly with the flat memory model instead of
+\cc{}'s block-based memory model. On the other hand, \ccx{} instruments the
+languages' semantics to record permissions in the stack frames in
+order to support address-taken stack variables, whereas \ccm{} supports
+them, without instrumenting the semantics, by adding the private
+memory components to memory injections as shown in
+\Cref{sec:overview-verification:injection:dynamic}.
+Interesting future work would be to apply the techniques of \ccx{} to \ccm{} to
+support the two missing features, and conversely apply the technique of
+\ccm{} to \ccx{} to support address-taken stack variables without
+recording permissions on the stack.
+
+\myparagraph{\scc{}}
+%
+\scc{}~\cite{kang:scc} proves a weaker form of compositional correctness for \cc{},
+namely correctness of separate compilation.
+Specifically, the proof assumes that all modules
+are separately compiled by the \emph{same} compiler and then linked
+together without linking with any handwritten assembly.
+%% and exploits the fact that all main optimizations are performed on the RTL intermediate language.
+For this, \scc{} employs a surprisingly lightweight \emph{closed} simulation technique,
+which, therefore, has been officially adopted by \cc{} since version 2.7.
+%% Consequently, the verification technique is surprisingly lightweight
+%% and thus has been officially adopted by \cc{} since version 2.7.
+%% Its ``Level B'' verification of RTL optimizations uses the standard contextual refinement in RTL.
+%% \scc{} has been officially adopted by \cc{} from version 2.7.
+
+%% can be considered as an
+%% instance of RUSC, but with a significant restriction: all contexts should be RTL modules, rather
+%% than arbitrary modules in arbitrary interaction semantics that are self-related by parameterized
+%% relations.
+
+% SepCompCert
+
+% - them: RTL contexts
+% - us  : defined "good" contexts,
+
+
+% but it also has two fundamental restrictions: it cannot support (i) a multi-language program, and
+% (ii) adding a new compiler (with different intermediate languages). Their technique to prove
+% ``Level B'' correctness has inspired us to develop RUSC: actually their technique can be
+% understood as a special case of RUSC where RTL is the only end-language.
+%
+% intentionally aim at a less ambitious goal than ours---verifying compositional correctness for a
+% \emph{single} compiler only.
+
+
+
+%% Finally, whilst their implementation is very lightweight in current
+%% \cc{}, they do impose additional complexity in global optimizations,
+%% which potentially burdens future extensions of \cc{}.  We will discuss
+%% this point in \Cref{sec:TODO}.
+
+%% Thanks to \scc{}, \cc{} now has a soundness theorem for
+%% separate compilation, with syntactically linked assemblies as its
+%% target program.  To put it another way, \cc{} trusts their target
+%% program an appropriate, closest formalization of actual physical
+%% behavior, and we follow this stance.  \todo{Email Valex?}
+
+
+%% \myparagraph{\ccx{}}
+%% %
+%% \ccx{}~\cite{gu:dscal,wang:saccx} extends \cc{} to support multi-language programs, but as discussed
+%% in \Cref{sec:introduction}, it is highly specialized for the CertiKOS~\cite{CertiKOS11,CertiKOS16} verification
+%% project.  As a consequence, it has interesting pros and cons compared to \ccm{}.
+
+%% On the one hand, \ccx{} imposes several restrictions on the input modules, in order to reduce its
+%% verification to closed simulation and reuse most of the verification in the original CompCert.
+%% Specifically, \ccx{} imposes the following restrictions on the input modules.  First, it assumes all
+%% the input modules (either in C or assembly) are verified against certain specifications, called
+%% Certified Abstraction Layers, and proves that the compiled assembly programs also satisfy the same
+%% specifications.  Second, it disallows non-terminating functions and mutually recursive modules.
+%% Third, it requires semantics to be deterministic.  Fourth, as a consequence, it supports Clight,
+%% which is a deterministic intermediate language in CompCert, rather than CompCert C, which is the
+%% nondeterministic source language of CompCert. \jeehoon{What does it mean by CompCertX disallowing
+%%   events?}
+
+%% On the other hand, \ccx{} supports more advanced control flows, such as context switch or
+%% coroutines, than just function call and return supported in \ccm{}.  We expect we can extend \ccm{}
+%% to support for those features by generalizing interaction semantics and RUSC, but we leave it as
+%% future work.
+
+% CompCertX
+
+% - intro에서 언급
+% - 제약을 해서 본질적으로 closed simulation을 쓸 수 있도록 함
+% - 소스가 검증되었다고 가정 (closed program, closed simulation)
+% - 검증이 mutual recursion 지원 안함
+% - (module local reasoning 안됨?)
+% - deterministic, no event (open spec?)  syscall에 대해 axiomatic하게 closed semantics 줌
+% - Clight?
+% - 장점: 다른 control flow 지원 (context switch, coroutine, ...)
+%   we expect, future work, ...
+
+% First restriction is that it does not allow modification of caller's stack if the caller is in
+% another module.  Second restriction is that in order to use their correctness theorem, each function
+% should have its corresponding \text{primitive specification}, which disallows (i) callback
+% (recursive call) between modules, (ii) infinite behavior, (iii) producing an event, and (iv)
+% nondeterministic behavior.  Even with these restrictions, \ccx{} was sufficient for their OS
+% verification, but as the authors made it clear in the paper, ``\ccx{} can not be regarded as a full
+% featured separate compiler for CompCert.''. Recent progress in this project \cite{wang:saccx}
+% removes the first restriction (stack modification), but instead it changes the memory model of \cc{}
+% and led to relatively heavier development.
+
+% \ccx{}~\cite{gu:dscal} extends \cc{} to support multi-language program, but it is specialized for
+% their OS verification project and has several restrictions.  First restriction is that it does not
+% allow modification of caller's stack if the caller is in another module.  Second restriction is that
+% in order to use their correctness theorem, each function should have its corresponding
+% \text{primitive specification}, which disallows (i) callback (recursive call) between modules, (ii)
+% infinite behavior, (iii) producing an event, and (iv) nondeterministic behavior.  Even with these
+% restrictions, \ccx{} was sufficient for their OS verification, but as the authors made it clear in
+% the paper, ``\ccx{} can not be regarded as a full featured separate compiler for CompCert.''. Recent
+% progress in this project \cite{wang:saccx} removes the first restriction (stack modification), but
+% instead it changes the memory model of \cc{} and led to relatively heavier development.
+
+% Concerning proof development, they also relied heavily on vertical
+% composition of memory relations. Therefore, we \todo{rephrase:} think
+% adding the Unreadglob pass would require a major change to their proof
+% architecture, if it is possible. Also, their development is not based
+% on the latest \cc{} and is not complete, omitting Unusedglob
+% optimization and frontend (from C to Clight). \todo{connective} Their
+% development is roughly divided into two parts: one is \ccx{} which
+% extends \cc{} but without explicit notion of linking, and the other is
+% layer calculus library which actually introduces the notion of
+% linking.  The former comprises 9K lines of Coq, which is almost as
+% small as our language/pass-specific development. The latter comprises
+% at least \footnote{Its LOC is calculated with
+%   \href{https://github.com/DeepSpec/dsss17/}, the only publicized
+%   source code we could found, but it seems they do not contain
+%   everything: \eg assembly style primitives} 30K lines of Coq, so in
+% total their development is of similar size with ours.
+
+% %29851 exactly
+
+% \note{2019년 1월 publish, compcert 버전은 2017-02. 2년치 업데이트 안함}
+
+%% \todo{SACCX claims their implementation is complete, but it is NOT!}
+
+
+
+%% \input{fig1} In a broad sense, there are three remarkable works
+%
+% For past few years, about three remarkable works has been accomplished in this area --- extending
+% \cc{} to support some form of compositional correctness. To this end, each of them developed their
+% own notion of multi-module semantics, and extended \cc{}'s proof under the proposed semantics. We
+% will first discuss them, then discuss two more works that are related in a broad sense ---
+% tackling the same problem, but outside the \cc{}.
+%
+%% We will discuss them first, and then discuss one more work that tackles compositional compiler
+%% correctness, but that are related in a broad sense.  However, none of them were both
+%% \textit{sound} and \textit{general}.
+
+% \myparagraph{\ccc{}}
+% %
+% The last one is \ccc{} \cite{beringer:isem, stewart:ccc} which developed the interaction
+% semantics. As discussed in this paper, their semantics is unsound \cite{sec:sec:overview-semantics}
+% and development was heavyweight. They used \cc{} v2.1 as a baseline, which lacks challenging passes
+% such as Unusedglob and ValueAnalysis, and did not port frontend (C to Clight). Finally, as they
+% fixed one memory relation for the whole proof, adding a new pass that requires more powerful memory
+% relation would require a major change.
+
+
+\myparagraph{\cascc{}}
+%
+%% > Line 1199: You write that CASCompCert has the restriction that
+%%   "stack allocated data should not be address taken."  I believe this
+%%   is true of the PLDI paper and the Coq proofs attached to it, but
+%%   they have a longer tech report cited from the PLDI paper with many
+%%   pages of Latex explaining how it would be possible to build Coq
+%%   proofs that remove this restriction.  Does that mean you accurately
+%%   characterize their work?  Yes, probably; but it may not be an
+%%   _inherent_ limitation of their approach.
+%% >  Furthermore, the claim (line 1998) that Jiang et al's approach forbids
+%%   address-taking of stack-allocated data is incorrect: while their Coq
+%%   formalization and the paper main paper indeed do not consider
+%%   leakage of stack pointers, the associated TR describes (without Coq
+%%   formalization, but with 30 pages LaTeX proof) how escaping stack
+%%   pointers can be supported (with more overhead).
+
+%% > while the recent PLDI paper by Jiang et al (CASCompCert) is
+%%   mentioned, its characterization hardly does it justice: indeed, the
+%%   PLDI paper provides an abstract rephrasing of CompCompCert's
+%%   rely/guarantee framework (hence the present paper's key criticism of
+%%   CompCompCert may well apply to it, too), but it then uses the
+%%   abstract framework to establish compiler correctness in the presence
+%%   of concurrency. In contrast, the present paper does not treat
+%%   concurrency at all, and hardly discusses it.
+
+%% Thanks for pointing this out. We will also cite and explain the technical report.
+
+%% We agree with this point. We will say that CASCompCert demonstrates
+%% that the technique of CompCompCert applies to the concurrency setting
+%% while we have not demonstrated applicability of our technique to
+%% concurrency yet.
+
+%% extends \ccc{} in three dimensions:
+%% \textbf{C}oncurrency, \textbf{A}bstraction, and \textbf{S}eparate
+%% compilation (hence the name).
+%% However its main focus is on concurrent
+%% abstraction, not on compositional correctness.
+%% In the view point of
+%% compositional correctness, \cascc{} basically follows the approach of
+%% \ccc{} and simplifies its complexity by imposing a significant
+%% restriction. Specifically, there are three problems.
+%% suffers from two problems.
+%% making a few unrealistic assumptions on compositional correctness.
+%% its semantics of physical linking is unsound just like that of \ccc{}.
+%% First, since it uses the original interaction semantics, its adequacy
+%% w.r.t. assembly and C does not hold.
+%% Second, it tames the complexity
+%% of structured simulations of \ccc{} by requiring the restriction that
+%% stack allocated data should not be address taken: this restriction
+%% unnecessitates the use of memory injection.
+%% Third, it covers only
+%% those passes the first \ccc{} covered, which means it covers only 12 out
+%% of 20 passes in CompCert 3.0.1, which is their base version.
+
+\cascc{}~\cite{jiang:cascc} extends \ccc{} to support concurrency in
+the absence of data races, which demonstrates that the proof technique
+of \ccc{} (\ie structured simulations) scales to a
+concurrent setting.  However, in the Coq formalization, \ccc{} tames
+the complexity of structured simulations by $(i)$ not allowing
+address-taken stack variables (although how to support them using
+structured simulations is described with paper proofs in the
+associated technical report\footnote{\url{https://plax-lab.github.io/publications/ccc/ccc-tr.pdf}}); and $(ii)$ only
+covering 12 out of the 20 passes in its base version, CompCert 3.0.1
+(although the 12 passes are exactly those that are covered by the
+original \ccc{}): these restrictions unnecessitate the use of memory
+injection. Also, \cascc{} can only allow special nondeterminism caused
+by scheduling threads by slightly relaxing the conditions for forward
+simulation, while \ccm{} can allow arbitrary nondeterminism by mixing
+forward and backward simulations.
+
+We do not currently see any problem with applying the approach of
+\cascc{} to \ccm{} to support concurrency in the absence of data races.
+Moreover, we expect that the compiler verification technique for
+\emph{promising semantics}~\cite{Kang:promising}, which is also based
+on simple closed simulations, applies to \ccm{} to fully support
+relaxed-memory concurrency.
+
+%% it addressed the
+%% nondeterminism inherently arising in concurrency or linking only in a restricted fashion.
+%% Specifically, it generalizes forward simulation to support for the nondeterminism, instead of
+%% applying backward reasoning, but its use of forward simulation does not apply to genuinely
+%% nondeterministic cases like relaxed-memory concurrency.
+%% Third, it requires all optimizations to be
+%% verified using an open simulation with memory extension, and disallows verifiers to reason about
+%% optimizations using different memory relations.\footnote{Note that \ccc{} requires
+%%   all optimizations to be verified using an open simulation with memory injection.}
+%% Fourth, to
+%% verify optimizations with memory extension, it disallows the use of a large class of memory
+%% operations.  Specifically, it disallows programmer to take the address of stack variables, and
+%% designates heap allocation (\texttt{malloc}) and deallocation (\texttt{free}) operations as visible
+%% events, thereby forbidding optimizations on those operations.
+
+%% Lastly, it covers only those passes
+%% that are covered in \cite{stewart:ccc} at the time that it is published.
+
+% \youngju{simplifying assumption - unsound 매치가 안되는 것 같습니다}
+% \\
+% \youngju{nondeterminisim이 linking에서 일어나지는 않을겁니다 -- 얘들은 unsound한거 해결을 안해서 nondeterminisim 넣을 필요가 없었습니다.}
+% \\
+%% \todo{Also mention \ccc{} does not support malloc/free optimizations.}
+%% \\
+
+% CASCompCert
+
+% - focus on concurrency, simplified the problem of compositionality
+% - open simulation
+% - memory relation을 extension으로 fix, vertical/horizontal compositionality
+% - heap: malloc, free을 다 external function call
+% - stack: no memory (register), address not taken
+% - compcomp original paper에서 한 패스만 커버
+% - semantics도 버그 답습 (physical linking)
+% - nondeterminism: forward -> backward가 되는 상황. 계속 forward로 증명. "switch point"라는 개념을 semantics에 넣음
+%     + 우리는 backward로 하는게 꼭 필요했던 상황
+
+
+% In order to focus on the new challenges they faced, they inherited development of \ccc{} as much
+% as possible.  Consequently, they also inherited the problem of \ccc{}: their semantics is unsound
+% in the same way.  For proof development, they avoided the challenges we faced by (i) employing
+% restricted semantics (each module has separate memory space, so passing a stack pointer to another
+% is prohibited), which made their local simulation \todo{simpler? trivial? 약간 부정적인 단어로?},
+% and (ii) not porting complex optimizations including Inlining (which enforced \ccc{} to strengthen
+% their structured injection), all the passes using ValueAnalysis, and Unusedglob.  Still, they had
+% to re-implement passes using identity relation to use extension relation.  Finally, they pointed
+% out that taming nondeterminism was one of their four major challenges. They addressed it but (i)
+% their nondeterminism is in certain form --- which can be understood as a special case of
+% determinate/receptive --- thus they reasoned it using forward simulation, and (ii) it is baked in
+% their simulation definition and they do not developed a reusable metatheory.
+
+%% It provides semantics to a multi-language program, and without any restrictions imposed in \textit{contextual compilation}.
+%% Therefore, \textit{interaction semantics} is strictly more powerful than \textit{contextual compilation}\cite{wang:saccx}.
+%% Also, they invented a \mrel{} called \textit{structured injection}, which is significantly more sophisticated than \cc{}'s vanilla \textit{injection}. \todo{For what?}
+%% %% They proved its veritcal and horizontal compositionality
+%% However, this comes with an expensive cost.
+%% First, their development caused devastating change on \cc{}'s code base.
+%% They had to rewrite both semantics and proof.
+%% %% For semantics, they annotated step with extra event structure,
+%% %% and they added two extra states for low-level languages dedicated for \textit{marshalling} in and out.
+%% %% For proof, they had to develop a sophisticated \mrel{} called \textit{structured injection} which is significantly more complex than \cc{}'s vanilla \textit{injection}.
+%% For proof, they had to replace each translation's \mrel{} into \textit{structured injection}, invalidating the strength of using multiple \mrel{}s.
+%% This resulted in much more complex proof for each optimization, \eg{} ``CleanupLabelsproof'' became 2043 LOC while it was only 372 LOC in vanilla \cc{}.
+%% As a consequence of such heavyweight changes, it became very hard to maintain compatibility with up-to-date \cc{}.
+%% In fact, their development is no longer maintained since 2015 \footnote{https://github.com/PrincetonUniversity/icc}, with their version remaining in 2.1 while \cc{} has updated to 3.5.
+%% Second, more importantly, their semantics is unsound. Their proof lacks \lbound{}, and it actually does not hold! We will describe this more in the \Cref{sec:TODO}.
+%% \todo{their paper lacks 3 passes / they are implemented after paper / SACCX attacks it}
+
+
+
+%% Finally, in terms of \textit{extensibility}, all three existing works are more or less rigid.
+%% By \textit{extensibility}, we consider both dimensions of extension,
+%% which we call \textit{horizontal extensionality} (adding a new verified compiler)
+%% and \textit{vertical extensionality}
+%% (adding a new compiler optimization, possibly with totally different \mrel{}).
+%% \scc{} is not horizontally extensible, as they manifested in their paper.
+%% The simplest scenario this could be troublesome is compiler version upgrade.
+%% Its soundness theorem does not guarantee you anything when you link assemblies from different versions of \cc{}.
+%% %% Also, to the best of our knowledge, it is unclear whether \ccx{} and \ccc{} are vertically extensible.
+%% On the other hand, \ccx{} and \ccc{} are not vertically extensible with ease.
+%% Their development relies heavily on the vertical composition of \mrel{}s
+%% (vanilla injection and \textit{structured injection}, respectively).
+%% It is unclear if we can add an optimization pass
+%% which uses \mrel{} that does not compose with injection (or \textit{structured injection}, respectively).
+%% A specific example of such optimization is given in \Cref{sec:TODO}.
+%% However, our development is extensible in both dimensions.
+%% We will clarify this in \Cref{sec:overview}.
+
+
+
+\subsection{Compositional Compiler Correctness for Higher-Order Languages}
+
+\myparagraph{Pilsner}
+%
+Pilsner~\cite{neis:pilsner,pb} is a multi-pass optimizing compiler from
+a higher-order imperative language down to an idealized assembly language.
+%% supporting horizontal and vertical compositionality.  
+To verify horizontally and vertically compositional correctness in the presence of higher-order functions, Pilsner uses
+very general and flexible open simulations, called \emph{parametric simulations},
+whose vertical compositionality proof is also technically very involved.
+%% But as a consequence, its vertical compositionality
+%% proof is significantly more complicated than that of \ccm{}, which is straightforward from the
+%% transitivity of (behavior) set inclusion.
+Since it would be hard to define interaction semantics
+due to the different representations of values and
+memory in the source and target languages,
+the RUSC technique is unlikely to be applicable to Pilsner.
+%% Pilsner aims higher than \ccm{} in
+%% that higher-order functions are not supported by interaction semantics
+%% and thus is beyond the reach of RUSC.
+
+Also, our approach to reasoning about dynamically and statically
+allocated local memory, presented in \Cref{sec:overview-verification},
+follows that of Pilsner, which is based on the work of
+\cite{DBLP:conf/icfp/DreyerNB10}. A minor difference is that we
+simplify the formulation by restricting the occurrence of private
+transitions only to just before and after external calls, while
+Pilsner allows private transitions at every local step only requiring
+public transitions between the end-to-end worlds of the execution of a
+function.
+
+%% Unlike \cite{DBLP:conf/icfp/DreyerNB10,pb}, for simplicity, we restrict
+%% the occurrence of private transitions only to just before and after external function calls.
+
+
+\youngju{앞에서 RUSC는 interaction semantics에 연관된 개념이 아니라
+  임의의 multi-language linking operator에 대해서 동작하는거로
+  이야기했습니다. 저 세팅에서는 linking operator를 정의하기 어려운게
+  문제의 본질인 것 같습니다.}
+
+% \youngju{(i) compositional correctness for \cc{} (ii) compositional
+%   compiler correctness 가 자연스러운 것 같고 그냥 compositional
+%   correctness는 어색한 것 같습니다.}
+
+% Pilsner
+
+% - higher-order language, interaction semantics 정의하기 어렵고 (value, register, ... 등등이 달라서) RUSC 어렵다.
+% - open simulation을 굉장히 flexible하게 general하게 정의했다
+% - vertical composition 증명이 어렵다
+
+
+\myparagraph{Multi-language semantics}
+%
+Ahmed and her collaborators propose multi-language
+semantics~\cite{perconti:multilang,patterson:funtal,DBLP:conf/fossacs/SchererNRA18,New:2016,ICFP19}
+as an approach to prove compositional correctness and full abstraction
+of a compiler for both assembly-like and higher-order languages.
+Specifically, they define a language that combines all of the source,
+intermediate and target languages, and prove contextual equivalence
+and/or full abstraction for each translation pass in the combined
+language using logical relations (with back-translations).  In this
+approach, they rule out ill-formed contexts by syntactic type systems
+and use the typed contextual equivalence for compositionality.  Since RUSC
+rules out ill-formed contexts by semantic program relations, it would
+be interesting to see if RUSC could be applicable and beneficial to
+the approach of Ahmed \etal, in particular, for full abstraction.
