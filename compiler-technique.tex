@@ -1,0 +1,360 @@
+\section{Formalization of Verification Techniques}
+\label{sec:compiler:verification}
+
+Now we present the formalization of our verification techniques.
+%% As discussed in \Cref{sec:overview-verification:solution},
+We parameterize the notion of open simulation presented in
+\Cref{sec:overview-verification} with three parameters: memory relations, symbol
+relations, and memory predicates.  We present the three parameters
+(\Cref{sec:main-verification:parameter}), the parameterized open simulations
+(\Cref{sec:main-verification:opensim}), and their horizontal compositionality and adequacy theorems
+(\Cref{sec:main-verification:theorems}).
+%% Then we introduce mixed simulation that allows forward
+%% reasoning in the presence of nondeterminism (\Cref{sec:main-verification:mixedsim}).
+
+\subsection{Parameters for Open Simulations}
+\label{sec:main-verification:parameter}
+
+\Cref{fig:simulation-parameters} presents
+the sets of three parameters for open simulations:
+the set of memory relations $\MREL$, the set of symbol relations $\SREL$, and the set of memory predicates $\MPRED$.
+%% , which we will explain in details.
+%% Note that this section will be easier to follow if read in color:
+%% \textcolor{myred}{memory relations} are presented in red, \textcolor{darkgreen}{symbol relations} in
+%% green, and \textcolor{myblue}{memory predicates} in blue.
+
+\input{fig-param}
+
+\myparagraph{Memory Relation}
+
+The first parameter ranges over Kripke-style memory/value relations in $\MREL$.
+%~\cite{DBLP:conf/popl/AhmedDR09}
+Following \cite{DBLP:conf/icfp/DreyerNB10,pb}, we model the
+evolution of memory relations using \emph{possible worlds} and \emph{private and public transitions}
+over the worlds.
+Note that this parameter will be instantiated with the three memory relations used in \cc{}---namely memory
+identity, extension, and injection---and the memory injection with module-local invariants we introduced.
+%% for verifying \texttt{Unreadglob}.
+
+A memory relation in $\MREL$ consists of $(i)$ a set $\code{t}$ of possible worlds; $(ii)$ \emph{public}
+and \emph{private} transition relations $\sqsubseteq$ and $\sqsubseteq_\weak$ over the worlds;
+and $(iii)$ for each world $w \in \code{t}$, memory relation $\texttt{mrel}(w)$ and
+value relation $\texttt{vrel}(w)$.  A world $w$ represents an invariant on the memory, which
+can evolve over time according to the public/private transition relations,
+as we discussed in \Cref{sec:overview-verification:injection}.
+%% public transitions $\sqsubseteq$ represent possible evolution of the world before and after an external function
+%% call, and private transitions $\sqsubseteq_\weak$ represent possible evolution between any two interaction points with
+%% external modules. %(\eg{} between two invocations of external functions).
+%% For example, we use private transitions to capture the permission changes in the arguments area of the stack,
+%% which cannot be public transitions according to the \newnewrevision{enriched} memory injection.
+%% For example, memory
+%% injection's public transition encodes the invariant that injection should be increased and memory
+%% access permissions are the same before and after a function call; but its private transition allows
+%% certain changes in access permissions, as discussed in \Cref{sec:overview-semantics:solution}.  The
+%% public transition relation is reflexive and transitive, and is a subset of the private transition
+%% relation.
+There are four natural well-formedness conditions, which are self-explanatory.
+%% $\texttt{vrel}(w)$ should be monotone w.r.t. the world's private
+%% transition, and it relates an integer value in source only with the same value in target.
+We can also straightforwardly extend the value/memory relation to relations on $\Args$ and $\Retv$, denoted $\succsim_{\mrel}$.
+%% For each
+%% world $w \in \code{t}$, relations on the input/output of external function calls are defined in a
+%% straightforward manner: function pointers, arguments, and results are related as values, and
+%% input/output memories are related as memories.
+
+\myparagraph{Symbol Relation}
+
+The second parameter ranges over symbol relations in $\SREL$ that
+relate information about global symbols (\eg which block each global
+variable points to) in the source and target.  This parameter is
+needed to verify optimizations like \code{Unusedglob},
+\code{Unreadglob} that remove unnecessary static variables thereby
+having non-identical symbol information in the source and target.
+
+%% enables he verification of such
+%% specifications and optimizations as \code{Unusedglob} that change symbol tables.
+%% Verification of
+%% all \cc{} optimizations, except for \code{unused-globs}, requires only a trivial symbol relation
+%% in which the source and target symbols are exactly the same.  The main purpose of $\SREL$ is
+%% guaranteeing a \emph{run-time} symbol relation, assuming all its modules satisfy \emph{compile-time}
+%% symbol relation.  We allow modular reasoning of symbol relations using states and their
+%% compatibility relation w.r.t. linking.  For example, the verification of \code{unused-globs} uses a
+%% symbol relation whose state is the set of dropped symbols.  To model the evolution of symbol
+%% relations under linking, we say two states are compatible if the former is a subset of the latter.
+%% The compile-time and run-time symbol relations check whether the symbols in the state are actually
+%% dropped.
+%% Specifically,
+
+A symbol relation in $\SREL$ consists of $(i)$ a set $\code{t}$ of symbol relation states; $(ii)$ 
+an extension relation $\sqsubseteq$ on the states; $(iii)$ for each state $d$,
+a (compile-time) symbol code relation $\texttt{screl}(d)$; and $(iv)$ for each state $d$ and world $w \in \MREL.\code{t}$,
+(run-time) symbol environment relation $\texttt{serel}(d,w)$.
+There are seven well-formedness conditions:
+%% $\SREL$ should satisfy the following conditions:
+$(1)$ the extension relation $\sqsubseteq$ is transitive and reflexive;
+$(2)$ \texttt{screl} is closed under the syntactic linking;
+$(3)$ if symbol codes are related by \texttt{screl}, then \newnewrevision{the initial memories and symbol environments loaded by \textrm{load\_mem} and \textrm{load\_se} are related by \texttt{mrel} and \texttt{serel}, respectively};
+$(4)$ \texttt{serel} is monotone w.r.t. private transitions;
+$(5)$ \newnewrevision{for symbol environments related by \texttt{serel}, their public symbols are identical and their functions have the same signatures};
+$(6)$ \texttt{serel} is compatible with $\sqsubseteq$: for $d \sqsubseteq d'$, $\texttt{serel}(d')$ restricted on $\texttt{screl}(d)$ should be in $\texttt{serel}(d)$; and
+%% is preserved w.r.t. compatible restriction on symbol codes; and
+$(7)$ the memory and symbol relations should be compatible with \cc{}'s axiom about system calls (\ie \textrm{external\_call}).
+%% external function symbols related by \texttt{serel} satisfy the condition for open simulation.
+
+% \cdashbox{darkgreen}{$\texttt{screl}(d)$} statically holds for some $d \sqsubseteq d'$ at compile time.
+
+
+
+% (0) \SREL{}는 크게 3가지로 instantiate 된다: identity, drop (unusedglob용), invariant (spec 증명용).
+%    t 는 두 symbol code (lanugage-dependent 한 부분을 걷어낸 코드)를 relate (screl) 하는데 쓰인다.
+%    identity의 경우 unit 타입이고 screl은 항상 true이다.
+%    drop의 경우 set of symbol이고 screl은 (i) 실제로 그 symbol이 빠졌는지 (ii) 그 symbol을 refer하는게 없는지 체크한다. (injection 매핑에서 빼줘야 하기 때문)
+%    invariant의 경우 역시 set of symbol이고 screl은 (i) 실제로 그 symbol이 invariant를 만족하는지 (ii) 그 symbol을 refer하는게 없는지 체크한다. (injection 매핑에서 빼줘야 하기 때문)
+%    $\sqsubseteq$의 의미는 대충 set inclusion 이다. \\
+%    이 interface의 모든 목적은 static하게 $\cfbox{darkgreen}{screl}$ 을 guarantee 해주면 runtime에 $\cdashbox{darkgreen}{serel}$ 를 rely 받는 것이다. \\
+
+% (5) serel이면 (i) public symbol들이 같고 (ii) 어떤 relate되어있는 src/tgt value가 있을 때, src가 function이면 tgt도 function이고 둘의 signature가 같다. \\
+% (6) 큰 senv가 큰 d'에 대해 serel이고, 작은 sc가 작은 d에 대해 screl이면, 각각의 큰 senv를 작은 sc로 restrict 한 것도 relate 되어있다. \\
+% (7) external call axiom \\
+
+
+
+\myparagraph{Memory Predicate}
+
+The third parameter ranges over Kripke-style memory predicates in $\MPRED$,
+which are needed to modularly verify \cc{}'s analysis engines such as value analysis (see \Cref{sec:main-verification:opensim}).
+%% based on which is proved the soundness of compiler's analyses such as \cc{}'s value analysis.
+$\MPRED$ is essentially a unary version of $\MREL$ combined with $\SREL$
+where $\SREL{}.{\sqsubseteq}$ and $\simsk$ are taken as the total relations (\ie relating everything):
+it consists of
+$(i)$ the set $\code{t}$ of possible worlds;
+$(ii)$ public and private transition relations $\sqsubseteq$ and $\sqsubseteq_\weak$ over the worlds, respectively; and
+$(iii)$ for each world $w \in \code{t}$, a memory predicate $\textrm{mpred}(w)$,
+a value predicate $\textrm{vpred}(w)$, and a symbol environment predicate $\textrm{sepred}(w)$.
+The well-formedness conditions are self-explanatory.
+%% Similarly to $\MREL$, $(i)$ $\MPRED$ has world's public and private transitions; $(ii)$ its value
+%% predicate should be monotone w.r.t. the world's private transition; and $(iii)$ for each world
+%% $w \in \code{t}$, relations on the input/output of external function calls are defined in a
+%% straightforward manner.  Similarly to $\SREL$, $\MPRED$ has a few conditions on the symbol
+%% environment predicate, which we omit in \Cref{fig:simulation-parameters} for brevity.
+
+% \youngju{3, 4, 6이라고 해놓은거 다른 표현으로 바꿨습니다}
+%% \youngju{
+%%       \ccc{}가 개발될 당시에는 Value Analysis가 없었고, \ccx{}는 ($\MREL{}$에서와 마찬가지로) closed simulation이기 때문에 문제가 없다.
+%%       \ccc{}의 후속연구인 \cascc{}에서도 Value Analysis가 들어간 pass들은 지원하지 않는다.
+%%       그러니까 우리가 이 문제를 처음으로 tackle 하는}
+
+
+\subsection{Open Simulations with Parameters}
+\label{sec:main-verification:opensim}
+
+\input{fig-sim}
+
+% \jeehoon{explain rely-guarantee?}
+
+%% TODO: Fig.11에 STEP 케이스가 forward 뿐인데, backward 케이스는 생략되었음을 언급
+
+\Cref{fig:full-sim} presents our parameterized open simulations, which
+are given in the form of forward simulation for simplicity though
+they are actually in the form of mixed simulation presented in
+\Cref{sec:overview-verification:mixedsim}.
+In this section, we omit $\MREL$,
+$\SREL$, and $\MPRED$ when clear from context (\eg{} $\texttt{vrel}(w)$ for
+$\MREL{}.\texttt{vrel}(w)$).  Also, $\cdashbox{black}{R}$ and $\cfbox{black}{G}$ means rely and
+guarantee conditions for the external modules.
+%% whose edge color indicates which parameters are
+%% involved in the rely/guarantee reasoning.
+
+\myparagraph{Simulation of Machine States}
+
+%% \setlist[description]{font=\normalfont\textbullet\space}
+
+A relation $match\_states$ on machine states is an \emph{open simulation} if all related states
+either $(i)$ transition to related states, $(ii)$ invoke related external calls (hence the name
+``open'' simulation), or $(iii)$ halt with related return values and memories.  Specifically, given
+source and target module semantics $\msem_\src$, $\msem_\tgt$ and a (source) soundness predicate $sound\_state$ (discussed later),
+%% relations $match\_states(w)$ for each possible world $w \in \MREL.\code{t}$
+the relation $match\_states$ over worlds is an open simulation if
+the relatedness of $\mssrc$ and $\mstgt$ at a world $w$ with the soundness of $\mssrc$ implies
+one of the followings.
+\begin{itemize}
+\item \caselabel{STEP} The source and target states transition to related states.
+  Specifically:
+  \begin{itemize}[leftmargin=11mm]
+  \item[\textbf{line 1:}] the source machine state takes intramodule steps, and
+  \item[\textbf{line 2:}] if the source machine state transitions to a next state emitting an event $e$,
+  \item[\textbf{line 3:}] then the target machine state is able to transition to a next state emitting the same
+    event $e$, possibly with additional silent transitions, and
+  \item[\textbf{line 4:}] the next states are related by $match\_states(w')$ for a public future world $w' \sqsupseteq w$.
+  %% \item[\textbf{line 3:}] the
+  %%   next source and target memories are related at a public future world $w' \sqsupseteq w$,
+  %% \item[\textbf{line 4:}] and the next states are related by $match\_states(w')$.
+  \end{itemize}
+  \vskip 1mm
+\item \caselabel{CALL} The source and target states invoke related external calls.
+  Specifically:
+  \begin{itemize}[leftmargin=11mm]
+  \item[\textbf{line 1:}] certain external functions and arguments in the source and target are related at a private future world $w' \sqsupseteq_\weak w$, and
+  \item[\textbf{line 2:}] the source and target machine states invoke the related external functions with the related arguments, and
+  \item[\textbf{line 3:}] for any return values and memories related at any public future world $w'' \sqsupseteq w'$,
+  \item[\textbf{line 4:}] if the source safely returns from the external call,
+  \item[\textbf{line 5:}] then the target also safely returns from the external call, and
+  \item[\textbf{line 6:}] the states after return are related by $match\_states(w''')$ for a world $w'''$ that is a private future of $w''$ and a public future of $w$.
+
+  %% \item[\textbf{line 1:}] The source and target machine states are about to invoke external calls, whose
+  %%   arguments are related at a private future world $w' \sqsupseteq_\weak w$,
+  %% \item[\textbf{line 2:}] for any public future world $w'' \sqsupseteq w'$ and return values and memories related at $w''$,
+  %% \item[\textbf{line 3:}] if the source safely returns from the external call,
+  %% \item[\textbf{line 4:}] then the target also safely returns from the external call,
+  %% \item[\textbf{line 5:}] and there exists a world $w'''$ that $(i)$ is a public future of $w$,
+  %%   %% and $(ii)$ a private future of $w''$,
+  %%   and $(ii)$ relates the next memories at $w'''$,
+  %% \item[\textbf{line 6:}] and the next states are related by $match\_states(w''')$.
+  \end{itemize}
+  \vskip 1mm
+\item \caselabel{RET} The source and target states halt with related values and memories.
+  Specifically:
+  \begin{itemize}[leftmargin=11mm]
+  \item[\textbf{line 1:}] with return values and memories related at~$w'$
+    for a public future world $w' \sqsupseteq w$,
+  \item[\textbf{line 2:}] the source and target machine states halt.
+  \end{itemize}
+\end{itemize}
+
+
+\myparagraph{Simulation of Module Semantics}
+
+Module semantics are related if their initial machine states are related.
+Specifically, for a symbol relation $d \in \SREL$ and a (source) soundness predicate $sound\_state$,
+a target module semantics $\msem_\tgt$ simulates a source one $\msem_\src$ if for an open simulation $match\_states$:
+\begin{itemize}
+\item \caselabel{INIT} the initial machine states of $\msem_\src$ and $\msem_\tgt$ are related by $match\_states$.
+Specifically: 
+\begin{itemize}[leftmargin=11mm]
+\item[\textbf{line 1:}] for any source and target call data related at any world $w \in \MREL$,
+\item[\textbf{line 2:}] if the functions of the source and target call data belong to the modules and
+\item[\textbf{line 3:}] the symbol environments are related at $d$ and $w$, then for any initial machine state of the source function call,
+\item[\textbf{line 4:}] there exists an initial machine state of the target function call such that
+\item[\textbf{line 5:}] the two initial machine states are related by $match\_states(w')$
+  for $w'$ a public future of~$w$.
+%\item[\textbf{line 3:}] if source and target symbol environments are related at $d$ and $w$,
+%\item[\textbf{line 4:}] then for all possible source initial machine state,
+%\item[\textbf{line 5:}] there exists a target initial machine state such that,
+%\item[\textbf{line 6:}] the initial memories are related at a public future $w'$ of the current world $w$,
+%\item[\textbf{line 7:}] and the initial machine states are again related by $match\_states(w')$.
+\end{itemize}
+\end{itemize}
+
+
+\myparagraph{Simulation of Modules}
+Modules are related if their module semantics are related. Specifically,
+a target module $\module_\tgt$ simulates a source one $\module_\src$
+if the following hold for a symbol relation $d \in \SREL$ and a soundness predicate $sound\_state$:
+\begin{itemize}[leftmargin=11mm]
+\item[\textbf{line 1:}] the source and target symbol codes are related at $d$,
+\item[\textbf{line 2:}] $sound\_state$ satisfies the open preservation property (discussed below), and
+\item[\textbf{line 3:}] for any symbol environments related at any symbol relation $d'$ extending $d$ and any world~$w$,
+\item[\textbf{line 4:}] the source and target module semantics for the related symbol environments are related at $d$ and $w$.
+\end{itemize}
+Note that the symbol environments are related at $d'$, which represents the possible symbol information after linking with an arbitrary module,
+while the module semantics are related at $d$, which represents the module's own symbol information.
+
+\myparagraph{Simulation of Programs}
+\newnewrevision{Two programs each of which consists of a list of modules are simulated if each corresponding modules are simulated.}
+
+\myparagraph{Open Preservation with Parameters}
+{\newnewrevisioncmd
+\cc{} uses a relation $match\_states$ to prove correctness of a translation pass
+and a predicate $sound\_state$ to prove correctness of the analyzer performing value analysis,
+where $sound\_state$ specifies those states where the analysis results hold.
+As we do for $match\_states$,
+we perform a similar generalization from a closed setting to an open setting for $sound\_state$.
+Specifically, 
+we generalize the conditions for $sound\_state$ from preservation to open preservation
+(\cf from simulation to open simulation);
+and parameterize over memory predicates $\MPRED{}$ (\cf memory relations $\MREL{}$),
+which intuitively encodes the analysis results of the analyzer.
+Also, as we do for open simulation,
+we prove that all \textrm{Clight} and \textrm{Asm} modules satisfy
+open preservation with $\MPRED{}$, which intuitively means that
+all those context modules preserve the analysis results of the analyzer.
+Note that the definition of open preservation, \text{open\_prsv}, is essentially a unary version of
+that of open simulation, where the \caselabel{INIT} case corresponds
+to that of the module semantics simulation and the \caselabel{STEP},
+\caselabel{CALL}, and \caselabel{RET} cases to those of the state simulation.
+
+% For brevity, we omit a detailed explanation of the conditions.
+
+%% Open simulation permits modular verification of compiler analyses and optimizations.
+%% analyzer L sound-state open preservation
+%% exists sound-state, ... Clight, Asm
+
+%% compiler verification uses sound-state given as a parameter to open simulation, so that the verifier can prove optimizations assuming that the sound-predicate holds.
+%% Analyzer prove, varifier uses.
+
+%% >  the (source) soundness predicate `sound_state` [l. 923]
+%% What is this predicate?
+%% >> First, compiler passes are developed in a modular way so that optimization passes can "query" analysis passes, and rely on the analysis result without any extra obligation.
+%% >> Such modular nature is reflected in the proof structure too.
+%% >> In CompCert, sound_state quantifies the states that are congruent with analysis result (e.g., if analysis concluded that global variable "x" is always positive, sound_state quantifies only those states).
+%% >> Then, the obligation for optimization passes is to establish "simulation" assuming "sound_state", while the obligation for analysis passes obligation is to establish "preservation" of "sound_state".
+%% >> We extended such notions into an open setting, where "simulation" resulted in "open simulation" and "preservation" resulted in "open preservation."
+%% >> We will add these explanations in our revision.
+
+%% Maybe: In particular, $(iii)$ is necessary for proving that context modules are self-related.
+
+%% For this, we
+%% require the analyzer for a language $L$ to be equipped with $(i)$ memory predicate $\MPRED$; and
+%% $(ii)$ soundness predicate $sound\_states$ for $L$ that satisfies open preservation for $\MPRED$,
+%% and $(iii)$ sound predicates for context languages---\textrm{Clight} and \textrm{Asm}---that
+%% respectively satisfy open preservation for $\MPRED$.  Then we can use them for discharging
+%% \textsc{(sim:mod)}'s condition (2) in the proof of open simulation.
+%% In particular, $(iii)$ is necessary for proving that context modules are self-related.
+
+% ; $(iii)$ open preservation of $A$ for $L$: for all $L$-module $M_\src$ and symbol environment
+% $\skenv_{\src}$, we have
+% $sound\_states(A(M_\src)) \in \text{open\_prsv}_{\MPRED}(\module_{\src}.\texttt{sem} \;
+% \skenv_{\src})$; and $(iii)$ open preservation of $A$ for context languages, \textrm{Clight} and
+% \textrm{Asm}, for suitable soundness predicates and $\MPRED$.  
+
+%% Furthermore, while the simulation definitions accept only one memory predicate parameter, we can
+%% essentially utilize multiple memory predicates (and analyses) by composing them.  Specifically, we
+%% proved the following composibility lemma for memory predicates and soundness predicates:
+%% \[
+%%   \begin{stackTL}
+%%     \forall \MPRED{}_{0}, \MPRED{}_{1} \in \textrm{MemPred},~ \exists \MPRED{}_{2} \in \textrm{MemPred},~ \forall sound\_states_{0}, sound\_states_{1}, \msem, \\
+%%     \quad sound\_states_{0} \in \textrm{open\_prsv}_{\MPRED{}_{0}}(\msem) \land sound\_states_{1} \in \textrm{open\_prsv}_{\MPRED{}_{1}}(\msem)  \implies \\
+%%     \quad (sound\_states_{0} \land sound\_states_{1}) \in \textrm{open\_prsv}_{\MPRED{}_{2}}(\msem)~.
+%%   \end{stackTL}
+%% \]
+}
+
+\subsection{Horizontal Compositionality and Adequacy}
+\label{sec:main-verification:theorems}
+
+To use open simulations in RUSC, we prove their horizontal compositionality and adequacy.  Let $P$
+and $Q$ be programs (\ie lists of modules) and we define $P \llink Q$ to be the list concatenation
+of $P$ and $Q$.  Let
+$\MREL \in \textrm{MemRel}, \SREL \in \textrm{SymbRel}, \MPRED \in \textrm{MemPred}$ be parameters,
+and $\succsim$ be the program simulation relation for the parameters,
+given in \textsc{(sim:prog)} of \Cref{fig:full-sim}.  Then we have:
+
+\begin{theorem}[HorComp]
+  For any programs $P_\src$, $P_\tgt$, $Q_\src$, $Q_\tgt$, if $P_\src \succsim P_\tgt$ and
+  $Q_\src \succsim Q_\tgt$:
+  \[
+  \vspace{-0.8mm}
+  P_\src \llink Q_\src \succsim P_\tgt \llink Q_\tgt~.
+  \vspace{-0.8mm}
+  \]
+\end{theorem}
+%% \begin{proof} Immediate from the definition of $\llink$ and \textsc{(sim:prog)}.
+%% \end{proof}
+\begin{theorem}[Adequacy]
+  For any programs $P_\src$ and $P_\tgt$, if $P_\src \succsim P_\tgt$:
+  \[
+  \vspace{-0.8mm}
+  \beh{P_\src} \supseteq \beh{P_\tgt}~.
+  \vspace{-0.8mm}
+  \]
+\end{theorem}

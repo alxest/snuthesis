@@ -1,7 +1,9 @@
 \begin{figure}[t!]
 \footnotesize
 
-\begin{minipage}{1\linewidth}
+%% trick from: https://tex.stackexchange.com/questions/391318/make-figure-with-minipages-wider-than-text
+\makebox[\linewidth]{\makebox[1.2\linewidth]{
+\begin{minipage}{1.2\linewidth}
   \mytitle{module}\\
 $
   \begin{stackTL}
@@ -12,16 +14,20 @@ $
   \end{stackTL}
 $
 \end{minipage}%
+}}
 \\
-\begin{minipage}{1\linewidth}
+\makebox[\linewidth]{\makebox[1.2\linewidth]{
+\begin{minipage}{1.2\linewidth}
   \mytitle{module semantics}\\
 $
   \begin{stackTL}
   \begin{array}{@{}l@{}}
     \msem \in \Msem = \\
     \quad  \setof{ \myst \in \textrm{Set}, \texttt{senv} \in \Skenv, \estep{} \; \in \powset{(\Memory \times \myst) \times \Events \times (\Memory \times \myst)}, \\
-    \quad\ \ \;\texttt{init\_core} \in \Args \rightarrow \powset{\Memory \times \myst}, \texttt{at\_external} \in (\Memory \times \myst) \rightarrow \option{\Args}, \\
-    \quad\ \ \;\texttt{after\_external} \in (\myst \times \Retv) \rightarrow \option{(\Memory \times \myst)}, \texttt{halted} \in (\Memory \times \myst) \rightarrow \option{\Retv} \; | \\
+    \quad\ \ \;\texttt{init\_core} \in \Args \rightarrow \powset{\Memory \times \myst}, \\
+    \quad\ \ \;\texttt{at\_external} \in (\Memory \times \myst) \rightarrow \option{\Args}, \\
+    \quad\ \ \;\texttt{after\_external} \in (\myst \times \Retv) \rightarrow \option{(\Memory \times \myst)}, \\
+    \quad\ \ \;\texttt{halted} \in (\Memory \times \myst) \rightarrow \option{\Retv} \; | \\
     \quad\ \ \;\{ \ms \;|\; \exists e, \ms',~ \ms \estep{e} \ms' \}, \{ \ms \;|\; \exists \args, \texttt{at\_external}(\ms) = \some{\args} \},
                \{ \ms \;|\; \exists \retv, \texttt{halted}(\ms) = \some{\retv} \} \text{ disjoint}
     } \\
@@ -41,9 +47,10 @@ $
 $
 \\
 \end{minipage}
+}}
 
 %% \youngju{Use [ $\defeq$ ] for [ $\module \in \Module =$ ]? If so, we should change this fig and fig-param too.}
 
-\caption{Module and Module Semantics}
+\caption{Module and Module Semantics \vspace{5mm} \mbox{}}
 \label{fig:modsem}
 \end{figure}
