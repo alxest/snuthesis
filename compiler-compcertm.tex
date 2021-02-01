@@ -1,0 +1,281 @@
+\section{CompCertM}
+\label{sec:compiler:compcertm}
+
+Based on the theories we presented so far, we develop \ccm{}, an extension of \cc{} with the
+repaired interaction semantics and open simulations to support multi-language linking.  We state
+\ccm{}'s compositional correctness results (\Cref{sec:results:compiler}) and evaluate its
+verification efforts (\Cref{sec:results:evaluation}).  \ccm{} currently supports the x86 backend only.
+We do not currently see any technical problem with supporting other architectures.
+
+\section{Compositional Correctness}
+\label{sec:results:compiler}
+
+\ccm{} uses open simulations with three parameters:
+memory relations, symbol relations and memory predicates
+(see \Cref{sec:main-verification:opensim} for details).
+It supports $(i)$ the memory relations discussed in \Cref{sec:overview-verification:injection}:
+identity, extension and (enriched) injections with no or any given module-local invariant;
+$(ii)$ two symbol relations: one for keeping identical symbols in the source and target
+and the other for allowing elimination of global variables in the target (only allowed for memory injections), needed for \code{Unusedglob} and \code{Unreadglob};
+$(iii)$ two memory predicates: one for no analysis and the other for the value analysis of \cc{}.
+
+Let $\rels$ be the set of open simulations with all possible parameters.
+To apply RUSC, we prove that the \ccm{} compiler $\mathcal{C}$ transforms the source module with
+a series of passes that are independently verified using open simulations in $\rels$.
+\begin{lemma}[Pass Correctness]\label{thm:results-passes}
+  For any \textrm{Clight} module $S$ and \textrm{Asm} module $T$, if $\mathcal{C}(S) = T$, then
+  there exist intermediate modules $M_0, M_1, \cdots, M_n$ such that:
+  \begin{enumerate}
+  \item $M_0 = S$ and $M_n = T$; and
+  \item $\forall i \in [0,n),~ \exists R \in \rels,~ (M_i, M_{i+1}) \in R$~.
+  \end{enumerate}
+\end{lemma}
+
+We also prove all \textrm{Clight} and \textrm{Asm} modules are self-related.
+\begin{lemma}[Self-Relatedness]\label{thm:results-relatedness} For any \textrm{Clight} or \textrm{Asm}
+  module $M$, we have $M \in \self{\rels}$.
+\end{lemma}
+\noindent
+\revision{Note that
+  since we define illegal interference from Asm
+  (\ie causing different behaviors in the source and target) as undefined behaviors (UBs)
+  as shown in \Cref{sec:compiler:solution},
+  every Asm module can be self-related.}
+
+From \Cref{thm:results-passes,thm:results-relatedness}, the RUSC relation for the compiler follows.
+\begin{theorem} [Modular Correctness]\label{thm:results-modular}
+  For any \textrm{Clight} module $S$ and \textrm{Asm} module $T$, if $\mathcal{C}(S) = T$:
+  \[
+    {S} \rusc_\rels {T} \quad\text{with}\quad S,T \in \self{\rels}~.
+  \]
+\end{theorem}
+
+\noindent
+This theorem provides a truly compositional correctness
+thanks to the compositionality of RUSC (\Cref{thm:rusc}):
+%% The fact that the source and target are related by RUSC
+%% implies that they satisfy behavioral refinement by adequacy of RUSC, and moreover
+the relation can be freely (\ie vertically or horizontally) composed with any verification using RUSC
+including that against mathematical specifications.
+As an example, the following compositional correctness follows.
+\begin{corollary} [Compositional Correctness 1]\label{thm:results-compiler}
+  Let $(S_1,T_1), \ldots, (S_n,T_n)$ be pairs of source and target modules.
+  If each pair is either compiled (\ie $\mathcal{C}(S_i) = T_i$ with $S_i$ \textrm{Clight} and $T_i$ \textrm{Asm}), or a self-related context (\ie $S_i = T_i \in \self{\rels}$), then
+  \[
+    \beh{S_1 \llink \cdots \llink S_n} \supseteq \beh{T_1 \llink \cdots \llink T_n}~.
+  \]
+\end{corollary}
+%
+\noindent This correctness theorem is compositional in the sense that behavior is refined in the
+presence of any self-related contexts such as arbitrary \textrm{Clight} and \textrm{Asm} modules
+(\Cref{thm:results-relatedness}).
+
+
+
+
+
+Note that \textrm{Clight}, not \textrm{\cc{} C}, is the source language in the above theorems.  One of the
+reasons is that \textrm{Clight} is the source language for most verification frameworks based on
+\cc{}, such as VST~\cite{VST}, \ccc{}, and \ccx{}.  More importantly, we found that
+\textrm{\cc{} C} is incompatible with memory injections.  Specifically,
+\textrm{\cc{} C} imposes a strict alignment requirement on memory blocks of size zero, which, however,
+%% but the requirement
+is not preserved by memory injections.
+%% For this reason, we cannot achieve full horizontal compositionality
+%% in the presence of both \textrm{\cc{} C} modules and compiler passes verified using memory injections.
+In other words, \textrm{\cc{} C} modules are not always self-related by memory injections.\footnote{This problem
+  would be solved if one strengthens memory injections with more strict alignment requirements.}
+
+\myparagraph{Supporting \textrm{\cc{} C}}
+However, we can still prove a compositional correctness (not modular correctness as in \Cref{thm:results-modular}) for \textrm{\cc{} C}
+following \scc{}'s \emph{Level A} technique~\cite{kang:scc},
+which exploits the fact that all \textrm{CompCert C} modules are transformed to \textrm{Clight} modules
+by the same two passes.
+Specifically, the first pass is verified using an open simulation with the memory identity
+and the second pass with memory injections, as done in the original \cc{}.
+Then the following lemma follows from horizontal compositionality and adequacy of
+open simulations (with memory identity and injection) and transitivity of behavioral refinement.
+
+\begin{lemma} [ClightGen Correctness]\label{thm:results-clightgen}
+  Let $(S_1,T_1), \ldots, (S_n,T_n)$ be pairs of source and target modules.
+  If each pair is either translated (\ie $\textrm{ClightGen}(S_i) = T_i$ with $S_i$ \textrm{\cc{} C} and $T_i$ \textrm{Clight}), or a self-related context (\ie $S_i = T_i \in \self{\rels}$), then
+  \[
+    \beh{S_1 \llink \cdots \llink S_n} \supseteq \beh{T_1 \llink \cdots \llink T_n}~.
+  \]
+\end{lemma}
+
+
+
+By composing \Cref{thm:results-compiler}, \Cref{thm:results-clightgen} and \Cref{thm:results-relatedness}, we have the following theorem.
+\begin{theorem} [Compositional Correctness 2]\label{thm:results-compiler2}
+  Let $(S_1,T_1), \ldots, (S_n,T_n)$ be pairs of source and target modules.
+  If each pair is either compiled (\ie $\mathcal{C}(S_i) = T_i$ with $S_i$ \textrm{\cc{} C} or \textrm{Clight} and $T_i$ \textrm{Asm}), or a self-related context (\ie $S_i = T_i \in \self{\rels}$), then
+  \[
+    \beh{S_1 \llink \cdots \llink S_n} \supseteq \beh{T_1 \llink \cdots \llink T_n}~.
+  \]
+\end{theorem}
+
+
+\myparagraph{Adequacy w.r.t. Physical Semantics}
+
+
+We show that the repaired interaction semantics is adequate w.r.t. the physical semantics of \cc{},
+where the former uses the language-independent linking $\llink$ and the latter the syntactic linking $\plink$
+concatenating modules of the same language.
+
+We prove that the physical semantics refines the repaired interaction semantics for \textrm{Asm} modules
+using a closed simulation of \cc{} with memory injections.
+\begin{theorem}[Adequacy w.r.t. Assembly]\label{thm:results-adequacy-asm}
+  Let $M_1, \cdots, M_n$ be \textrm{Asm} modules.  We have:
+  \[   \beh{M_1 \llink \ldots \llink M_n} \supseteq  \beh{M_1 \plink \ldots \plink M_n} ~.\]
+\end{theorem}
+\noindent
+\revision{This theorem allows us to carry verification results on the interaction semantics such as \Cref{thm:results-compiler2}
+down to \cc{}'s Asm semantics with syntactic linking.}
+
+
+
+Conversely, we prove that the repaired interaction semantics refines the physical semantics for \textrm{\cc{} C} modules
+using a closed simulation of \cc{} with memory identity.
+\begin{theorem}[Adequacy w.r.t C]\label{thm:results-adequacy-c}
+  Let $M_1, \cdots, M_n$ be \textrm{\cc{} C} modules.  We have:
+  \[  \beh{M_1 \plink \ldots \plink M_n} \supseteq \beh{M_1 \llink \ldots \llink M_n}  ~.\]
+\end{theorem}
+
+
+
+
+By composing \Cref{thm:results-compiler2,thm:results-adequacy-asm,thm:results-adequacy-c}, we obtain
+the same separate compilation correctness result of \scc{}~\cite{kang:scc}:
+
+\begin{corollary}[Separate Compilation Correctness]
+  Let $S_1, \ldots, S_n$ be \textrm{\cc{} C} modules and $T_1, \ldots, T_n$ be \textrm{Asm} modules.
+  If $\mathcal{C}(S_i) = T_i$ for each $i$, we have:
+  \[
+    \beh{S_1 \plink \cdots \plink S_n} \supseteq \beh{T_1 \plink \cdots \plink T_n}~.
+  \]
+\end{corollary}
+
+\youngju{Just mention that \ccc{} does not satisfy upperbound, and explain it in appendix?}
+\youngju{here? or appendix?: To this end, we have strengthened \cc{}'s type checker in a number of
+  ways, ruling out trivially wrong (according to C standard) programs more than before.  We rule out
+  (i) a program that contains an identifier that is not declared in the module (ii) ``return''
+  (without value) statement used for non-void function (iii) ``return'' (with value) statement used
+  for void function (iv) function arguments containing void type.  (v) has duplicate (function or
+  global variable) identifiers (vi) A function argument with size bigger than INT\_MAX (\cc{}
+  already aborts on such programs)}
+
+
+
+
+
+\section{Evaluation of Verification Efforts}\label{sec:results:evaluation}
+
+\begin{table}[t]
+\footnotesize
+
+\parbox{\linewidth}{
+\caption{SLOC of \ccm{} and related works --- compared to its baseline \cc{}, respectively}
+\begin{tabu}{@{}l@{\hspace{1.55pt}}|[1.25pt]@{\hspace{1.55pt}} r @{\hspace{1.55pt}}|@{\hspace{1.55pt}} r @{\hspace{1.55pt}}|@{\hspace{1.55pt}} r @{\hspace{1.55pt}}|[1.25pt]@{\hspace{1.55pt}} r @{\hspace{1.55pt}}|@{\hspace{1.55pt}} r @{\hspace{1.55pt}}|[1.25pt]@{\hspace{1.55pt}} r @{\hspace{1.55pt}}|@{\hspace{1.55pt}} r @{}}
+Portion     & \shortstack{\cc{} \\ 3.5} & \ccr{} 3.5        & \ccm{} pack                                               & \shortstack{\cc{}\\ 2.1} & \ccc{}                             & \shortstack{\cc{} \\ 3.0} & \ccx{}             \\
+\hline
+Pass Proofs & 34,376    & 35,893 (+4.41\%)  & \newrevision{4,923(+14.32\%)}                                          & 21,215    & 52,140 (+145.77\%)  & 26,466    & 30,572 (+15.51\%)  \\
+The Rest    & 85,617    & 87,965 (+2.74\%)  & \newrevision{25,558(+29.85\%)}  & 59,365    & 107,910 \hspace{.6mm} (+81.77\%)                 & 82,312    & 121,532 (+47.65\%) \\
+Total       & 119,993   & 123,858 (+3.22\%) & \newrevision{30,481(+25.40\%)}                                         & 80,580    & 160,050 \hspace{.6mm} (+98.62\%)                 & 108,778   & 152,104 (+39.83\%) \\
+\end{tabu}
+\label{table:evaluation-ours}
+}
+    
+\parbox{0.38\linewidth}{
+\vspace{1mm}
+\caption{\mbox{Breakdown of \ccm{} pack}}
+\begin{tabu}{@{}l | l@{}}
+Portion                          & SLOC                                                                                                     \\
+\hline
+\revision{Proofs about Intermodule Steps} & \newrevision{4,923}                                                                                                    \\
+Interaction Semantics/Properties & 1,940                                                                                                    \\
+Language Semantics/Properties    & 1,701                                                                                                    \\
+Self Simulations                 & \newrevision{5,593}                                                                                                    \\
+\cc{}  Metatheory Extension      & \newrevision{4,688}                                                                                                    \\
+\ccm{} Metatheory                & \newrevision{7,656}                                                                                                    \\
+Mixed Simulation                 & 1,090                                                                                                    \\
+Adequacy w.r.t. Asm              & 2,890                                                                                                    \\
+\end{tabu}
+\label{table:evaluation-breakdown}
+}
+\hfill
+\parbox{0.59\linewidth}{
+\vspace{1mm}
+\caption{SLOC of additional developments}
+\begin{tabu}{@{}l @{\;} |[1.25pt] @{\;} r @{\;} | @{\;} r @{\;} | @{\;} r @{\;} | @{\;} r @{\;} | @{\;} r @{}}
+Portion                          & \shortstack{\texttt{Unreadglob} \\ 3.5} & \shortstack{\texttt{Unreadglob} \\ pack} & \texttt{mutual-sum} & \texttt{utod} & \shortstack{Adequacy \\ w.r.t. C} \\
+\hline
+Pass Proofs                      & 1,842                   & 338                      & 3,088               & 361           & -             \\
+The Rest                         & 260                     & 1,933                    & 2,707               & 424           & 4,044         \\
+Total                            & 2,102                   & 2,271                    & 5,795               & 785           & 4,044         \\
+\end{tabu}
+\label{table:evaluation-others}
+}%
+\end{table}
+
+\youngju{There are two ``unreadglob'' columns, one for \cc{} and one for pack. Simplify it}
+\youngju{How about reducing caption text size?}
+\jeehoon{``Per-pass'', ``Metatheory'', and ``Total'' instead of ``Pass Proofs'', ``The Rest'', and ``Whole''}
+
+To demonstrate that \ccm{} is lightweight,
+we compare significant lines of code (SLOC) of \ccm{}, \ccc{}, and \ccx{} with
+those of their baseline \cc{} versions 3.5, 2.1, and 3.0, respectively.
+Overall, \ccm{} adds less code to \cc{} than \ccc{} and \ccx{} do,
+and in particular significantly less code than \ccc{} for the proofs of compiler passes.%
+\footnote{\revision{Note that \ccc{} allows horizontal compositionality between any intermediate languages (ILs)
+  while \ccm{} only between Clight and Asm since self-relatedness is proven only for the two.
+  Though practically unnecessary, supporting linking between arbitrary ILs in \ccm{} would increase SLOC to prove self-relatedness for the other ILs.}}
+\newrevision{Also note that \ccr{} uses the enriched memory injections of \Cref{sec:overview-verification:injection:dynamic} instead of the original memory injections
+in order to give reusable main lemmas for both closed and open simulations.
+Since \ccr{}'s pass proofs are only 4.41\% larger than \cc{}'s, 
+the overhead due to handling the private memory components of enriched memory injections is, roughly speaking, at most 4.41\%.}
+
+\Cref{table:evaluation-ours} summarizes the comparison.
+For each compiler (\ie each column),
+the rows report SLOC for the proofs of all compiler passes (Pass Proofs),
+the rest of the development (The Rest),
+and their summation (Total).
+Note that \ccm{} is split into \ccr{} and \ccm{} pack, for which the former is our refactoring
+of \cc{} and the latter is an additional package to support multi-language linking.
+We counted SLOC reported by
+\code{coqwc}.\footnote{Concretely, we counted ``spec'' and ``proof'' lines reported by \code{coqwc}.
+  Because we use a different criteria for line numbers, they are different from those reported in
+  prior work~\cite{stewart:ccc,gu:dscal,wang:saccx}.}  When counting SLOC, we excluded the following
+code for fair comparison: $(i)$ code for other architectures than x86 because all three projects support
+only x86; $(ii)$ code for the parser and type checker introduced in later versions of \cc{}; and $(iii)$ code for \textrm{ClightGen}, which is not supported by both \ccx{} and
+\ccc{}.  We also excluded \ccc{}'s legacy proofs for the original compiler correctness.  We used the
+latest development branches for the three projects.\footnote{Development as of November 8, 2019, available at: \url{https://github.com/snu-sf/compcertr}, \url{https://github.com/snu-sf/compcertm}, \url{https://github.com/PrincetonUniversity/compcomp}, \url{https://github.com/DeepSpec/dsss17/tree/master/CAL}}
+
+
+
+
+
+
+
+
+\Cref{table:evaluation-breakdown} analyzes the \newrevision{30,481} SLOC for \ccm{} pack.
+\revision{The pass proofs consist of \newrevision{4,923} SLOC for reasoning about intermodule steps, which is
+  sometimes nontrivial since they perform the logical instrumentation presented in \Cref{sec:overview-semantics}.
+  Note that \ccr{} provides proofs for intramodule steps as main lemmas, which are reused in \ccm{}.
+}
+The rest consists of
+1,940 SLOC for the repaired interaction semantics and its properties;
+1,701 SLOC for properties of each language such as determinism and receptiveness;
+5,576 SLOC for self-relatedness (\Cref{thm:results-relatedness});
+4,687 SLOC for extending the metatheory of CompCert;
+7,569 SLOC for open simulations and other metatheory for \ccm{};
+1,090 SLOC for mixed simulation; and
+2,890 SLOC for adequacy w.r.t. assembly (\Cref{thm:results-adequacy-asm}).
+
+\Cref{table:evaluation-others} shows SLOC for the new optimization pass and the verification examples
+given in the dissertation.  Note that \code{Unreadglob} 3.5 adds the optimization to \ccr{} proving closed simulation
+and \code{Unreadglob} pack to \ccm{} proving open simulation, which reuses the proof of \code{Unreadglob} 3.5 for intramodule steps.
+As the verification of \code{mutual-sum} and \code{utod} show, directly proving
+open simulation between programs and specifications is costly. 
+We believe that program logics like VST~\cite{VST} can be used to prove such simulation,
+which could significantly reduce the verification cost.
