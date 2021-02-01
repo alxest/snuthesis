@@ -33,49 +33,7 @@
 %
 
 % BEGIN REVISION
-{\revisioncmd
-\section{Memory Relations of \ccm{}}
-\label{sec:overview-verification:injection}
 
-\ccm{} uses the original memory identity and extension of \cc{}
-(\Cref{sec:overview-verification:injection:original}) and mildly
-strengthens the original memory injection to reason about dynamically allocated
-local memory such as a function's stack frame for \emph{open} modules,
-which can be compared to the structured injection of \ccc{}
-(\Cref{sec:overview-verification:injection:dynamic}).
-Moreover, we generalize it further to reason about statically allocated local memory
-such as static variables of C by allowing module-local invariants on those static variables
-(\Cref{sec:overview-verification:injection:static}).
-
-%% and mildly generalize the memory injection of \cc{} in two steps: first to reason
-%% about dynamic local memory such as a function's stack frame
-%% (\Cref{sec:overview-verification:injection:dynamic}) and further to
-%% reason about static local memory such as static variables of C
-%% (\Cref{sec:overview-verification:injection:static}).
-%% Structured injections of \ccc{} can be compared to our first generalization
-
-\subsection{Memory Relations of \cc{}}
-\label{sec:overview-verification:injection:original}
-%
-\cc{}'s memory model consists of a finite set of blocks of finite size
-and a pointer value (or, an address) is a pair $(b,o)$ of a block id $b$ and an offset $o$ inside it.
-The memory identity imposes that the source and target memories are identical;
-and the extension that the two memories contain identical block ids and
-each target block extends the corresponding source block
-with more space and any values in it at the end.
-
-A memory injection injects a subset of the source blocks into target blocks
-without overlap. More precisely, a (selected) whole source block is injected into a single target block
-while allowing multiple source blocks to be injected into the same target block without overlap.
-This injection map specifies the \emph{public} areas of the source and target memories and the correspondence between them.
-In other words, the corresponding addresses by the injection map are treated as \emph{equivalent} (public) pointer values,
-%% and therefore
-so that at those corresponding addresses,
-only equivalent%
-\footnote{Technically speaking, \cc{} allow more undefined values in the source
-  because it proves refinement rather than equivalence between the source and target programs.}
-values (\ie equivalent non-pointer values or corresponding addresses) should be stored .
-All the areas that are not on the injection map are considered as \emph{private} areas of the source and target memories.
 
 
 %% Using mixed simulation, we verify the compositional correctness of \cc{} optimizations by
