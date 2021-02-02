@@ -383,13 +383,13 @@ We use state transition system because it is the most general form, and fortunat
 Then, each implementation module (written in C or assembly) is verified against its specification module using open simulations, thus implying RUSC relation.
 The challenge here is: How to utilize the specifications of other modules even though what we are proving is RUSC, which quantifies over an arbitrary context?
 Our key idea is that, instead of directly assuming the specifications of other modules, we carefully massage each specification module with UB in order to give an illusion as if we are assuming specifications of other modules.
-Specifically, $f_{spec}$ calls $g$ -- which can be an arbitrary function because we are proving under an arbitrary context -- and then check if $g$ returns the expected value. If so, it will proceed, but if not, it will trigger UB.
-As a result, when verifying $f_{spec} \rusc_\rels f_{c}$ one needs to proceed the simulation proof only when $g$ behaves as expected, because otherwise the proof is trivial.
-After each module's verification is over, we can {\it merge} these modules to form $fg_{spec}$ and remove the potential source of UB.
+Specifically, $\texttt{f.spec}$ calls $\texttt{g}$ -- which can be an arbitrary function because we are proving under an arbitrary context -- and then check if $\texttt{g}$ returns the expected value. If so, it will proceed, but if not, it will trigger UB.
+As a result, when verifying $\texttt{f.spec} \rusc_\rels \texttt{f.c}$ one needs to proceed the simulation proof only when $\texttt{g}$ behaves as expected, because otherwise the proof is trivial.
+After each module's verification is over, we can {\it merge} these modules to form $\texttt{fg.spec}$ and remove the potential source of UB.
 This way, we can handle cooperation among the modules naturally.
 
 Finally, recall that RUSC lifts (almost) arbitrary open simulations.
-Therefore, even though verifying $f_{c}$ againts $f_{spec}$ requires a specialized simulation, RUSC can ably support them.
+Therefore, even though verifying $\texttt{f.c}$ againts $\texttt{f.spec}$ requires a specialized simulation, RUSC can ably support them.
 
 %%% 우리가 어떻게 하는지 설명
 %%% hoare logic 단점들이랑 비교 -- 왜 그런 단점이 생겼나까지 설명할 필요는 없음.

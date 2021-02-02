@@ -270,17 +270,34 @@ sensible relations will rule out such bad contexts and give us a sensible (bette
 
 
 \myparagraph{Comparison to \scc{}}
-If we ``unfold'' the notion of RUSC, what is happening under the hood is this: \Cref{fig:rusc-inline}.
-The key insight here is that {\it dummy passes} -- which does not modify anything -- are inserted so that between each row, {\it only one} module is actually translated.
-
-//비교: rusc notation 의 유용함, multi-language setting, open sim, ...
-
 \begin{figure}[t]
   \centering
   \includegraphics[width=0.90\linewidth]{images/fig-rusc-inline.png}
   \caption{An expanded version of the verification scenario described \Cref{fig:rusc-verif-scenario}}
   \label{fig:rusc-inline}
 \end{figure}
+If we ``unfold'' the notion of RUSC in the verification scenario above (\Cref{fig:rusc-verif-scenario}), what is happening under the hood is this: \Cref{fig:rusc-inline}.
+The key insight here is that by inserting {\it dummy passes} -- which does not modify anything -- {\it only one} module is actually translated between each row.
+Then, self-relatedness of \emph{end modules} and \emph{HorComp} and \emph{Adequacy} of each relation $R_i$ implies behavioral refinement between each row.
+For an instance, between the first and second row:
+\begin{itemize}
+\item $(\texttt{a.c}, \texttt{a.il1}) \in R_1$ is given;
+\item $(\texttt{b.c}, \texttt{b.c}) \in R_1$ and $(\texttt{c.asm}, \texttt{c.asm}) \in R_1$ by self-relatedness of end modules;
+\item $(\texttt{a.c} \llink \texttt{b.c} \llink \texttt{c.asm}, \texttt{a.il1} \llink \texttt{b.c} \llink \texttt{c.asm}) \in R_1$ by \emph{HorComp} of $R_1$;
+\item $\beh{\texttt{a.c} \llink \texttt{b.c} \llink \texttt{c.asm}} \supseteq \beh{\texttt{a.il1} \llink \texttt{b.c} \llink \texttt{c.asm}}$ by \emph{Adequacy} of $R_1$;
+%% \item \beh{$\texttt{a.c} \llink \texttt{b.c} \texttt{c.asm}} $\supseteq$ \beh{$\texttt{a.il1} \llink \texttt{b.c} \texttt{c.asm}} by (\emph{Adequacy}) of $R_1$;
+\end{itemize}
+
+Actually, the idea of inserting dummy passes has already been employed in \scc{}'s ``Level B'' correctness, but their technique is akin to contextual refinement and thus RUSC can be seen a generalization of their technique.
+Also, explicitly having a composable relation (RUSC) is both cognitively and technically useful.
+Other minor differences are that in their setting they used the syntactic linking operator $\plink$ concatenating modules of the \emph{same} language only, where our linking algebra allows language-independent linking.
+Also, due to this restriction, \scc{} was able to use closed simulation while we use open simulation.
+
+%% Most importantly, their approach is 
+%% //비교: rusc notation 의 유용함, multi-language setting, open sim, ...
+
+%% \begin{wrapfigure}{R}{1\linewidth}
+%%\end{wrapfigure}
 
 
 %% \myparagraph{Compositional Compiler Correctness}
