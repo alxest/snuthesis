@@ -359,8 +359,8 @@ For example, suppose you wrote a source program that uses sort function from an 
 Then, your module is correct (behaves according to a mathematical specification) only when the sort function behaves as expected.
 In other words, in program verification, it is important to support {\it cooperation} between different modules naturally.
 %
-Third, compilers are {\it general}, which means that they are designed to serve arbitrary C code so their translations are relatively simpler.
-However, in program verification, we write specifications for each C module so each abstraction is {\it special} which often require deeper understanding about its algorithmic nature.
+Third, compilers are general, which means that they are designed to serve arbitrary C code so their translations are relatively simpler.
+However, in program verification, we write specifications for each C module so each abstraction is special which often require deeper understanding about its algorithmic nature.
 %% For an instance, a compiler will never change quick sort to bubble sort, but in program verification one may.
 
 
@@ -373,7 +373,7 @@ However, in program verification, we write specifications for each C module so e
 
 
 
-Now we explain how we can apply RUSC to program verification with an example (\Cref{fig:program-verif}) where two mutually recursive modules f and g are verified against its specifications even in the presence of an unknown assembly module h.
+Now we explain how we can apply RUSC to program verification with an example (\Cref{fig:program-verif}) where two mutually recursive modules $\texttt{f.c}$ and $\texttt{g.c}$ are verified against its specifications even in the presence of an unknown assembly module $\texttt{h.asm}$.
 
 First, we write a specification as a {\it module}, not in C but in abstract mathematical state transition system. %%simpler, abstract
 For an instance, if we have a C module computing Fibonacci number employing dynamic programming technique, its specification module directly returns $\mathrm{Fib}(\code{n})$ for an argument \code{n} where $\mathrm{Fib}$ is a Gallina function.

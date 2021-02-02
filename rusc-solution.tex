@@ -169,25 +169,23 @@ we also parameterize open simulations with memory predicates---representing the
 analysis results of such analyzers---and
 prove their horizontal compositionality and adequacy (See \Cref{sec:main-verification} for details).
 
-\myparagraph{Applications} In our paper, we use RUSC
+\myparagraph{Applications} We use RUSC
 % with open simulations
 in two situations: compiler and program verification.
 %% \jeehoon{On paragraph name: how about ``Applications''?  It sounds more general.}
 
-First, we give an abstract example for compiler
+First, we give an abstract example (presented in \Cref{fig:rusc-verif-scenario}) for compiler
 verification.  Suppose our source program is written in three modules,
 \texttt{a.c}, \texttt{b.c} and \texttt{c.asm}, and compiled via
 multiple passes: $\texttt{a.c}\to\texttt{a.il1}\to\texttt{a.asm}$ and
 $\texttt{b.c}\to\texttt{b.il2}\to\texttt{b.il3}\to\texttt{b.asm}$,
-each of which is verified using a different relation as follows:
-\[
-\begin{array}{l}
-  (\texttt{a.c},\texttt{a.il1}) \in R_1 \quad (\texttt{a.il1},\texttt{a.asm}) \in R_2 \\
-  (\texttt{b.c},\texttt{b.il2}) \in R_3 \quad
-  (\texttt{b.il2},\texttt{b.il3}) \in R_4 \quad
-  (\texttt{b.il3},\texttt{b.asm}) \in R_5
-\end{array}
-\]
+each of which is verified using a different relation $R_1$ to $R_5$.
+\begin{figure}[t]
+  \centering
+  \includegraphics[width=0.90\linewidth]{images/fig-rusc.png}
+  \caption{A compiler verification scenario with RUSC}
+  \label{fig:rusc-verif-scenario}
+\end{figure}
 %
 Then as long as the \emph{end modules}, \texttt{a.c}, \texttt{b.c}, \texttt{a.asm},
 \texttt{b.asm}, \texttt{c.asm}, are self-related by the relations $R_1,\ldots,R_5$,
@@ -269,6 +267,20 @@ strong preventing any reasoning about private memory such as
 functions' stack frames. On the other hand, RUSC w.r.t. a set of
 sensible relations will rule out such bad contexts and give us a sensible (better) relation.
 %% even in the presence of such ill-behaved contexts.
+
+
+\myparagraph{Comparison to \scc{}}
+If we ``unfold'' the notion of RUSC, what is happening under the hood is this: \Cref{fig:rusc-inline}.
+The key insight here is that {\it dummy passes} -- which does not modify anything -- are inserted so that between each row, {\it only one} module is actually translated.
+
+//비교: rusc notation 의 유용함, multi-language setting, open sim, ...
+
+\begin{figure}[t]
+  \centering
+  \includegraphics[width=0.90\linewidth]{images/fig-rusc-inline.png}
+  \caption{An expanded version of the verification scenario described \Cref{fig:rusc-verif-scenario}}
+  \label{fig:rusc-inline}
+\end{figure}
 
 
 %% \myparagraph{Compositional Compiler Correctness}
