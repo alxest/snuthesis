@@ -343,105 +343,57 @@ allowing arbitrary memory relations.
 
 \section{Program Verification}\label{sec:overview:program}
 
+Program verification is about proving the source program behaves according to mathematical specifications.
+Together with the compiler verification, this constitutes an end-to-end verification of a system.
+%% Just like compiler verification, it is critically important to have a modular reasoning principle that allows one to verify each module against its specification separately.
+Just like compiler verification, it is critically important to have a modular reasoning principle that allows one to modularly verify each module against its specification by a series of incremental abstractions.
 
-\todo{what is program verification? compare it with compiler verification}
-
-
-%% Since its origination in 1960s,
-Since its origination in 1960s, Hoare logic has shown great success as a program verification technique and modularity is at the heart of it success.
-In Hoare logic, for a given program $prog$, verifier tries to establish the following formula $\hoare{P}{prog}{Q}$.
-This is called {\it Hoare triple} and means that if the $prog$ starts in a state satisfying the {\it precondition} $P$,
-its returning state should satisfy the {\it postcondition} $Q$.
-%% In other words, Hoare triple guarantees {\it partial correctness} which means that $Q$ holds {\it if} the program terminates (returns), but Hoare triple itself does not say anything about termination.
-%% In other words, Hoare triple guarantees {\it partial correctness}; it does not say anything about termination.
-Then, the following {\it sequence} (or sequential composition) rule holds.
-
-\[
-\infer
-    {\hoare{P}{c_{0} ; c_{1}}{R}}
-    {\deduce{\hoare{P}{c_{0}}{Q} \;\;\;\;\;\; \hoare{Q}{c_{1}}{R}}
-      {\textsc{(Sequence)}}}
-    %% {\deduce{\viewshift{Q'}{Q''}}
-    %%   {\deduce{\viewshift{Q}{Q'}}
-    %%     {\deduce{\textsc{(Trans)}\phantom{aa}}{\phantom{a}}}}}
-\]
-
-\noindent The rule says that two Hoare triples can be composed as long as the former's postcondition coincides with the latter's precondition. Thanks to this sequence rule, the verifier can modularly verify each instruction of the program and then compose them to establish whole program correctness.
+However, program verification is distinct from compiler verification in few ways.
+%
+First, we need a way to describe mathematical specifications. Several existing works \cite{lorch:armada, jung:irisjfp, VST, gu:dscal} take different approaches on this with pros and cons.
+%
+Second difference is that compilers are {\it conservative}; when a compiler translates a module, it does not assume any property about external function's implementation, and thus the translation is sound under arbitrary C context.
+%% However, that is not the case in program verification.
+However, in program verification we need to assume external function's behavior and that function should meet the assumption.
+For example, suppose you wrote a source program that uses sort function from an external library.
+Then, your module is correct (behaves according to a mathematical specification) only when the sort function behaves as expected.
+In other words, in program verification, it is important to support {\it cooperation} between different modules naturally.
+%
+Third, compilers are {\it general}, which means that they are designed to serve arbitrary C code so their translations are relatively simpler.
+However, in program verification, we write specifications for each C module so each abstraction is {\it special} which often require deeper understanding about its algorithmic nature.
+%% For an instance, a compiler will never change quick sort to bubble sort, but in program verification one may.
 
 
 
-%%% plcc 120p
-%%% VC 40p
-\todo{앞의 sequence rule하고 연결이 안됨. 연결하는 내용 추가 (기본적으로 sequence rule하고 똑같은거다)}
-Modern higher-order variants of Hoare logic\cite{VST,appel:plcc} supports another useful modular reasoning principle, which is written below (simplified for presentation purpose).%, but justifying it accompanies much complexity and it only works for partial correctness.
-%% The rule (simplified for presentation purpose) is as follows.
-\[
-\infer
-    %% {\hoare{P_{f}}{f}{Q_{f}} \;\;\;\;\;\;\; \hoare{P_{g}}{g}{Q_{g}}}
-    %% {\infer
-    %%   {\hoare{P_{g}}{g}{Q_{g}}}
-    %%   {\hoare{P_{f}}{f}{Q_{f}}}
-    %%   \;\;\;\;\;\;
-    %%  \infer
-    %%   {\hoare{P_{f}}{f}{Q_{f}}}
-    %%   {\hoare{P_{g}}{g}{Q_{g}}}}
-    {\deduce{\hoare{P_{g}}{\code{g}}{Q_{g}}}{\hoare{P_{f}}{\code{f}}{Q_{f}}}}
-    {\deduce{\hoare{P_{f}}{\code{f}}{Q_{f}} \implies \hoare{P_{g}}{\code{g}}{Q_{g}}}
-            {\hoare{P_{g}}{\code{g}}{Q_{g}} \implies \hoare{P_{f}}{\code{f}}{Q_{f}}}
-    }
-    %% {\deduce{(\hoare{P_{f}}{f}{Q_{f}} \land \hoare{P_{g}}{g}{Q_{g}}) \implies \hoare{P_{g}}{g}{Q_{g}}}
-    %%         {(\hoare{P_{f}}{f}{Q_{f}} \land \hoare{P_{g}}{g}{Q_{g}}) \implies \hoare{P_{f}}{f}{Q_{f}}}
-    %% }
-\]
-
-\noindent When verifying two mutually recursive functions \code{f} and \code{g}, this reasoning principle allows one to verify \code{f} assuming the specification of \code{g} and vice versa.
-The principle is seemingly unsound because it is a circular reasoning, but (with a little fix%% \todo{is this fix essential?}
-) it is indeed sound. %%because we are proving only the partial correctness.
-In order to justify the principle, a technique called {\it step-index} is employed.
-With this, it is sufficient to verify that \code{f}'s specification holds until $k+1$ steps assuming the specification of \code{g} holds until $k$ steps and vice versa.
-Then, by using induction on the step-index $k$, one can show that $f$ and $g$'s specifications hold for any finite number of steps, which is sufficient because Hoare triple requires only the {\it partial correctness}.
-\footnote{Actually, the principle is unsound for total correctness. For an instance, given $\code{f} \defeq \code{g()}$ and $\code{g} \defeq \code{f()}$, one would be able to prove \hoare{True}{\code{f}}{r . r = 42} and \hoare{True}{\code{g}}{r . r = 42}.
-  These triples mean \code{f} and \code{g} terminates with return value $42$, and these are wrong. }
-Partial correctness means that Hoare triple guarantees postcondition {\it if} it happens to terminate and does not say anything about termination itself.
+\begin{figure}[t]
+\centerline{\includegraphics[width=0.90\linewidth]{images/program-verif.png}}
+\caption{An end-to-end verification scenario}
+\label{fig:program-verif}
+\end{figure}
 
 
 
+Now we explain how we can apply RUSC to program verification with an example (\Cref{fig:program-verif}) where two mutually recursive modules f and g are verified against its specifications even in the presence of an unknown assembly module h.
 
-However, Hoare logic also has few drawbacks.
-First, step-index complicates the underlying model, and this in turn makes soundness result (or even the meaning of a Hoare triple) esoteric.
-Second, it has poor support for termination proof.
-Most variants of Hoare logic proves only the partial correctness.
-%% \footnote{\cite{jung:irisjfp} \todo{Iris jfp 도 full functional, contextual refinement 지원한다고 써놓기는 했는데 이게 total weakestpre라서 invariant 못쓸거임}}
-Thus, for proving {\it total correctness}, which guarantees both the postcondition and termination, one usually proves termination separately using another tool.
-\footnote{There are also some variants of Hoare logic which proves total correctness, but it is too stringent to be realistic. Consider the verification of library code where clients are unknown.
-Using total Hoare logic here will rule out potential non-terminating clients (e.g., web server).}
-Third, its adequacy results holds only when the whole program is verified with the same Hoare logic. This is restrictive because we often want to verify each module with different tools (such as model checker).
-Moreover, consider verification of an web server or an operating system; it is not realistic to enforce clients or user-level applications to be formally verified with the same Hoare logic.
-%% \todo{step-index complicates underlying model, spec is very hard to understand, etc...}
-%% Third, \todo{gradual abstraction} ...
-
-
-
-Our approach supports modular reasoning principle in the presence of mutual recursion, but does not suffer from aforementioned drawbacks.
-%% Now, we will explain what our approach is
 First, we write a specification as a {\it module}, not in C but in abstract mathematical state transition system. %%simpler, abstract
 For an instance, if we have a C module computing Fibonacci number employing dynamic programming technique, its specification module directly returns $\mathrm{Fib}(\code{n})$ for an argument \code{n} where $\mathrm{Fib}$ is a Gallina function.
+Existing works\cite{lorch:armada, jung:irisjfp, VST, gu:dscal} often take different choice with us, where they write specifications in a specific language, as a {\it Hoare triple}, or as a CAL.
+We use state transition system because it is the most general form, and fortunately it is already supported in interaction semantics. %% TODO: compare with multi-language semantics?
+
 Then, each implementation module (written in C or assembly) is verified against its specification module using open simulations, thus implying RUSC relation.
 The challenge here is: How to utilize the specifications of other modules even though what we are proving is RUSC, which quantifies over an arbitrary context?
-Our key idea is that, instead of directly assuming the specifications of other modules, we carefully write each specification module to give an illusion as if we are assuming specifications of other modules.
-Specifically, in $f_{spec}$, it calls $g$ and then check if $g$ returns the expected value. If so, it will proceed, but if not, it will trigger UB.
-As a result, when verifying $f_{spec} \rusc_\rels f_{impl}$ one needs to proceed the simulation proof only when $g$ behaves as expected, because otherwise the proof is trivial.
-Finally, after each module's verification is over, we can {\it merge} these modules to form $fg_{spec}$ and remove the potential source of UB.
+Our key idea is that, instead of directly assuming the specifications of other modules, we carefully massage each specification module with UB in order to give an illusion as if we are assuming specifications of other modules.
+Specifically, $f_{spec}$ calls $g$ -- which can be an arbitrary function because we are proving under an arbitrary context -- and then check if $g$ returns the expected value. If so, it will proceed, but if not, it will trigger UB.
+As a result, when verifying $f_{spec} \rusc_\rels f_{c}$ one needs to proceed the simulation proof only when $g$ behaves as expected, because otherwise the proof is trivial.
+After each module's verification is over, we can {\it merge} these modules to form $fg_{spec}$ and remove the potential source of UB.
+This way, we can handle cooperation among the modules naturally.
 
-\includegraphics[width=0.6\linewidth]{fig-program-verif.png}
+Finally, recall that RUSC lifts (almost) arbitrary open simulations.
+Therefore, even though verifying $f_{c}$ againts $f_{spec}$ requires a specialized simulation, RUSC can ably support them.
 
-\noindent Now we explain why our approach does not suffer from the drawbacks.
-First and foremost, by passively modeling the expected behavior of other modules with UB, we don't have any circularity in our reasoning. Therefore, we don't need step-index and can use RUSC framework without any problem.
-Second, we trivially support total correctness because the notion of behavior is termination-sensitive.
-Third, we don't impose any restrictions on the client module because RUSC quantifies over an arbitrary context.
-
-
-%% We have formalized our idea with the following examples:
+%%% 우리가 어떻게 하는지 설명
+%%% hoare logic 단점들이랑 비교 -- 왜 그런 단점이 생겼나까지 설명할 필요는 없음.
+%%% compiler verif랑 스타일 맞추려면... key challenge?
 
 We demonstrate RUSC's power as a program verification framework with interesting
 examples, for which we write mathematical specifications as abstract
@@ -466,14 +418,22 @@ examples and their specification modules.  Specifically, we develop:
 \end{itemize}
 \medskip
 
-Although the results are promising, RUSC as a program verification technique is still on its early stage and we will discuss future research directions in \todo{\ref{TODO}}.
+%% Although the results are promising, RUSC as a program verification technique is still on its early stage and we will discuss future research directions in \todo{\ref{TODO}}.
+%% Achieving high level of automation
+
+Our approach is promising -- it does not suffer from a few drawbacks of higher-order separation logic -- but is still on early stage and further research is needed.
+We will give a more comprehensive comparison between higher-order separation logic in \Cref{sec:program:hoare} and discuss future research directions in \Cref{sec:program:future}.
+
+
+
 %% First, we extend
 %% The most advanced variants of Hoare logic today are ``higher-order concurrent separation logic''.
 %% As the name implies,
 %% As discussed above, using RUSC as a program verification technique shows promising results but its verification overhead is relatively high.
 %% As discussed above, using RUSC as a program verification technique shows promising results but further research is needed to lower the verification overhead.
 %% Specifically, modern extension of 
-%% The reason is twofold. First, unlike compiler verification, program verification needs 
+%% The reason is twofold. First, unlike compiler verification, program verification needs
+%% interaction tree as a language
 
 %Despite the promising results, verification overhead of our approach is relatively high, so further research is needed. %to lower the verification overhead.
 %%% program verification 에서만 문제가 있고 compiler verification 과는 다르다는 것을 좀 더 이야기해야 함

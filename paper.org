@@ -7,6 +7,10 @@
 - dummy stack
 - Ctyping?
 - 피규어 더 찢고 확대
+- program verif에서 DSCAL과 비교
+
+RUSC figure 추가하기 그림으로
+%% automation 이야기... layered approach (armada claim)
 
 TODO: Chapter III에서 pagebreak가 있으니까 Chapter II background 좀만 추가하면 page+1임
 TODO: broken reference 고치기
