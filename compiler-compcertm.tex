@@ -299,10 +299,12 @@ The rest consists of
 1,090 SLOC for mixed simulation; and
 2,890 SLOC for adequacy w.r.t. assembly (\Cref{thm:results-adequacy-asm}).
 
-\Cref{table:evaluation-others} shows SLOC for the new optimization pass and the verification examples
-given in the dissertation.  Note that \code{Unreadglob} 3.5 adds the optimization to \ccr{} proving closed simulation
+%% \Cref{table:evaluation-others} shows SLOC for the new optimization pass and the verification examples
+%% given in the dissertation.  Note that \code{Unreadglob} 3.5 adds the optimization to \ccr{} proving closed simulation
+%% and \code{Unreadglob} pack to \ccm{} proving open simulation, which reuses the proof of \code{Unreadglob} 3.5 for intramodule steps.
+%% As the verification of \code{mutual-sum} and \code{utod} show, directly proving
+%% open simulation between programs and specifications is costly. 
+%% We believe that program logics like VST~\cite{VST} can be used to prove such simulation,
+%% which could significantly reduce the verification cost.
+\Cref{table:evaluation-others} shows SLOC for the new optimization pass.  Note that \code{Unreadglob} 3.5 adds the optimization to \ccr{} proving closed simulation
 and \code{Unreadglob} pack to \ccm{} proving open simulation, which reuses the proof of \code{Unreadglob} 3.5 for intramodule steps.
-As the verification of \code{mutual-sum} and \code{utod} show, directly proving
-open simulation between programs and specifications is costly. 
-We believe that program logics like VST~\cite{VST} can be used to prove such simulation,
-which could significantly reduce the verification cost.

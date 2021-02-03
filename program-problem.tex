@@ -1,2 +1,18 @@
-\section{TODO}
+\section{Problems}
 \label{sec:program:problem}
+
+However, those modern variants of Hoare logic also has few drawbacks.
+First, step-index complicates the underlying model, and this in turn makes soundness result (or even the meaning of a Hoare triple) esoteric.
+Second, it supports only partial correctness (\ie cannot prove termination).
+In fact, if we change the meaning of Hoare triple to guarantee {\it total correctness} (\ie both the postcondition and termination), the call rule becomes unsound.
+\footnote{Here is a simple counter example: $\code{f} := \code{call} \; \code{f}$. Here, one can prove arbitrary pre/postcondition on $\code{f}$ by using the call rule, which in turn implies that $\code{f}$ terminates. This is contradiction.}
+%% \footnote{\cite{jung:irisjfp} \todo{Iris jfp 도 full functional, contextual refinement 지원한다고 써놓기는 했는데 이게 total weakestpre라서 invariant 못쓸거임}}
+Therefore, for proving total correctness one needs to employ a separate tool.
+%% \footnote{There are also some variants of Hoare logic which proves total correctness, but it is too stringent to be realistic. Consider the verification of library code where clients are unknown.
+%% Using total Hoare logic here will rule out potential non-terminating clients (e.g., web server).}
+Third, its adequacy results holds only when the whole program is verified with the same Hoare logic.
+This is restrictive because we often want to verify each module with different tools (such as model checker).
+Moreover, consider verification of an web server or an operating system; it is not realistic to enforce clients or user-level applications to be formally verified with the same Hoare logic.
+Finally, it cannot verify a program that communicates with outside world. Think of a simpl REPL; it is unclear how to even write a Hoare triple for such a program.
+%% \even{step-index complicates underlying model, spec is very hard to understand, etc...}
+%% Third, \todo{gradual abstraction} ...

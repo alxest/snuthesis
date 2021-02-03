@@ -12,6 +12,7 @@
 TODO: Chapter III에서 pagebreak가 있으니까 Chapter II background 좀만 추가하면 page+1임
 TODO: broken reference 고치기
 TODO: 맞춤법 한번 싹 돌리기
+TODO: footnotesize 다 지워버러ㅕ
 
 
 DONE utod figure

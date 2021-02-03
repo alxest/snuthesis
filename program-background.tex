@@ -1,2 +1,63 @@
-\section{TODO}
+\section{Background}
 \label{sec:program:background}
+
+%% Since its origination in 1960s,
+Hoare logic, since its origination in 1960s, has shown great success as a program verification technique and modularity is at the heart of it success.
+In Hoare logic, for a given program $prog$, verifier tries to establish the following formula $\hoare{P}{prog}{Q}$.
+This is called {\it Hoare triple} and means that if the $prog$ starts in a state satisfying the {\it precondition} $P$,
+its returning state should satisfy the {\it postcondition} $Q$.
+%% In other words, Hoare triple guarantees {\it partial correctness} which means that $Q$ holds {\it if} the program terminates (returns), but Hoare triple itself does not say anything about termination.
+%% In other words, Hoare triple guarantees {\it partial correctness}; it does not say anything about termination.
+Then, the following {\it sequence} (or sequential composition) rule holds.
+
+\[
+\infer
+    {\hoare{P}{c_{0} ; c_{1}}{R}}
+    {\deduce{\hoare{P}{c_{0}}{Q} \;\;\;\;\;\; \hoare{Q}{c_{1}}{R}}
+      {\textsc{(Sequence)}}}
+    %% {\deduce{\viewshift{Q'}{Q''}}
+    %%   {\deduce{\viewshift{Q}{Q'}}
+    %%     {\deduce{\textsc{(Trans)}\phantom{aa}}{\phantom{a}}}}}
+\]
+
+\noindent The rule says that two Hoare triples can be composed as long as the former's postcondition coincides with the latter's precondition. Thanks to this sequence rule, the verifier can modularly verify each instruction of the program and then compose them to establish whole program correctness.
+
+
+
+%%% plcc 120p
+%%% VC 40p
+%% \todo{앞의 sequence rule하고 연결이 안됨. 연결하는 내용 추가 (기본적으로 sequence rule하고 똑같은거다)}
+Modern higher-order variants of Hoare logic\cite{VST,appel:plcc} supports another useful modular reasoning principle, which is written below (simplified for presentation purpose).%, but justifying it accompanies much complexity and it only works for partial correctness.
+%% The rule (simplified for presentation purpose) is as follows.
+\[
+\infer
+    %% {\hoare{P_{f}}{f}{Q_{f}} \;\;\;\;\;\;\; \hoare{P_{g}}{g}{Q_{g}}}
+    %% {\infer
+    %%   {\hoare{P_{g}}{g}{Q_{g}}}
+    %%   {\hoare{P_{f}}{f}{Q_{f}}}
+    %%   \;\;\;\;\;\;
+    %%  \infer
+    %%   {\hoare{P_{f}}{f}{Q_{f}}}
+    %%   {\hoare{P_{g}}{g}{Q_{g}}}}
+    {\deduce{\hoare{P_{g}}{\code{g}}{Q_{g}}}{\hoare{P_{f}}{\code{f}}{Q_{f}}}}
+    {\deduce{\hoare{P_{f}}{\code{call} \; \code{f}}{Q_{f}} \implies \hoare{P_{g}}{\code{g}}{Q_{g}}}
+            {\deduce{\hoare{P_{g}}{\code{call} \; \code{g}}{Q_{g}} \implies \hoare{P_{f}}{\code{f}}{Q_{f}}}
+                    {\textsc{(Call)}}}
+    }
+    %% {\deduce{(\hoare{P_{f}}{f}{Q_{f}} \land \hoare{P_{g}}{g}{Q_{g}}) \implies \hoare{P_{g}}{g}{Q_{g}}}
+    %%         {(\hoare{P_{f}}{f}{Q_{f}} \land \hoare{P_{g}}{g}{Q_{g}}) \implies \hoare{P_{f}}{f}{Q_{f}}}
+    %% }
+\]
+
+\noindent When verifying two mutually recursive functions \code{f} and \code{g}, this reasoning principle allows one to verify \code{f} assuming the specification of \code{g} and vice versa.
+Then, together with the sequence rule, one can pass by $\code{call} \; \code{f}$ (and $\code{call} \; \code{g}$, respectively) instead of going through its body.
+The principle is seemingly unsound because it is a circular reasoning, but %(with a little fix)
+it is indeed sound. %%because we are proving only the partial correctness.
+In order to justify the principle, a technique called {\it step-index} is employed.
+With this, it is sufficient to verify that \code{f}'s specification holds until $k+1$ steps assuming the specification of \code{g} holds until $k$ steps and vice versa.
+Then, by using induction on the step-index $k$, one can show that $f$ and $g$'s specifications hold for any finite number of steps, which is sufficient because Hoare triple requires only the {\it partial correctness}.
+%% \footnote{Actually, the principle is unsound for total correctness. For an instance, given $\code{f} \defeq \code{g()}$ and $\code{g} \defeq \code{f()}$, one would be able to prove \hoare{True}{\code{f}}{r . r = 42} and \hoare{True}{\code{g}}{r . r = 42}.
+%%   These triples mean \code{f} and \code{g} terminates with return value $42$, and these are wrong. }
+Partial correctness means that it does not say anything about termination; recall that Hoare triple requires the postcondition to hold {\it if} it happens to terminate.
+%% Recall that Hoare triple requires the postcondition to hold {\it if} it happens to terminate; in other words, Hoare triple does not say anything about termination itself so are called partial correctness.
+%% Partial correctness means that Hoare triple guarantees postcondition {\it if} it happens to terminate and does not say anything about termination itself.
