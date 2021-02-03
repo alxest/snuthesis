@@ -1,6 +1,177 @@
 \section{Advanced Optimizations with Module-Local Invariants}
 \label{sec:compiler:advanced}
 
+\myparagraph{Enriched Memory Injection}
+\label{sec:overview-verification:injection:dynamic}
+%
+For open modules, reasoning about dynamically allocated local memory
+such as a function's stack frame requires to strengthen the original
+memory injection due to the presence of unknown modules.  The reason
+is because when reasoning about a module $M$, we have to assume that
+an unknown function invoked by $M$ does not change the dynamic local
+memory of $M$ and also guarantee that a function of $M$ invoked by an
+unknown module does not change the caller's dynamic local memory.
+
+For this purpose, \ccc{} introduces \emph{structured injections} that
+enrich the original memory injections with ownership information (\ie
+whether owned by the current module or others) for all memory blocks
+including public ones.  Using them, structured simulations impose
+fine-grained invariants subject to the ownership information and a
+concrete leakage protocol based on reachability from pointers.
+
+Unlike \ccc{}, \ccm{} generalizes open simulations and memory injections
+in a more abstract way following \cite{DBLP:conf/icfp/DreyerNB10,pb}.
+
+First, we generalize the external call case of the open simulation in \Cref{fig:open-sim}
+by allowing \emph{private transitions}, denoted $\sqsupseteq_\weak$,
+as follows (\textcolor{red}{in red color}):
+\[
+\begin{array}{@{}l@{}}
+\texttt{ 5:}~\quad \textcolor{red}{\exists w' \sqsupseteq_\weak w},~ (f_\src,f_\tgt)\in \texttt{vrel}(\textcolor{red}{w'}) \land (\vec{v}_\src,\vec{v}_\tgt) \in \overrightarrow{\texttt{vrel}(\textcolor{red}{w'})} \land{} \\[1mm]
+\texttt{ 6:}~\quad \textcolor{red}{\forall w'' \sqsupseteq w'},~\forall (\memsrc',\memtgt')\in\texttt{mrel}(\textcolor{red}{w''}),~ \forall (r_\src,r_\tgt)\in \texttt{vrel}(\textcolor{red}{w''}),\\[1mm]
+\texttt{ 7:}~\quad \textcolor{red}{\exists w''' \sqsupseteq_\weak w'',~ w''' \sqsupseteq w} \land {} \\
+\phantom{\texttt{ 7:}}~\quad ((\memsrc',\mathtt{after\_external}~r_\src~\stsrc),(\memtgt',\mathtt{after\_external}~r_\tgt~\sttgt))\in R(\textcolor{red}{w'''})
+\end{array}
+\]
+Though private transitions are allowed before and after an external function call (\ie
+$w' \sqsupseteq_\weak w$ and $w''' \sqsupseteq_\weak w''$),
+the overall transition should be \emph{public} (\ie $w''' \sqsupseteq w$)
+assuming the external call also makes a public transition (\ie $w'' \sqsupseteq w'$).%
+\footnote{We only allow private transitions just before and after external calls for simplicity.
+See \Cref{sec:related} for comparison with \cite{DBLP:conf/icfp/DreyerNB10,pb}.}
+
+Second, we extend memory injections to specify others' dynamic local
+memories in the source and target that should be unchanged by the current module.
+Specifically, an (enriched) memory injection $(\iota, m^\weak_\src, m^\weak_\tgt)$
+consists of an original memory injection $\iota$ mapping the source public blocks into target blocks; and additionally
+a private (\ie dynamic local) memory of the source $m^\weak_\src$ and that of the target $m^\weak_\tgt$
+where $m^\weak_\src$ and $m^\weak_\tgt$ should be disjoint from the public memories specified by~$\iota$.
+Then, private transitions from $(\iota, m^\weak_\src, m^\weak_\tgt)$ to
+$(\iota', {m'}^\weak_\src, {m'}^\weak_\tgt)$ only require that $\iota'$ should extend $\iota$,
+while public transitions additionally require that private memories should be unchanged
+(\ie $m^\weak_\src = {m'}^\weak_\src$ and $m^\weak_\tgt = {m'}^\weak_\tgt$).
+Note that all the areas of the source and target memories that are not on $m^\weak_\src$, $m^\weak_\tgt$ or the injection map $\iota$
+are considered as \emph{private} (\ie dynamic local) memory of the current module.
+
+%% \begin{wrapfigure}{r}{0.45\textwidth}
+\begin{minipage}{1\textwidth}
+\mbox{}\\[-7mm]    
+\begin{Verbatim}
+   int f() {          int f() {     
+1:   int a0;            int a[2];   
+2:   reg a1 = 0;  -->   a[1] = 0;   
+3:   g(&a0);            g(&a[0]);   
+4:   return a1;         return a[1];
+   }                  }
+\end{Verbatim}
+\mbox{}\\[-10mm]
+\end{minipage}
+%% \end{wrapfigure}
+To show how it works,
+we give an example mimicking register spilling
+in the presence of address-taken stack variables.
+Consider the transformation on the right, where
+in the source a memory block for \texttt{a0} and a function-local register for \texttt{a1} are allocated and
+the address of \texttt{a0} escapes to \texttt{g},
+while in the target a single block for both \texttt{a[0]} and \texttt{a[1]}
+is allocated and the address of the block escapes to \texttt{g}.
+Here \texttt{a0} can be seen as an address-taken stack variable and \texttt{a1} a spilled register.
+The key difference is that, in the source, \texttt{a1} cannot be accessed by
+\texttt{g} since it is a function-local register
+while, in the target, \texttt{a[1]} can be accessed via the address of \texttt{a[0]}.
+
+We now show how the target \texttt{f} simulates the source \texttt{f}
+by logically protecting \texttt{a[1]} from \texttt{g}.
+Though we give an informal description here to help understanding,
+the formal definition of an open simulation $R$ 
+can be easily derived from the description.
+At line~$\texttt{1}$, any world $w_0$ and
+memories $(m_\src, m_\tgt)$ related at $w_0$ are given. We take a step
+to line~$\texttt{2}$ by extending $w_0.\iota$ (\ie the public
+injection of $w_0$) to map $\texttt{a0}$ to $\texttt{a[0]}$, say $w_1$,
+which is a public transition. At line~$\texttt{2}$, we take a step
+to line~$\texttt{3}$ without changing the world $w_1$.
+At line~$\texttt{3}$, we first make a private transition from $w_1$
+to $w_2$ by extending $w_1.m^\weak_\tgt$
+%(\ie the private area of the target memory)
+to include the memory chunk $\texttt{a[1]} = 0$.
+Then we assume that \texttt{g} makes a public transition from $w_2$ to $w_3$
+returning any memories related at $w_3$. Thanks to $w_2.m^\weak_\tgt = w_3.m^\weak_\tgt$,
+we know that the chunk $\texttt{a[1]} = 0$ remains the same.
+Then we make a private transition from $w_3$ to $w_4$ by
+dropping the chunk $\texttt{a[1]} = 0$ from $w_3.m^\weak_\tgt$.
+Since $w_4.m^\weak_\tgt = w_1.m^\weak_\tgt$, we have a public transition from $w_1$ to $w_4$.
+Finally, at line~$\texttt{4}$, we know that both the register $\texttt{a1}$ and
+the memory-allocated variable $\texttt{a[1]}$ contain
+$\texttt{0}$ and thus the same value $\texttt{0}$ is returned.
+
+It is important to note that the (others') private memories $w.m^\weak_\src$ and $w.m^\weak_\tgt$ of a
+memory injection $w$ are preserved as long as a function accesses
+$(i)$ the memory via public addresses, or $(ii)$ its own private memory.
+In the former case,
+since a public block of the source is fully injected into a block of the target,
+%% ---this is why the mapping is called an injection---
+whenever a pointer offset goes beyond the public area mapped by the injection $w.\iota$,
+the source program accesses an unallocated area thereby raising UB.
+In the example above, if \texttt{g} in the target accesses \texttt{*(\&a[0]+1)},
+then in the source it accesses \texttt{*(\&a0+1)}, which raises UB.
+In the latter case, since the function's own private memory
+is disjoint from all the memories specified by~$w$,
+accessing it does not affect $w$. In the example above, at line~\texttt{2} in the target, 
+the assignment \texttt{a[1] = 0} preserves $w_1.m^\weak_\tgt$ (and also the target public memory of $w_1$) because we know that
+the current private memory \texttt{a[1]} is disjoint from the area specified by $w_1$ by construction.
+
+\newrevision{Also note that any part of the public memories cannot be
+  converted to a private one since the injection map is only
+  extended at each step; and any part of the others' private memories
+  (\ie $m^\weak_\src$ and $m^\weak_\tgt$) cannot be
+  converted to the current module's private one since all
+  \emph{proper} steps (\ie local steps or steps across an external
+  call) only allow public transitions (\ie preserving $m^\weak_\src$ and $m^\weak_\tgt$).}
+
+%% $R(w)$ relates any memories related at $w$ and
+%% we take a step to line~$\texttt{2}$ by extending $w.\iota$
+%% (\ie the (public) injection of $w$)
+%% to map $\texttt{a0}$ to $\texttt{a[0]}$. At line~$\texttt{2}$,
+%% $R(w)$ requires that $w.\iota$ maps $\texttt{a0}$ to $\texttt{a[0]}$
+
+%% We now show how to logically protect \texttt{a[1]} from \texttt{g} and
+%% prove that the two programs are related by an open simulation $R$.
+%% First, $R$ relates each corresponding line of \texttt{f} in the source
+%% and target.  We will then explain, at each line, how $R$ relates
+%% source and target memories and satisfies the open simulation property.
+%% At line~$\texttt{1}$, $R(w)$ relates any memories related at $w$ and
+%% we take a step to line~$\texttt{2}$ by extending $w.\iota$
+%% (\ie the (public) injection of $w$)
+%% to map $\texttt{a0}$ to $\texttt{a[0]}$. At line~$\texttt{2}$,
+%% $R(w)$ requires that $w.\iota$ maps $\texttt{a0}$ to $\texttt{a[0]}$
+
+%% First,
+%% we define an open simulation $R(w)$ to relate any memories related at
+%% $w$ and each corresponding line of \texttt{f} in the source and
+%% target. Second, we prove that 
+
+%% Explain open simulation
+
+\myparagraph{Memory Injection with Module-Local Invariants}
+\label{sec:overview-verification:injection:static}
+%
+For open modules, reasoning about statically allocated local memory
+such as static variables of C requires a further generalization.  The
+problem is that when an open module $M$ invokes an unknown function
+$f$, one cannot assume that the static memory of $M$ is unchanged
+during the call because $f$ may call back a function from $M$, which
+may change the static memory. However, since the static memory is only
+accessible to the known functions in $M$, one can find a certain
+invariant on the static memory by analyzing all the functions of $M$
+and expect that an external call preserves the invariant although the
+static memory can be changed. Enabling such reasoning is simple:
+\ccm{} just adds another component in a memory injection $w$ that
+globally imposes a given invariant on selected static variables
+disjoint from $w.m^\weak_\src$, $w.m^\weak_\tgt$ and $w.\iota$.
+We give examples using module-local invariants in \Cref{sec:overview-modulelocal}.
+
+
 \begin{figure}[t]
 \begin{Verbatim}
 static int x = 0;       static int x = 0;                   
@@ -22,7 +193,7 @@ void g() {
 \label{fig:overview-modulelocal:compiler}
 \end{figure}
 
-\todo{revise}
+\myparagraph{Unreadglob Optimization}
 We developed a new optimization \texttt{Unreadglob} eliminating all
 unread static variables and instructions writing to them.
 \Cref{fig:overview-modulelocal:compiler} shows an example
