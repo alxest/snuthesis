@@ -2,6 +2,13 @@
 \chapter{\;\;\;\;Compiler Verification}
 \label{sec:compiler}
 
+We first give background on \cc{} and \ccc{}'s interaction semantics (\Cref{sec:compiler:background}), discuss the problems with interaction semantics (\Cref{sec:compiler:problems}) and present how we fixed it (\Cref{sec:compiler:solution}).
+We show the flexibility of our framework by adding an advanced optimization (\Cref{sec:compiler:advanced}), and report our overall results in (\Cref{sec:compiler:compcertm}).
+In \Cref{sec:compiler:semantics,sec:compiler:technique,sec:compiler:compcertr}, we flesh out formal details of our development.
+Finally, we discuss related works in \Cref{sec:compiler:related}.
+%% Finally, we discuss related works (\Cref{sec:compiler:related}).
+
+
 \input{compiler-background}
 \input{compiler-problems}
 \input{compiler-solution}
@@ -9,4 +16,5 @@
 \input{compiler-compcertm}
 \input{compiler-semantics}
 \input{compiler-technique}
+\input{compiler-compcertr}
 \input{compiler-related}
