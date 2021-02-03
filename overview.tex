@@ -29,7 +29,7 @@ dependence and be verified against certain well-behaved
 specifications. On the other hand, the latter develops a new
 verification technique that directly solves the problem but at the
 expense of significantly increasing the verification cost.
-For program verification, higher-order separation logic has shown great success, but it also has shortcomings:
+For program verification, higher-order separation logic (such as VST\cite{VST}) has shown great success, but it also has shortcomings:
 its underlying model (and thus soundness result) is esoteric, it proves partial correctness instead of total correctness,
 and its soundness theorem is applicable only when the whole program is verified with the same logic.
 %does not support gradual abstraction.
@@ -48,8 +48,8 @@ both compiler verification (\Cref{sec:compiler}) and program verification (\Cref
 Specifically, we develop CompCertM, a full
 extension of the latest version of CompCert supporting multi-language
 linking, and show how RUSC enables modular compiler verification without any restrictions but still with low verification overhead.
-Moreover, we verify interesting programs using RUSC as a program verification technique, and demonstrate that it does not suffer from aforementioned drawbacks of higher-order separation logic.
-Although the results are promising, RUSC as a program verification technique is still on its early stage and we discuss future research directions.
+Moreover, we verify interesting programs using RUSC as a program logic, and demonstrate that it does not suffer from aforementioned drawbacks of higher-order separation logic.
+Although the result shows potential, RUSC-as-a-program-logic is still on its early stage and we discuss future research directions.
 %% Moreover, we demonstrate the power of RUSC as a program
 %% verification technique by modularly verifying interesting programs
 %% consisting of C and handwritten assembly against their mathematical
@@ -395,7 +395,7 @@ Therefore, even though verifying $\texttt{f.c}$ againts $\texttt{f.spec}$ requir
 %%% hoare logic 단점들이랑 비교 -- 왜 그런 단점이 생겼나까지 설명할 필요는 없음.
 %%% compiler verif랑 스타일 맞추려면... key challenge?
 
-We demonstrate RUSC's power as a program verification framework with interesting
+We demonstrate RUSC's potential as a program verification framework with interesting
 examples, for which we write mathematical specifications as abstract
 modules in interaction semantics and prove refinement between the
 examples and their specification modules.  Specifically, we develop:
@@ -422,7 +422,8 @@ examples and their specification modules.  Specifically, we develop:
 %% Achieving high level of automation
 
 Our approach is promising -- it does not suffer from a few drawbacks of higher-order separation logic -- but is still on early stage and further research is needed.
-We will give a more comprehensive comparison between higher-order separation logic in \Cref{sec:program:hoare} and discuss future research directions in \Cref{sec:program:future}.
+Specifically, we give clean and understandable specifications, prove total correctness, and our results are sound under arbitrary context, but our verification overhead is relatively higher than that of higher-order separation logic.
+We will give a more comprehensive comparison in \Cref{sec:program:hoare} and discuss future research directions in \Cref{sec:program:future}.
 
 
 

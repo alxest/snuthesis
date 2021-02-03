@@ -1,6 +1,13 @@
 \chapter{\;\;\;\;Program Verification}
 \label{sec:program}
 
+In this chapter, we will show the potential of RUSC as a program verification technique with interesting examples and give a comprehensive comparison with higher-order separation logic, (arguably) the most successful and widely used program verification technique so far.
+We first give a brief background on Hoare logic,
+\cc{} and \ccc{}'s interaction semantics (\Cref{sec:compiler:background}), discuss the problems with interaction semantics (\Cref{sec:compiler:problems}) and present how we fixed it (\Cref{sec:compiler:solution}).
+We show the flexibility of our framework by adding an advanced optimization (\Cref{sec:compiler:advanced}), and report our overall results in (\Cref{sec:compiler:compcertm}).
+In \Cref{sec:compiler:semantics,sec:compiler:technique,sec:compiler:compcertr}, we flesh out formal details of our development.
+Finally, we discuss related works in \Cref{sec:compiler:related}.
+
 \input{program-background}
 \input{program-problem}
 \input{program-solution}
