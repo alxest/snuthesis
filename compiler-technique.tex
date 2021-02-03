@@ -5,14 +5,16 @@ Now we present the formalization of our verification techniques.
 %% As discussed in \Cref{sec:overview-verification:solution},
 We parameterize the notion of open simulation presented in
 \Cref{sec:overview-verification} with three parameters: memory relations, symbol
-relations, and memory predicates.  We present the three parameters
-(\Cref{sec:main-verification:parameter}), the parameterized open simulations
-(\Cref{sec:main-verification:opensim}), and their horizontal compositionality and adequacy theorems
-(\Cref{sec:main-verification:theorems}).
+relations, and memory predicates.  We present formal details about
+mixed simulation (\Cref{sec:main-verification:mixedsim}),
+the three parameters (\Cref{sec:main-verification:parameter}),
+the parameterized open simulations (\Cref{sec:main-verification:opensim}), and
+their horizontal compositionality and adequacy theorems (\Cref{sec:main-verification:theorems}).
 %% Then we introduce mixed simulation that allows forward
 %% reasoning in the presence of nondeterminism (\Cref{sec:main-verification:mixedsim}).
 
 \subsection{Mixed Simulation}
+\label{sec:main-verification:mixedsim}
 In this section, we flesh out technical details about mixed simulation.
 Recall that our mixed simulation technique supports three modes; (1) backward, (2) forward with locally deterministic target states, and (3) forward with locally receptive source states and locally determinate target states.
 Technically, the mode (2) and (3) are implemented as an instance of a more general mode (4) that subsumes the two.
@@ -24,15 +26,15 @@ In the mode (4), we introduce a parameter ST that controls the amount of restric
 \[
 \begin{array}{l@{}l}
 \textrm{ST} \in \textrm{SimilarTraces} = & \{\; \sim \; \in \; \option \Events \times \option \Events \;|\; \\
-                         & \;\; (\forall \, x, \; \none \sim x \implies x = \none) \land (\forall \, x, \; x \sim \none \implies x = \none) \}
+                         & \;\; (\forall \, e, \; \none \sim e \implies e = \none) \land (\forall \, e, \; e \sim \none \implies e = \none) \}
 \end{array}
 \]
 Then, depending on the parameter ST, we define the notion of locally receptive and locally determinate as follows.
 \[
 \begin{array}{l@{}l}
-\textrm{receptive\_at} (s: \texttt{state})   & \; \defeq \; \forall \, t_1, s_1, t_2, (s \estep{t_1} s_1 \land t_1 \sim t_2) \implies \exists s_2, s \estep{t_2} s_2 \\
-\textrm{determinate\_at} (s: \texttt{state}) & \; \defeq \; \forall \, t_1, s_1, t_2, s_2, (s \estep{t_1} s_1 \land s \estep{t_2} s_2) \implies \\
-                                             & \;\;\;\;\;\;\; (t_1 \sim t_2 \land (t_1 = t_2 \implies s_1 = s_2)) \\
+\textrm{receptive\_at} (s: \texttt{state})   & \; \defeq \; \forall \, e_1, s_1, e_2, (s \estep{e_1} s_1 \land e_1 \sim e_2) \implies \exists s_2, s \estep{e_2} s_2 \\
+\textrm{determinate\_at} (s: \texttt{state}) & \; \defeq \; \forall \, e_1, s_1, e_2, s_2, (s \estep{e_1} s_1 \land s \estep{e_2} s_2) \implies \\
+                                             & \;\;\;\;\;\;\; (e_1 \sim e_2 \land (e_1 = e_2 \implies s_1 = s_2)) \\
 \end{array}
 \]
 Finally, the mode (4) is defined as follows:
@@ -43,6 +45,27 @@ Finally, the mode (4) is defined as follows:
   $ \exists \mstgt',~ \mstgt \exstep{\tau}^{\raisebox{-1mm}{\scriptsize$\ast$}} \exstep{e}\exstep{\tau}^{\raisebox{-1mm}{\scriptsize$\ast$}} \mstgt' \land (\mssrc', \mstgt') \in R$\\
   where $\ms \exstep{e} \ms'$ denotes that determinate\_at($\ms$) holds and $\ms \estep{e} \ms'$.
 \end{enumerate}
+\begin{proof}
+We write rough outline of the adequacy proof of this mode.
+If the $\mssrc$ cannot take any step, it is undefined behavior so the proof is over. Otherwise, we have $e_1$ such that $\mssrc \estep{e_1} \mssrc'$.
+By applying mode (4) proof with $e_1$ and $\mssrc'$, we have ($\tau$ steps omitted for brevity) $\mstgt \estep{e_1} \mstgt' \land (\mssrc', \mstgt') \in R$. Now, it suffices\footnote{We omit the details about coinductive reasoning here.} to prove this:
+\[\forall e_2, \mstgt'', \mstgt \estep{e_2} \mstgt'' \implies \exists \mssrc', \mssrc \estep{e_2} \mssrc' \land (\mssrc', \mstgt'') \in R.\]
+
+By determinate\_at, we have $(e_1 \sim e_2 \land (e_1 = e_2 \implies \mstgt' = \mstgt''))$.
+If $e_1 = e_2$, we have $\mstgt' = \mstgt''$. We finish the proof by instantiating $\exists \mssrc'$ with $\mssrc'$.
+Otherwise, we still have $e_1 \sim e_2$.
+Then, by receptive\_at, we have $\mssrc''$ such that $\mssrc \estep{e_2} \mssrc''$.
+Finally, by applying mode (4) proof with $e_2$ and $\mssrc''$, we get $\mstgt''$ such that $\mstgt \estep{e_1} \mstgt'' \land (\mssrc'', \mstgt'') \in R$.
+We finish the proof by instantiating $\exists \mssrc'$ with $\mssrc''$.
+
+\end{proof}
+%% We write rough outline of the adequacy proof of this mode.
+%% If the $\mssrc$ cannot take any step, it is undefined behavior so the proof ends. Otherwise, we have $e$ such that
+%% \begin{itemize}
+%% $\mssrc \estep{e} \mssrc'$; \\
+%% $\mstgt \estep{e} \mstgt'$ by the mode (4) proof; \\
+%% Now, we need to show that $\forall e', \mstgt \estep{e'} \mstgt' \implies \mssrc \estep{e'} \mssrc'$ \\
+%% \end{itemize}
 
 We get mode (2) and (3) by instantiating $\sim$ of (4) with proper instances; the former with equality, and the latter with a certain relation called ``match\_traces'' from \cc{}.
 %% \end{itemize}
@@ -454,8 +477,8 @@ while public transitions additionally require that private memories should be un
 Note that all the areas of the source and target memories that are not on $m^\weak_\src$, $m^\weak_\tgt$ or the injection map $\iota$
 are considered as \emph{private} (\ie dynamic local) memory of the current module.
 
-\begin{wrapfigure}{r}{0.45\textwidth}
-\begin{minipage}{0.45\textwidth}
+%% \begin{wrapfigure}{r}{0.45\textwidth}
+\begin{minipage}{1\textwidth}
 \mbox{}\\[-7mm]    
 \begin{Verbatim}
    int f() {          int f() {     
@@ -467,7 +490,7 @@ are considered as \emph{private} (\ie dynamic local) memory of the current modul
 \end{Verbatim}
 \mbox{}\\[-10mm]
 \end{minipage}
-\end{wrapfigure}
+%% \end{wrapfigure}
 To show how it works,
 we give an example mimicking register spilling
 in the presence of address-taken stack variables.
