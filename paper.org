@@ -1,3 +1,8 @@
+일단 TODO (compcertr, parameters, program-related works) 남겨둔 채로 맞춤법 체크 하고 발송하자.
+
+
+
+
 내용 추가할만한 것들 
 - parameter instances, 직관 더 설명
 - future works for program verif
@@ -9,7 +14,6 @@
 - program verif에서 DSCAL과 비교
 - automation 이야기... layered approach (armada claim)
 
-TODO: Chapter III에서 pagebreak가 있으니까 Chapter II background 좀만 추가하면 page+1임
 TODO: broken reference 고치기
 TODO: 맞춤법 한번 싹 돌리기
 TODO: footnotesize 다 지워버러ㅕ
@@ -17,6 +21,7 @@ TODO: footnotesize 다 지워버러ㅕ
 
 DONE utod figure
 DONE rusc figure 추가하기 그림으로
+DONE: Chapter III에서 pagebreak가 있으니까 Chapter II background 좀만 추가하면 page+1임
 
 
 
