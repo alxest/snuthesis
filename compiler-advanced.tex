@@ -1,6 +1,17 @@
 \section{Advanced Optimizations with Module-Local Invariants}
 \label{sec:compiler:advanced}
 
+To demonstrate the flexibility of our framework -- allowing arbitrary memory relations -- we added a new optimization, \texttt{Unreadglob}, whose verification requires a new memory relation.
+We flesh out the details in the following order: first we present {\it enriched memory injection}, a mildly strengthened version of \cc{}'s original injection (\Cref{sec:overview-verification:injection:static}),
+then the new memory relation (\Cref{sec:overview-verification:injection:dynamic}), and finally \texttt{Unreadglob} optimization (\Cref{sec:compiler:advanced:unreadglob}).
+%% In this section, we present {\it enriched memory injection}, a mild generalization of \cc{}'s original injection (\Cref{sec:overview-verification:injection:static}),
+%% the new memory relation \Cref{sec:overview-verification:injection:dynamic}, and \texttt{Unreadglob} optimization \Cref{fig:overview-modulelocal:compiler}.
+
+%% In this section we present what our framework additionally offers about compiler and
+%% program verification: verifying more advanced compiler optimizations with module-local
+%% invariants (\Cref{sec:overview-modulelocal:compiler}) and verifying program modules against their
+%% mathematical specification modules (\Cref{sec:overview-modulelocal:program} and \Cref{sec:overview-modulelocal:utod}).
+
 \myparagraph{Enriched Memory Injection}
 \label{sec:overview-verification:injection:dynamic}
 %
@@ -194,6 +205,7 @@ void g() {
 \end{figure}
 
 \myparagraph{Unreadglob Optimization}
+\label{sec:compiler:advanced:unreadglob}
 We developed a new optimization \texttt{Unreadglob} eliminating all
 unread static variables and instructions writing to them.
 \Cref{fig:overview-modulelocal:compiler} shows an example
