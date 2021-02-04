@@ -17,11 +17,11 @@ their horizontal compositionality and adequacy theorems (\Cref{sec:main-verifica
 \label{sec:main-verification:mixedsim}
 In this section, we flesh out technical details about mixed simulation.
 Recall that our mixed simulation technique supports three modes; (1) backward, (2) forward with locally deterministic target states, and (3) forward with locally receptive source states and locally determinate target states.
-Technically, the mode (2) and (3) are implemented as an instance of a more general mode (4) that subsumes the two.
-Therefore, we first give the definition of that ``general'' mode and then explain the others.
+Technically, modes (2) and (3) are implemented as an instance of a more general mode (4) that subsumes the two.
+Therefore, we first define that ``general'' mode and then explain the others.
 
-Intuitively, mode (2) imposes strong restriction on the target and no restriction on source, where mode (3) imposes moderate restriction on both source and target.
-In the mode (4), we introduce a parameter ST that controls the amount of restriction imposed on the source and target.
+Intuitively, mode (2) imposes a strong restriction on the target and no restriction on the source, whereas mode (3) imposes a moderate restriction on both source and target.
+In mode (4), we introduce a parameter ST that controls the amount of restriction imposed on the source and target.
 %% $\textrm{SimilarTraces} \eq \{ \sim \; \in \; \option \Events \times \option \Events \;|\; (\forall x, \none \; \sim \; x \implies x \eq \none) \land (\forall x, x \; \sim \; \none \implies x \eq \none) \}$ 
 \[
 \begin{array}{l@{}l}
@@ -37,7 +37,7 @@ Then, depending on the parameter ST, we define the notion of locally receptive a
                                              & \;\;\;\;\;\;\; (e_1 \sim e_2 \land (e_1 = e_2 \implies s_1 = s_2)) \\
 \end{array}
 \]
-Finally, the mode (4) is defined as follows:
+Finally, mode (4) is defined as follows:
 %% \begin{itemize}
 \begin{enumerate}[resume]
 \item There exists ST such that receptive\_at($\mssrc$) holds and\\
@@ -46,8 +46,8 @@ Finally, the mode (4) is defined as follows:
   where $\ms \exstep{e} \ms'$ denotes that determinate\_at($\ms$) holds and $\ms \estep{e} \ms'$.
 \end{enumerate}
 \begin{proof}
-We write rough outline of the adequacy proof of this mode.
-If the $\mssrc$ cannot take any step, it is undefined behavior so the proof is over. Otherwise, we have $e_1$ such that $\mssrc \estep{e_1} \mssrc'$.
+We write a rough outline of the adequacy proof of this mode.
+If the $\mssrc$ cannot take any step, it is undefined behavior, so the proof is over. Otherwise, we have $e_1$ such that $\mssrc \estep{e_1} \mssrc'$.
 By applying mode (4) proof with $e_1$ and $\mssrc'$, we have ($\tau$ steps omitted for brevity) $\mstgt \estep{e_1} \mstgt' \land (\mssrc', \mstgt') \in R$. Now, it suffices\footnote{We omit the details about coinductive reasoning here.} to prove this:
 \[\forall e_2, \mstgt'', \mstgt \estep{e_2} \mstgt'' \implies \exists \mssrc', \mssrc \estep{e_2} \mssrc' \land (\mssrc', \mstgt'') \in R.\]
 
@@ -67,7 +67,7 @@ We finish the proof by instantiating $\exists \mssrc'$ with $\mssrc''$.
 %% Now, we need to show that $\forall e', \mstgt \estep{e'} \mstgt' \implies \mssrc \estep{e'} \mssrc'$ \\
 %% \end{itemize}
 
-We get mode (2) and (3) by instantiating $\sim$ of (4) with proper instances; the former with equality, and the latter with a certain relation called ``match\_traces'' from \cc{}.
+We get modes (2) and (3) by instantiating $\sim$ of (4) with proper instances; the former with equality, and the latter with a certain relation called ``match\_traces'' from \cc{}.
 %% \end{itemize}
 
 \subsection{Parameters for Open Simulations}
