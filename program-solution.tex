@@ -3,7 +3,7 @@
 
 In this section, we first present our approach with the \texttt{mutual-sum} example (\Cref{sec:program:solution:mutsum}).
 To the best of our knowledge, our framework is the first, in the context of \cc{}, that is capable of verifying the \emph{mutually recursive} modules.
-Then, we point out that our approach does not suffer from aforementioned problems in \Cref{sec:program:problem} while supporting modular reasoning principle (\Cref{sec:program:solution:advantages}).
+Then, we point out that our approach does not suffer from the aforementioned problems in \Cref{sec:program:problem} while supporting the modular reasoning principle (\Cref{sec:program:solution:advantages}).
 Additionally, we verify \texttt{utod}, \cc{}'s internal handwritten assembly function whose behavior is axiomatized, and show that such axioms can be removed (\Cref{sec:program:solution:utod}).
 Finally, we report their verification efforts (\Cref{sec:program:solution:evaluation}).
 
@@ -166,20 +166,20 @@ Finally, we prove $\texttt{ab.spec} \rusc_\rels \texttt{a.spec} \llink
 
 \subsection{Advantages}
 \label{sec:program:solution:advantages}
-Our approach does not suffer from aforementioned problems in \Cref{sec:program:problem} while supporting modular reasoning principle (\Cref{sec:program:solution:advantages}).
+Our approach does not suffer from the aforementioned problems in \Cref{sec:program:problem} while supporting the modular reasoning principle (\Cref{sec:program:solution:advantages}).
 
-First and foremost, by passively modeling the expected behavior of other modules with UB, we don't have any circularity in our reasoning.
-Therefore, we don't need step-index so our specification is clean and easy to understand.
-Furthermore, as our specification is written in an operational semantics, it can even be executed and tested.
-It is very important to have a reliable and understandable specification, perhaps as important as the verification itself, and testing is widely adopted as a tool to establish such trust.
+First and foremost, by passively modeling the expected behavior of other modules with UB, we do not have any circularity in our reasoning.
+Therefore, we do not need a step-index, so our specification is clean and easy to understand.
+Furthermore, as our specification is written in operational semantics, it can even be executed and tested.
+It is crucial to have a reliable and understandable specification, perhaps as important as the verification itself, and testing is widely adopted as a tool to establish such trust.
 %
-Second, we trivially support total correctness because the notion of behavior is termination-sensitive and we prove behavioral refinement.
+Second, we trivially support total correctness because the notion of behavior is termination-sensitive, and we prove behavioral refinement.
 %
-Third, we don't impose any restriction on the client module because RUSC quantifies over an arbitrary context.
+Third, we do not impose any restriction on the client module because RUSC quantifies over an arbitrary context.
 %
 Finally, our specification module can trigger events just as C and assembly modules do, so we can definitely give a REPL-like specification.
-Note that while we give terminating specification for terminating implementations and reactive (non-terminating and consistently communicating with outside world, like REPL) specification for reactive modules,
-their correctness are all expressed in simple RUSC relation. This is in contrast with where they define Hoare triple for partial correctness and total correctness separately, and these two are not coexist.
+Note that while we give terminating specifications for terminating implementations and reactive (non-terminating and consistently communicating with the outside world, like REPL) specification for reactive modules,
+their correctnesses are all expressed in the same RUSC relation. This is in contrast with where they define Hoare triple for partial correctness and total correctness separately, and these two do not coexist.
 
 
 
@@ -240,17 +240,17 @@ and then establish an open simulation with memory injections between the assembl
 \Cref{table:evaluation-program} shows SLOC for the program verification examples presented above.
 
 Pass proofs (establishing open simulation between the specification and the implementation module) are mostly mechanical and tedious.
-They mostly consist of executing C (or assembly) semantics step-by-step, doing simple reduction on local environment (or register state), and applying memory related lemmas appropriately.
-Note that all of these are shared pattern among general C (or assembly) program verification.
-We didn't do any proof automation at all, so there is big room for improvement.
+They mostly consist of executing C (or assembly) semantics step-by-step, making a simple reduction on the local environment (or register state), and applying memory related lemmas appropriately.
+Note that all of these are shared patterns among general C (or assembly) program verification.
+We did not do any proof automation at all, so there is a big room for improvement.
 
-For ``The Rest'', \texttt{mutual-sum} and \texttt{utod} have quite different reasons for their SLOC.
-In \texttt{utod}, the whole SLOC is about proving self-relatedness of the specification module.
+For ``The Rest,'' \texttt{mutual-sum} and \texttt{utod} have quite different reasons for their SLOC.
+In \texttt{utod}, the whole SLOC is about proving the self-relatedness of the specification module.
 Recall that we verified self-relatedness for arbitrary C and assembly modules but not for arbitrary specification modules (it is not true).
-In \texttt{mutual-sum} however, about 1,089 SLOC are from $\texttt{ab.spec} \rusc_\rels \texttt{a.spec} \llink \texttt{b.spec}$.
-As discussed above, the proof of this translation is mainly about termination which should (morally) be easy.
-Main technical hassle that made this long SLOC is that we had to take unknown context into account.
-Such reasoning can be made as a general purpose meta-theory.
+In \texttt{mutual-sum}, however, about 1,089 SLOC are from $\texttt{ab.spec} \rusc_\rels \texttt{a.spec} \llink \texttt{b.spec}$.
+As discussed above, the proof of this translation is mainly about termination, which should (morally) be easy.
+The main technical hassle that made this long SLOC is that we had to take unknown context into account.
+Such reasoning can be made as a general-purpose meta-theory.
 
 
 %% As the verification of \code{mutual-sum} and \code{utod} show, directly proving open simulation between programs and specifications is costly. 

@@ -2,7 +2,7 @@
 \label{sec:program:background}
 
 %% Since its origination in 1960s,
-Hoare logic, since its origination in 1960s, has shown great success as a program verification technique and modularity is at the heart of it success.
+Hoare logic, since its origination in the 1960s, has shown great success as a program verification technique, and modularity is at the heart of its success.
 In Hoare logic, for a given program $prog$, verifier tries to establish the following formula $\hoare{P}{prog}{Q}$.
 This is called {\it Hoare triple} and means that if the $prog$ starts in a state satisfying the {\it precondition} $P$,
 its returning state should satisfy the {\it postcondition} $Q$.
@@ -49,9 +49,9 @@ Modern higher-order variants of Hoare logic\cite{VST,appel:plcc} supports anothe
     %% }
 \]
 
-\noindent When verifying two mutually recursive functions \code{f} and \code{g}, this reasoning principle allows one to verify \code{f} assuming the specification of \code{g} and vice versa.
+\noindent When verifying two mutually recursive functions, \code{f} and \code{g}, this reasoning principle allows one to verify \code{f} assuming the specification of \code{g} and vice versa.
 Then, together with the sequence rule, one can pass by $\code{call} \; \code{f}$ (and $\code{call} \; \code{g}$, respectively) instead of going through its body.
-The principle is seemingly unsound because it is a circular reasoning, but %(with a little fix)
+The principle is seemingly unsound because it is circular reasoning, but %(with a little fix)
 it is indeed sound. %%because we are proving only the partial correctness.
 In order to justify the principle, a technique called {\it step-index} is employed.
 With this, it is sufficient to verify that \code{f}'s specification holds until $k+1$ steps assuming the specification of \code{g} holds until $k$ steps and vice versa.
