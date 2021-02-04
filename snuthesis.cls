@@ -246,7 +246,8 @@
 	\newcommand{\studentnumbername}{Student Number}
 	\newcommand{\studentnumbernamealt}{학번}
 	\newcommand{\abstractnamealt}{초록}
-	\newcommand{\acknowledgementname}{Acknowledgements}
+	%% \newcommand{\acknowledgementname}{Acknowledgements}
+	\newcommand{\acknowledgementname}{감사의 글}
 \fi
 
 \if@snu@indentoptionset
