@@ -204,7 +204,7 @@ interaction semantics of linked assembly modules deviates from their
 one of the modules indeed causes illegal interference, for example, by not
 preserving the callee-save register values.
 \revision{Note that this problem was also observed and discussed
-in the PhD thesis of \cite{StewartThesis} (see \Cref{sec:related} for comparison).}
+in the PhD thesis of \cite{StewartThesis} (see \Cref{sec:compiler:related} for comparison).}
 
 Finally, there is another difference between \ccc{} and \ccx{}:
 \ccc{} only supports C-style calling conventions, while \ccx{} additionally
@@ -295,7 +295,7 @@ Second, to make those illegal
 behaviors UBs, we strengthened only the interaction part of
 interaction semantics without changing the underlying language
 semantics of \cc{}, which indeed is quite nontrivial as
-discussed in \Cref{sec:overview-semantics}. Finally, we
+discussed in \Cref{sec:compiler:problems}. Finally, we
 prove two adequacy results: $(i)$ the interaction semantics of linked
 assembly modules is refined by their physical semantics, and $(ii)$
 the physical semantics (\ie the language semantics of \cc{}) of linked
@@ -423,7 +423,7 @@ examples and their specification modules.  Specifically, we develop:
 
 Our approach is promising -- it does not suffer from a few drawbacks of higher-order separation logic -- but is still in early-stage, and further research is needed.
 Specifically, we give clean and understandable specifications, prove total correctness, and our results are sound under arbitrary context, but we do not support advanced features (\eg{} concurrency) yet, and our verification overhead is relatively high.
-We will give a more comprehensive comparison in \Cref{sec:program:hoare} and discuss future research directions in \Cref{sec:program:future}.
+We will give a more comprehensive comparison and discuss future research directions in \Cref{sec:program:solution,sec:program:future}.
 
 
 

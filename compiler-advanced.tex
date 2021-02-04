@@ -49,7 +49,7 @@ $w' \sqsupseteq_\weak w$ and $w''' \sqsupseteq_\weak w''$),
 the overall transition should be \emph{public} (\ie $w''' \sqsupseteq w$)
 assuming the external call also makes a public transition (\ie $w'' \sqsupseteq w'$).%
 \footnote{We only allow private transitions just before and after external calls for simplicity.
-See \Cref{sec:related} for comparison with \cite{DBLP:conf/icfp/DreyerNB10,pb}.}
+See \Cref{sec:compiler:related} for comparison with \cite{DBLP:conf/icfp/DreyerNB10,pb}.}
 
 Second, we extend memory injections to specify others' dynamic local
 memories in the source and target that should be unchanged by the current module.
@@ -180,7 +180,7 @@ static memory can be changed. Enabling such reasoning is simple:
 \ccm{} just adds another component in a memory injection $w$ that
 globally imposes a given invariant on selected static variables
 disjoint from $w.m^\weak_\src$, $w.m^\weak_\tgt$ and $w.\iota$.
-We give examples using module-local invariants in \Cref{sec:overview-modulelocal}.
+We give examples using module-local invariants in \Cref{sec:compiler:advanced:unreadglob,sec:program:solution}.
 
 
 \begin{figure}[t]

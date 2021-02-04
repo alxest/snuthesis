@@ -5,7 +5,7 @@ Our solution is twofold. First, we develop a general and abstract
 theory, called \emph{Refinement Under Self-related Contexts (RUSC)},
 which is inspired by the standard notion of contextual refinement
 \revision{and the notion of self-related context from \cite{stewart:ccc}
-  (see \Cref{sec:related} for comparison).}
+  (see \Cref{sec:compiler:related} for comparison).}
 %\scc{}~\cite{?} (see \Sref{sec:related} for comparison).
 Specifically, given a set of (arbitrary and independent)
 relations each of which is horizontally compositional and adequate,
@@ -39,7 +39,7 @@ that is associative%
 \]
 Note that RUSC can be applied to interaction semantics because it
 allows linking between arbitrary modules sharing the same notions
-of value and memory (see \Cref{sec:overview-semantics:background} and \Cref{sec:main-semantics} for details).
+of value and memory (see \Cref{sec:compiler:background:isem} and \Cref{sec:compiler:semantics} for details).
 
 To define RUSC, let $\rels$ be a set of module relations each of which is horizontally
 compositional and adequate: for any $R \in \rels$ and $p,p',q,q'\in \Module$,
@@ -158,7 +158,7 @@ called \emph{memory injection with module-local invariants}.
 This new memory relation is needed to
 verify a new pass we added, called \texttt{Unreadglob}, which
 requires reasoning about module-local states enabled by \emph{static}
-variables of C (see \Cref{sec:overview-modulelocal} for details).
+variables of C (see \Cref{sec:compiler:advanced} for details).
 
 %% (emphasize that RUSC allows different techniques for different passes.
 %% Additionally, analysis passes and assumptions on global variables).
@@ -167,7 +167,7 @@ implements a static analyzer performing value analysis, which is used by
 several passes. In order to support independent modular verification of such analyzers,
 we also parameterize open simulations with memory predicates---representing the
 analysis results of such analyzers---and
-prove their horizontal compositionality and adequacy (See \Cref{sec:main-verification} for details).
+prove their horizontal compositionality and adequacy (See \Cref{sec:compiler:technique} for details).
 
 \myparagraph{Applications} We use RUSC
 % with open simulations
@@ -215,7 +215,7 @@ we could easily prove that \emph{all} Clight\footnote{Clight is taken
   as the source language in most verification projects using \cc{}
   such as VST~\cite{VST}, CertiKOS and even \ccc{}.
   However, we also prove behavioral refinement w.r.t. the C source language
-  (see \Cref{sec:results}).
+  (see \Cref{sec:compiler:compcertm}).
 }
 and assembly programs are
 self-related by all the relations used by \ccm{}
@@ -223,7 +223,7 @@ self-related by all the relations used by \ccm{}
 and injection with or without module-local invariants).
 %% \jeehoon{How about ``we could easily prove that \emph{all} C, Clight, ...''}
 
-Second, we demonstrate, via small but interesting examples (see \Cref{sec:overview-modulelocal}),
+Second, we demonstrate, via small but interesting examples (see \Cref{sec:program:solution}),
 % (see \Cref{sec:overview-modulelocal} and \Cref{sec:utod-verification}),
 %% the possibility
 that our framework can be used to verify program modules
