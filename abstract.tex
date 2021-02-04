@@ -2,6 +2,34 @@
 
 \begin{abstract}
 
+Modern software systems are complex, and modularity is the crucial tool for coping with such complexity.
+To verify such a system end-to-end, it is critically important to have a modular verification technique.
+However, none of the existing approaches are satisfactory.
+In this dissertation, we develop a novel modular verification technique, called RUSC (Refinement
+Under Self-related Contexts), and demonstrate its usefulness by applying it to
+both compiler verification and program verification.
+
+
+
+The two state-of-the-art frameworks, CompCertX and Compositional
+CompCert, supporting modular verification of multi-language program %% heterogeneous systems
+take different approaches. The former simplifies the problem by
+imposing restrictions that the source modules should have no mutual
+dependence and be verified against certain well-behaved
+specifications. On the other hand, the latter develops a new
+verification technique that directly solves the problem but at the
+expense of significantly increasing the verification cost.
+
+We show how RUSC can solve the problem without any restrictions but still with
+low verification overhead. For this, we develop CompCertM, a full
+extension of the latest version of CompCert supporting multi-language
+linking. Moreover, we demonstrate the power of RUSC as a program
+verification technique by modularly verifying interesting programs
+consisting of C and handwritten assembly against their mathematical
+specifications.
+
+
+
 %% In modern computer systems, to tame complexity, each component is developed modularly and then composed.
 
   %% In modern computer systems, each component is developed modularly and then compiled down to assembly,
@@ -24,6 +52,7 @@
 
 %% In order to tame complexity, modern computer systems are developed modularly, where each modules are
 
+\hide{
 \todo{TODO}
 Modern software systems are large and complex; they are composed of
 multiple modules written in different languages such as C and
@@ -61,6 +90,7 @@ linking. Moreover, we demonstrate the power of RUSC as a program
 verification technique by modularly verifying interesting programs
 consisting of C and handwritten assembly against their mathematical
 specifications.
+}
 
 
 
