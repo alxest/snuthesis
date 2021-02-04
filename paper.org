@@ -14,10 +14,10 @@
 - program verif에서 DSCAL과 비교
 - automation 이야기... layered approach (armada claim)
 
-TODO: broken reference 고치기
 TODO: footnotesize 다 지워버러ㅕ
 
 
+DONE: broken reference 고치기
 DONE utod figure
 DONE rusc figure 추가하기 그림으로
 DONE: Chapter III에서 pagebreak가 있으니까 Chapter II background 좀만 추가하면 page+1임

@@ -10,6 +10,7 @@ mixed simulation (\Cref{sec:main-verification:mixedsim}),
 the three parameters (\Cref{sec:main-verification:parameter}),
 the parameterized open simulations (\Cref{sec:main-verification:opensim}), and
 their horizontal compositionality and adequacy theorems (\Cref{sec:main-verification:theorems}).
+Finally, we present some interesting instances for the three parameters (\Cref{sec:main-verification:instances}).
 %% Then we introduce mixed simulation that allows forward
 %% reasoning in the presence of nondeterminism (\Cref{sec:main-verification:mixedsim}).
 
@@ -422,5 +423,53 @@ given in \textsc{(sim:prog)} of \Cref{fig:full-sim}.  Then we have:
 
 
 \subsection{Instances of Parameters}
+\label{sec:main-verification:instances}
 
-\todo{TODO}
+In this section, we present intuition behind the three parameters (\Cref{sec:main-verification:instances}) with some interesting instances of them.
+%% with their underlying ideas.
+%% and try to convey the idea behind them.
+
+The virtue of $\MREL$ is that in the \caselabel{CALL} case of \Cref{fig:full-sim},
+possible future worlds are restricted with \cdashbox{myred}{$\mrel{}'' \sqsupseteq \mrel{}'$}.
+Actually, all the guarantee conditions \cfbox{myred}{$\mrel' \sqsupseteq \mrel$} elsewhere are required to ensure this condition.
+The most interesting instances of $\MREL$ are already presented in \Cref{sec:overview-verification:injection:dynamic,sec:overview-verification:injection:static}.
+They are carefully designed so that each function guarantees others' private memories (\eg dynamic local memories) are unchanged (\cdashbox{myred}{$\mrel{}'' \sqsupseteq \mrel{}'$}), and in return they are guaranteed that their own private memories are unchanged after an external function call.
+
+$\SREL$ was introduced to verify optimizations that changes their symbol environments, such as \code{Unusedglob}.
+Except for those optimizations, we always use the following trivial quadruple.
+%% \[
+%% (\Skel \times \Skel, \;
+%% \code{fun \_\,\_} \rightarrow \true, \;
+%% \code{fun} \; \srel \; \skel_\src \; \skel_\tgt \rightarrow \srel = (\skel_\src, \skel_\tgt), \;
+%% \]
+%% \[
+%% \code{fun \_\,\_ } \; \skenv_\src \; \skenv_\tgt \rightarrow \skenv_\src = \skenv_\tgt)
+%% \]
+\[
+\begin{array}{l@{}l}
+(&\Skel \times \Skel, \;
+\code{fun \_\,\_} \rightarrow \true, \;
+\code{fun} \; \srel \; \skel_\src \; \skel_\tgt \rightarrow \srel = (\skel_\src, \skel_\tgt), \\
+&\code{fun \_\,\_ } \; \skenv_\src \; \skenv_\tgt \rightarrow \skenv_\src = \skenv_\tgt)
+\end{array}
+\]
+
+%% $
+%% (\Skel \times \Skel, \;
+%% \code{fun \_\,\_} \rightarrow \true, \;
+%% \code{fun} \; \srel \; \skel_\src \; \skel_\tgt \rightarrow \srel = (\skel_\src, \skel_\tgt), \;
+%% \code{fun \_\,\_ } \; \skenv_\src \; \skenv_\tgt \rightarrow \skenv_\src = \skenv_\tgt)
+%% $
+
+For unusedglob, we use following instance.
+\[
+\begin{array}{l@{}l}
+(&(\code{d}, \code{s}, \code{t}) \in \powset{\Ident} \times \Skel \times \Skel), \\
+ &\code{fun (\code{d}, \code{s}, \code{t}) (\code{d'}, \code{s'}, \code{t'})} \rightarrow \\
+ &\qquad \code{d} \subseteq \code{d'} \land \code{s} \sqsubseteq \code{s'} \land \code{t} \sqsubseteq \code{t'} \land (\forall i \in \Ident, i \in d' \land i \notin d \implies (i \notin \code{s} \land i \notin \code{t})), \\
+ &\code{fun (d, s, t)} \; \skel_\src \; \skel_\tgt \rightarrow \\
+ &\qquad \code{s} = \skel_\src \land \code{t} = \skel_\tgt \land (\forall i \in \Ident, i \notin d \implies \code{s.}i = \code{t.}i) \land \\
+ &\qquad (\forall i \in \Ident, i \in d \implies i \in \code{s.statics} \land \code{t.}i = \none) \\
+\end{array}
+\]
+%% {(t, ⊑, screl, serel) ∈ (Set × P(t × t) × (t → P(Scode × Scode)) × (t → MR.t → P(Senv × Senv))) |
