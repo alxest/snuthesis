@@ -429,13 +429,13 @@ In this section, we present intuition behind the three parameters (\Cref{sec:mai
 %% with their underlying ideas.
 %% and try to convey the idea behind them.
 
-The virtue of $\MREL$ is that in the \caselabel{CALL} case of \Cref{fig:full-sim},
+The virtue of parameterizing $\MREL$ is that in the \caselabel{CALL} case of \Cref{fig:full-sim},
 possible future worlds are restricted with \cdashbox{myred}{$\mrel{}'' \sqsupseteq \mrel{}'$}.
 Actually, all the guarantee conditions \cfbox{myred}{$\mrel' \sqsupseteq \mrel$} elsewhere are required to ensure this condition.
 The most interesting instances of $\MREL$ are already presented in \Cref{sec:overview-verification:injection:dynamic,sec:overview-verification:injection:static}.
 They are carefully designed so that each function guarantees others' private memories (\eg dynamic local memories) are unchanged (\cdashbox{myred}{$\mrel{}'' \sqsupseteq \mrel{}'$}), and in return they are guaranteed that their own private memories are unchanged after an external function call.
 
-$\SREL$ was introduced to verify optimizations that changes their symbol environments, such as \code{Unusedglob}.
+$\SREL$ is introduced to verify optimizations that changes their symbol environments, such as \code{Unusedglob}.
 Except for those optimizations, we always use the following trivial quadruple.
 %% \[
 %% (\Skel \times \Skel, \;
@@ -446,11 +446,18 @@ Except for those optimizations, we always use the following trivial quadruple.
 %% \code{fun \_\,\_ } \; \skenv_\src \; \skenv_\tgt \rightarrow \skenv_\src = \skenv_\tgt)
 %% \]
 \[
+%% \begin{array}{l@{}l}
+%% (&\Skel \times \Skel, \;
+%% \code{fun \_\,\_} \rightarrow \true, \;
+%% \code{fun} \; \srel \; \skel_\src \; \skel_\tgt \rightarrow \srel = (\skel_\src, \skel_\tgt), \\
+%% &\code{fun \_\,\_ } \; \skenv_\src \; \skenv_\tgt \rightarrow \skenv_\src = \skenv_\tgt)
+%% \end{array}
+%% \]
 \begin{array}{l@{}l}
-(&\Skel \times \Skel, \;
-\code{fun \_\,\_} \rightarrow \true, \;
-\code{fun} \; \srel \; \skel_\src \; \skel_\tgt \rightarrow \srel = (\skel_\src, \skel_\tgt), \\
-&\code{fun \_\,\_ } \; \skenv_\src \; \skenv_\tgt \rightarrow \skenv_\src = \skenv_\tgt)
+(&\Skel \times \Skel, \\
+&\code{fun \_\,\_} \rightarrow \true, \\
+&\code{fun} \; \srel \; \skel_\src \; \skel_\tgt \rightarrow \srel = (\skel_\src, \skel_\tgt), \\
+&\code{fun \_\,\_ } \; \skenv_\src \; \skenv_\tgt \rightarrow \skenv_\src = \skenv_\tgt) \\
 \end{array}
 \]
 
@@ -461,15 +468,40 @@ Except for those optimizations, we always use the following trivial quadruple.
 %% \code{fun \_\,\_ } \; \skenv_\src \; \skenv_\tgt \rightarrow \skenv_\src = \skenv_\tgt)
 %% $
 
-For unusedglob, we use following instance.
+For unusedglob, we use the following instance.
 \[
 \begin{array}{l@{}l}
 (&(\code{d}, \code{s}, \code{t}) \in \powset{\Ident} \times \Skel \times \Skel), \\
- &\code{fun (\code{d}, \code{s}, \code{t}) (\code{d'}, \code{s'}, \code{t'})} \rightarrow \\
- &\qquad \code{d} \subseteq \code{d'} \land \code{s} \sqsubseteq \code{s'} \land \code{t} \sqsubseteq \code{t'} \land (\forall i \in \Ident, i \in d' \land i \notin d \implies (i \notin \code{s} \land i \notin \code{t})), \\
- &\code{fun (d, s, t)} \; \skel_\src \; \skel_\tgt \rightarrow \\
- &\qquad \code{s} = \skel_\src \land \code{t} = \skel_\tgt \land (\forall i \in \Ident, i \notin d \implies \code{s.}i = \code{t.}i) \land \\
- &\qquad (\forall i \in \Ident, i \in d \implies i \in \code{s.statics} \land \code{t.}i = \none) \\
+ &(\code{fun } (d, s, t) \; (d', s', t') \rightarrow \\
+ &\qquad d \subseteq d' \land s \subseteq s' \land t \subseteq t' \land (\forall i \in \Ident, i \in d' \land i \notin d \implies (i \notin s \land i \notin t))), \\
+ &(\code{fun } (d, s, t) \; \skel_\src \; \skel_\tgt \rightarrow \\
+ &\qquad s = \skel_\src \land t = \skel_\tgt \land (\forall i \in \Ident, i \notin d \implies s\code{@}i = t\code{@}i) \land \\
+ &\qquad (\forall i \in \Ident, i \in d \implies i \in (\code{statics\_of } s) \land t\code{@}i = \none)), \\
+ & \ldots) \\
 \end{array}
 \]
 %% {(t, ⊑, screl, serel) ∈ (Set × P(t × t) × (t → P(Scode × Scode)) × (t → MR.t → P(Senv × Senv))) |
+Here, \code{d} means dropped identifiers, \code{s} source \Skel \, and \code{t} target \Skel.
+\code{statics\_of} means the list of identifiers marked as static variable and $s\code{@}i$ is a definition in $s$ whose identifier is $i$.
+We omit exact definition of $\simskenv$; it morally means that the injection does not map dropped identifier in the source and all other identifiers are mapped one-to-one.
+%% Note that if the dropped identifier is mapped, than  <--- src UB는 괜찮...
+
+Similarly with above, the virtue of parameterizing $\SREL$ is that in \caselabel{INIT} case of \Cref{fig:full-sim}, one can rely on $\cdashbox{green}{$(\msem_{src}.\texttt{senv}, \msem_{tgt}.\texttt{senv}) \in \simskenv(\srel, \mrel)$}$.
+For this, a pair of module first guarantees their symbol codes are related: \cfbox{green}{$(\module_{\src}.\texttt{scode}, \module_{\tgt}.\texttt{scode}) \in \simsk(\srel)$}.
+Recall that in the loading process (\Cref{sec:main-semantics:loading}),
+individual symbol codes are linked to constitute a global symbol code,
+loaded into global symbol environment, and finally projected into individual symbol environments.
+There should be a mechanism that ensures the information written in $\simsk$ (\ie the list of dropped identifiers) to be transferred into $\simskenv$ (\ie dropped identifiers are not injected).
+For instance, suppose that a module $A$ claims that a static identifier $i$ of another module $B$ is dropped while it actually isn't.
+Then, the resulting injection will not map $i$, so the $\simskenv$ of $B$ is broken.
+To prevent this, $\simsk$ requires that the identifiers one claims to be dropped should be its own \emph{static} variables ($\code{statics\_of } s$),
+which prevents invalidating the invariants of other modules.
+Then, such information is maintained throughout the linking process by $\sqsubseteq$ relation.
+
+
+
+$\MPRED$ is introduced to verify optimizations employing static analyzers.
+
+
+Open Preservation with Parameters
+SoundTop
