@@ -7,23 +7,23 @@ In this section, we briefly review \cc{}'s memory model and memory relations (\C
 \label{sec:compiler:background:compcert}
 
 \myparagraph{Undefined Behavior}
-UBs can be understood as erroneous (forbidden) operations, so that compilers are licensed to translate them into arbitrary behaviors.
-A typical example of such erroneous operation is buffer overrun, which may spoil the stack frame, and thus invalidate basic assumptions compiler has made.
-Note that compilers are not required to detect those UB -- it is impossible to detect it statically, and doing so dynamically will give too much overhead.
-Instead, programmers are obligated to avoid UB, and compilers can optimize assuming the source program is free of UB.
+UBs can be understood as erroneous (forbidden) operations so that compilers are licensed to translate them into arbitrary behaviors.
+A typical example of such an erroneous operation is a buffer overrun, which may spoil the stack frame and invalidate the compiler's basic assumptions.
+Note that compilers are not required to detect UB -- it is impossible to detect it statically, and doing so dynamically will give too much overhead.
+Instead, programmers are obligated to avoid UB, and compilers can optimize, assuming the source program is free of UB.
 
 To capture those intuitions, UB is formally defined as a set of all possible behaviors.
 Recall that the semantics preservation (\Cref{sec:rusc:background}) property states that behaviors of the source program includes that of the target.
 By defining UB this way, compilers are indeed licensed to translate UB into arbitrary behaviors.
-Also, programmers are indeed obligated to avoid UB, because if UB is executed then anything can happen (\eg{}leaking private data).
+Also, programmers are indeed obligated to avoid UB, because if UB is executed, anything can happen (\eg{}leaking private data).
 
 %% As mentioned in \Cref{sec:overview:compiler}, UBs can be understood as forbidden behaviors, so that compilers are licensed to translate them into any behaviors.
 
 \myparagraph{\cc{} Memory Model}
-{\it Memory model} determines, for each memory operations, how the memory is changed and what are the return values.
+The {\it memory model} determines, for each memory operation, how the memory is changed and what are the return values.
 
 The simplest way to define a memory model is to represent memory as a single large map, just as in hardware.
-This model is often called {\it flat} (or {\it concrete}) memory model.
+This model is often called a {\it flat} (or {\it concrete}) memory model.
 Formally, the model is defined as follows.
 \[
 \begin{array}{r@{~~}c@{~~}l}
@@ -33,10 +33,10 @@ Formally, the model is defined as follows.
 \]
 Note that both pointer and integer values are represented as a 32-bit integer in $\textrm{Val}$.
 %% Note that $\textrm{Val}$ is just a 32-bit integer, which means both pointer and integer values are represented as a mere natural number.
-$\textrm{Mem}(p) = \some{v}$ means that the location $p$ is allocated and it contains a value $v$. On the other hand, $\textrm{Mem}(p) = \none$ means it is not allocated yet.
+$\textrm{Mem}(p) = \some{v}$ means that the location $p$ is allocated, and it contains a value $v$. On the other hand, $\textrm{Mem}(p) = \none$ means it is not allocated yet.
 
 
-However, flat memory model does not properly model buffer overrun as UB, and thus it cannot validate essential compiler translations.
+However, the flat memory model does not properly model buffer overrun as UB, and thus it cannot validate essential compiler translations.
 Specifically, see the following example:
 \begin{figure}[h]
 \begin{minipage}{1.2\linewidth}
@@ -64,14 +64,14 @@ int f() {
 \end{minipage}
 %% \makebox[\linewidth]{\makebox[1.2\linewidth]{
 %% }}
-\caption{A counterexample showing the problem with flat memory model}
+\caption{A counterexample showing the problem with the flat memory model}
 \label{fig:flat-model}
 \end{figure}
 
 %% In this example, if the address of \begin{verbatim}x\end{verbatim} and \begin{verbatim}y+4\end{verbatim} happens to be the same, the translation is invalid because the source prints 43 and while the target prints 42.
 %% The root cause of the problem is that there is no way to distinguish the two pointer \begin{verbatim}x\end{verbatim} and \begin{verbatim}y+4\end{verbatim}, where the former should be allowed to access \begin{verbatim}x[0]\end{verbatim} while the latter should not.
 \noindent In this example, if the address of x and y+4 happens to be the same, the translation is invalid because the source prints 43 while the target prints 42.
-The root cause of the problem is that there is no way to distinguish two pointer x and y+4 where the former should be allowed to access x[0] while the latter should not.
+The root cause of the problem is that there is no way to distinguish two pointers x and y+4 where the former should be allowed to access x[0] while the latter should not.
 
 
 To address this problem, \cc{} uses a different memory model that is also called {\it logical} memory model.
@@ -92,13 +92,13 @@ It is formally defined as follows (simplified for presentation purpose):
 %% \textrm{Perm} & \defeq & \textrm{Allocated} \uplus  \textrm{Unallocated} \\
 \end{array}
 \]
-If a block's permission (\textrm{Perm}) is \textrm{Valid}, then it is an allocated block and accessible. If it is \textrm{Invalid}, then it is not allocated yet or already freed, thus accessing it is considered UB.
-Values are either a 32-bit integer, a pointer composed of a block id and an offset inside it, or an \Undef value which can be understood as an uninitialized value. %% pair $(b,o)$ where $b$ is a block id and $o$ is an offset inside it.
-In $\textrm{Mem}$, for a given address $(b,o)$, $m$ returns permission and the value contained in that address.
-$nb$ (which is an abbreviation of next block) always points to the smallest fresh block id. Therefore, whenever a memory is allocated, it increments $nb$ by one and returns $(nb, 0)$.
+If a block's permission (\textrm{Perm}) is \textrm{Valid}, it is an allocated block and accessible. If it is \textrm{Invalid}, it is not allocated yet or already freed; thus, accessing it is considered UB.
+Values are either a 32-bit integer, a pointer composed of a block id and an offset inside it, or an \Undef value, which can be understood as an uninitialized value. %% pair $(b,o)$ where $b$ is a block id and $o$ is an offset inside it.
+In $\textrm{Mem}$, for a given address $(b,o)$, $m$ returns permission, and the value contained in that address.
+$nb$ (which is an abbreviation of next block) always points to the smallest fresh block id. Therefore, whenever a memory block is allocated, it increments $nb$ by one and returns $(nb, 0)$.
 
-With logical memory model, the above translation is valid.
-Note that $x$ and $y$ originates in different allocations, so they have different block id.
+With a logical memory model, the above translation is valid.
+Note that $x$ and $y$ originate in different allocations, so they have different block id.
 Therefore, one cannot access $x$ with $y$ no matter the offset.
 Actually, accessing $y[1]$ executes UB because its permission is \textrm{Invalid}, so the semantic preservation holds trivially.
 
