@@ -346,21 +346,21 @@ allowing arbitrary memory relations.
 Program verification is about proving the source program behaves according to mathematical specifications.
 Together with the compiler verification, this constitutes an end-to-end verification of a system.
 %% Just like compiler verification, it is critically important to have a modular reasoning principle that allows one to verify each module against its specification separately.
-Just like compiler verification, it is critically important to have a modular reasoning principle that allows one to modularly verify each module against its specification by a series of incremental abstractions.
+Like compiler verification, it is critically important to have a modular reasoning principle that allows one to verify each module against its specification by a series of gradual abstractions. 
 
 However, program verification is distinct from compiler verification in few ways.
 %
 First, we need a way to describe mathematical specifications. Several existing works \cite{lorch:armada, jung:irisjfp, VST, gu:dscal} take different approaches on this with pros and cons.
 %
-Second difference is that compilers are {\it conservative}; when a compiler translates a module, it does not assume any property about external function's implementation, and thus the translation is sound under arbitrary C context.
+The second difference is that compilers are {\it conservative}; when a compiler translates a module, it does not assume any property about external function's implementation, and thus the translation is sound under arbitrary C context.
 %% However, that is not the case in program verification.
-However, in program verification we need to assume external function's behavior and that function should meet the assumption.
-For example, suppose you wrote a source program that uses sort function from an external library.
-Then, your module is correct (behaves according to a mathematical specification) only when the sort function behaves as expected.
-In other words, in program verification, it is important to support {\it cooperation} between different modules naturally.
+However, in program verification, we need to assume the external function's behavior, and that function should meet the assumption.
+For example, suppose there is a source program that uses a sort function from an external library.
+Then, the module is correct (behaves according to a mathematical specification) only when the sort function behaves as expected.
+In other words, in program verification, it is crucial to support {\it cooperation} between different modules naturally.
 %
-Third, compilers are general, which means that they are designed to serve arbitrary C code so their translations are relatively simpler.
-However, in program verification, we write specifications for each C module so each abstraction is special which often require deeper understanding about its algorithmic nature.
+Third, compilers are general, which means that they are designed to serve arbitrary C code, so their translations are relatively more straightforward.
+However, in program verification, we write specifications for each C module, so each abstraction is unique, requiring a deeper understanding of its algorithmic nature. 
 %% For an instance, a compiler will never change quick sort to bubble sort, but in program verification one may.
 
 
@@ -373,23 +373,23 @@ However, in program verification, we write specifications for each C module so e
 
 
 
-Now we explain how we can apply RUSC to program verification with an example (\Cref{fig:program-verif}) where two mutually recursive modules $\texttt{f.c}$ and $\texttt{g.c}$ are verified against its specifications even in the presence of an unknown assembly module $\texttt{h.asm}$.
+Now we explain how we can apply RUSC to program verification with an example (\Cref{fig:program-verif}) where two mutually recursive modules, $\texttt{f.c}$ and $\texttt{g.c}$, are verified against its specifications even in the presence of an unknown assembly module $\texttt{h.asm}$.
 
-First, we write a specification as a {\it module}, not in C but in abstract mathematical state transition system. %%simpler, abstract
-For an instance, if we have a C module computing Fibonacci number employing dynamic programming technique, its specification module directly returns $\mathrm{Fib}(\code{n})$ for an argument \code{n} where $\mathrm{Fib}$ is a Gallina function.
-Existing works\cite{lorch:armada, jung:irisjfp, VST, gu:dscal} often take different choice with us, where they write specifications in a specific language, as a {\it Hoare triple}, or as a CAL.
-We use state transition system because it is the most general form, and fortunately it is already supported in interaction semantics. %% TODO: compare with multi-language semantics?
+First, we write a specification as a {\it module}, not in C but an abstract mathematical state transition system. %%simpler, abstract
+For instance, if we have a C module computing Fibonacci number employing dynamic programming technique, its specification module directly returns $\mathrm{Fib}(\code{n})$ for an argument \code{n} where $\mathrm{Fib}$ is a Gallina function.
+Existing works\cite{lorch:armada, jung:irisjfp, VST, gu:dscal} often take different choices with us, where they write specifications in a specific language, as a {\it Hoare triple}, or as a CAL.
+We use a state transition system because it is the most general form, and fortunately, it is already supported in interaction semantics. %% TODO: compare with multi-language semantics?
 
 Then, each implementation module (written in C or assembly) is verified against its specification module using open simulations, thus implying RUSC relation.
-The challenge here is: How to utilize the specifications of other modules even though what we are proving is RUSC, which quantifies over an arbitrary context?
+The challenge here is: How to utilize the other modules' specifications even though what we are proving is RUSC, which quantifies over an arbitrary context?
 Our key idea is that, instead of directly assuming the specifications of other modules, we carefully massage each specification module with UB in order to give an illusion as if we are assuming specifications of other modules.
 Specifically, $\texttt{f.spec}$ calls $\texttt{g}$ -- which can be an arbitrary function because we are proving under an arbitrary context -- and then check if $\texttt{g}$ returns the expected value. If so, it will proceed, but if not, it will trigger UB.
-As a result, when verifying $\texttt{f.spec} \rusc_\rels \texttt{f.c}$ one needs to proceed the simulation proof only when $\texttt{g}$ behaves as expected, because otherwise the proof is trivial.
+As a result, when verifying $\texttt{f.spec} \rusc_\rels \texttt{f.c}$ one needs to proceed with the simulation proof only when $\texttt{g}$ behaves as expected because otherwise, the proof is trivial.
 After each module's verification is over, we can {\it merge} these modules to form $\texttt{fg.spec}$ and remove the potential source of UB.
 This way, we can handle cooperation among the modules naturally.
 
 Finally, recall that RUSC lifts (almost) arbitrary open simulations.
-Therefore, even though verifying $\texttt{f.c}$ againts $\texttt{f.spec}$ requires a specialized simulation, RUSC can ably support them.
+Therefore, even though verifying $\texttt{f.c}$ against $\texttt{f.spec}$ requires a specialized simulation, RUSC can ably support them.
 
 %%% 우리가 어떻게 하는지 설명
 %%% hoare logic 단점들이랑 비교 -- 왜 그런 단점이 생겼나까지 설명할 필요는 없음.
