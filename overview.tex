@@ -10,11 +10,11 @@ Then compilers translate such high-level languages into assembly via multiple tr
 
 
 
-To verify such a system end-to-end, it is critically important to have a modular verification technique.
-Specifically, the verification can be divided into two parts, compiler verification and program verification,
-where the former is about proving the generated assembly code behaves as specified by the semantics of the source program,
+To verify such a system, it is critically important to have a modular verification technique.
+Specifically, the verification can be divided into two parts, compiler verification and program verification.
+The former is about proving the generated assembly code behaves as specified by the source program's semantics,
 and the latter is about proving desired properties about the behaviors of the source program.
-In compiler verification, we want to focus on a single compiler and its single translation at a time, even though each modules are written in different languages and compiled with different compilers.
+In compiler verification, we want to focus on a single compiler and its single translation at a time, even though each module is written in different languages and compiled with different compilers.
 Similarly, in program verification, we want to focus on a single module and its single abstraction at a time, assuming interfaces of other modules.
 
 
@@ -46,10 +46,10 @@ Under Self-related Contexts) (\Cref{sec:rusc}), and demonstrate its usefulness b
 both compiler verification (\Cref{sec:compiler}) and program verification (\Cref{sec:program}).
 %% Specifically, RUSC solves the problem without aforementioned restrictions but still with low verification overhead.
 Specifically, we develop CompCertM, a full
-extension of the latest version of CompCert supporting multi-language
+extension of CompCert supporting multi-language
 linking, and show how RUSC enables modular compiler verification without any restrictions but still with low verification overhead.
-Moreover, we verify interesting programs using RUSC as a program logic, and demonstrate that it does not suffer from aforementioned drawbacks of higher-order separation logic.
-Although the result shows potential, RUSC-as-a-program-logic is still on its early stage and we discuss future research directions.
+Moreover, we verify interesting programs using RUSC as a program logic and demonstrate that it does not suffer from the drawbacks above of higher-order separation logic.
+Although the result shows potential, RUSC-as-a-program-logic is still in its early stage, and we discuss future research directions.
 %% Moreover, we demonstrate the power of RUSC as a program
 %% verification technique by modularly verifying interesting programs
 %% consisting of C and handwritten assembly against their mathematical
@@ -227,7 +227,7 @@ Specifically, we develop:
 \item Repaired Interaction Semantics: providing adequacy w.r.t. the
   physical semantics and additionally supporting assembly-style
   calling conventions;
-\item \ccm{}: the latest version of \cc{} (v3.5) fully extended with
+\item \ccm{}: \cc{} v3.5 fully extended with
   the repaired interaction semantics and open simulations to support
   multi-language linking (\newrevision{18.73}\% larger in the correctness
   proofs of all compiler passes, and \newrevision{32.59}\% larger in the metatheory);
