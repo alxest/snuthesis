@@ -44,7 +44,7 @@ Specifically, see the following example:
 \begin{Verbatim}[frame=single]
 int main() {            int main {
   int* x = malloc(4);     int* x = malloc(4);
-  x[0] = 0;               x[0] = 42;
+  x[0] = 42;              x[0] = 42;
   f();               -->  f();
   out(x[0]);              out(42);
 }                       }

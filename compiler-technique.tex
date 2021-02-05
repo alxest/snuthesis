@@ -322,10 +322,17 @@ while the module semantics are related at $d$, which represents the module's own
 \newnewrevision{Two programs each of which consists of a list of modules are simulated if each corresponding modules are simulated.}
 
 \myparagraph{Open Preservation with Parameters}
-{\newnewrevisioncmd
+\label{sec:main-verification:openprsv}
+\cc{}'s passes are categorized into two groups: analysis pass and translation (optimization) pass.
+The former computes useful information about the source program so that it can be used in translation passes.
+Such separation encourages code reuse as an analysis pass can be employed in multiple translation passes.
+
+In verification, \cc{} verifies the soundness of an analysis pass modularly, independent from its clients.
+Specifically,
 \cc{} uses a relation $match\_states$ to prove correctness of a translation pass
-and a predicate $sound\_state$ to prove correctness of the analyzer performing value analysis,
+and a predicate $sound\_state$ to prove correctness of the analyzer such as value analysis,
 where $sound\_state$ specifies those states where the analysis results hold.
+%% This design is also fruitful because one can keep $match\_states$ relatively simpler.
 As we do for $match\_states$,
 we perform a similar generalization from a closed setting to an open setting for $sound\_state$.
 Specifically, 
@@ -386,7 +393,6 @@ to that of the module semantics simulation and the \caselabel{STEP},
 %%     \quad (sound\_states_{0} \land sound\_states_{1}) \in \textrm{open\_prsv}_{\MPRED{}_{2}}(\msem)~.
 %%   \end{stackTL}
 %% \]
-}
 
 \subsection{Horizontal Compositionality and Adequacy}
 \label{sec:main-verification:theorems}
@@ -425,7 +431,7 @@ given in \textsc{(sim:prog)} of \Cref{fig:full-sim}.  Then we have:
 \subsection{Instances of Parameters}
 \label{sec:main-verification:instances}
 
-In this section, we present intuition behind the three parameters (\Cref{sec:main-verification:instances}) with some interesting instances of them.
+This section presents intuition behind the three parameters (\Cref{sec:main-verification:instances}) with some interesting instances of them.
 %% with their underlying ideas.
 %% and try to convey the idea behind them.
 
@@ -433,9 +439,9 @@ The virtue of parameterizing $\MREL$ is that in the \caselabel{CALL} case of \Cr
 possible future worlds are restricted with \cdashbox{myred}{$\mrel{}'' \sqsupseteq \mrel{}'$}.
 Actually, all the guarantee conditions \cfbox{myred}{$\mrel' \sqsupseteq \mrel$} elsewhere are required to ensure this condition.
 The most interesting instances of $\MREL$ are already presented in \Cref{sec:overview-verification:injection:dynamic,sec:overview-verification:injection:static}.
-They are carefully designed so that each function guarantees others' private memories (\eg dynamic local memories) are unchanged (\cdashbox{myred}{$\mrel{}'' \sqsupseteq \mrel{}'$}), and in return they are guaranteed that their own private memories are unchanged after an external function call.
+They are carefully designed so that each function guarantees others' private memories (\eg dynamic local memories) are unchanged (\cdashbox{myred}{$\mrel{}'' \sqsupseteq \mrel{}'$}), and in return, they are guaranteed that their own private memories are unchanged after an external function call.
 
-$\SREL$ is introduced to verify optimizations that changes their symbol environments, such as \code{Unusedglob}.
+$\SREL$ is introduced to verify optimizations that change their symbol code, such as \code{Unusedglob}.
 Except for those optimizations, we always use the following trivial quadruple.
 %% \[
 %% (\Skel \times \Skel, \;
@@ -455,7 +461,7 @@ Except for those optimizations, we always use the following trivial quadruple.
 %% \]
 \begin{array}{l@{}l}
 (&\Skel \times \Skel, \\
-&\code{fun \_\,\_} \rightarrow \true, \\
+&\code{fun \_\,\_} \rightarrow \top, \\
 &\code{fun} \; \srel \; \skel_\src \; \skel_\tgt \rightarrow \srel = (\skel_\src, \skel_\tgt), \\
 &\code{fun \_\,\_ } \; \skenv_\src \; \skenv_\tgt \rightarrow \skenv_\src = \skenv_\tgt) \\
 \end{array}
@@ -468,7 +474,7 @@ Except for those optimizations, we always use the following trivial quadruple.
 %% \code{fun \_\,\_ } \; \skenv_\src \; \skenv_\tgt \rightarrow \skenv_\src = \skenv_\tgt)
 %% $
 
-For unusedglob, we use the following instance.
+For \code{Unusedglob}, we use the following instance.
 \[
 \begin{array}{l@{}l}
 (&(\code{d}, \code{s}, \code{t}) \in \powset{\Ident} \times \Skel \times \Skel), \\
@@ -481,27 +487,58 @@ For unusedglob, we use the following instance.
 \end{array}
 \]
 %% {(t, ⊑, screl, serel) ∈ (Set × P(t × t) × (t → P(Scode × Scode)) × (t → MR.t → P(Senv × Senv))) |
-Here, \code{d} means dropped identifiers, \code{s} source \Skel \, and \code{t} target \Skel.
+Here, \code{d} means dropped identifiers, \code{s} source \Skel, \, and \code{t} target \Skel.
 \code{statics\_of} means the list of identifiers marked as static variable and $s\code{@}i$ is a definition in $s$ whose identifier is $i$.
-We omit exact definition of $\simskenv$; it morally means that the injection does not map dropped identifier in the source and all other identifiers are mapped one-to-one.
+We omit the exact definition of $\simskenv$; it morally means that the injection does not map dropped identifier in the source, and all other identifiers are mapped one-to-one.
 %% Note that if the dropped identifier is mapped, than  <--- src UB는 괜찮...
 
-Similarly with above, the virtue of parameterizing $\SREL$ is that in \caselabel{INIT} case of \Cref{fig:full-sim}, one can rely on $\cdashbox{green}{$(\msem_{src}.\texttt{senv}, \msem_{tgt}.\texttt{senv}) \in \simskenv(\srel, \mrel)$}$.
-For this, a pair of module first guarantees their symbol codes are related: \cfbox{green}{$(\module_{\src}.\texttt{scode}, \module_{\tgt}.\texttt{scode}) \in \simsk(\srel)$}.
+Similarly to the above, the virtue of parameterizing $\SREL$ is that in \caselabel{INIT} case of \Cref{fig:full-sim}, one can rely on $\cdashbox{green}{$(\msem_{src}.\texttt{senv}, \msem_{tgt}.\texttt{senv}) \in \simskenv(\srel, \mrel)$}$.
+For this, a pair of the module first guarantees their symbol codes are related: \cfbox{green}{$(\module_{\src}.\texttt{scode}, \module_{\tgt}.\texttt{scode}) \in \simsk(\srel)$}.
 Recall that in the loading process (\Cref{sec:main-semantics:loading}),
 individual symbol codes are linked to constitute a global symbol code,
-loaded into global symbol environment, and finally projected into individual symbol environments.
+loaded into the global symbol environment, and finally projected into individual symbol environments.
 There should be a mechanism that ensures the information written in $\simsk$ (\ie the list of dropped identifiers) to be transferred into $\simskenv$ (\ie dropped identifiers are not injected).
-For instance, suppose that a module $A$ claims that a static identifier $i$ of another module $B$ is dropped while it actually isn't.
+For instance, suppose that module $A$ claims that a static identifier $i$ of another module $B$ is dropped while it actually is not.
 Then, the resulting injection will not map $i$, so the $\simskenv$ of $B$ is broken.
-To prevent this, $\simsk$ requires that the identifiers one claims to be dropped should be its own \emph{static} variables ($\code{statics\_of } s$),
-which prevents invalidating the invariants of other modules.
+In order to prevent this, $\simsk$ requires that the identifiers one claims to be dropped should be its own \emph{static} variables ($\code{statics\_of } s$),
+which prevents invalidating other modules' invariants.
 Then, such information is maintained throughout the linking process by $\sqsubseteq$ relation.
 
 
 
-$\MPRED$ is introduced to verify optimizations employing static analyzers.
+The idea behind $\MPRED$ is already discussed in \Cref{sec:main-verification:openprsv}.
+For passes that do not employ the value analysis, we offer the following trivial instance accompanied by an open preservation proof with a trivial $sound\_state$,
+so there is no additional proof obligation:
+%% introduced to verify optimizations employing static analyzers.
+%% Open Preservation with Parameters
+%% SoundTop
+\[
+\begin{array}{l@{}l}
+(
+&\code{Unit},\;
+\code{fun \_\,\_} \rightarrow \top, \;
+\code{fun \_\,\_} \rightarrow \top, \;
+\code{fun \_\,\_\,\_} \rightarrow \top, \;
+\code{fun \_\,\_\,\_} \rightarrow \top, \;
+\code{fun \_\,\_\,\_} \rightarrow \top) \;
+\end{array}
+%% (\code{Unit},\;
+%% \code{fun \_\,\_} \rightarrow \true, \;
+%% \code{fun \_\,\_} \rightarrow \true, \;
+%% \code{fun \_\,\_\,\_} \rightarrow \true, \;
+%% \code{fun \_\,\_\,\_} \rightarrow \true, \;
+%% \code{fun \_\,\_\,\_} \rightarrow \true) \;
+\]
+\[
+sound\_state \defeq \code{fun \_\,\_\,\_} \rightarrow \top
+\]
+For passes that employ value analysis, we use a unary version of enriched memory injection.
+Its definition is largely straightforward, so we omit here; instead, we note some interesting points.
+The idea behind the two examples \Cref{sec:overview-verification:injection:dynamic} and \Cref{fig:flat-model} are similar: protection of private memory.
+However, while the former in its essence requires relational reasoning so it should be verified with enriched memory injection,
+the latter suffices to use unary reasoning, so it is verified with memory identity plus open preservation, which greatly simplifies the proof.
+%% However, while the former in its essence requires relational reasoning so it should be verified with enriched memory injection,
+%% the latter suffices to use unary reasoning, so it is verified memory identity together with open preservation, which greatly simplifies the proof.
+%% While the idea behind two examples \Cref{sec:overview-verification:injection:dynamic} and \Cref{fig:flat-model} are similar -- protection of private memory --
 
 
-Open Preservation with Parameters
-SoundTop
