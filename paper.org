@@ -1,5 +1,9 @@
 일단 TODO (compcertr, parameters, program-related works) 남겨둔 채로 맞춤법 체크 하고 발송하자.
 
+- TODO: mixed sim 증명에서 t1 <> t2 조건 써야 함
+  그리고 mt_nil_left/right는 technical하게 증명 편하게 하려고 했다고 걍 대충 쓰자
+
+
 
 
 

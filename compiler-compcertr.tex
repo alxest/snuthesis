@@ -1,4 +1,26 @@
 \section{CompCertR}
 \label{sec:compiler:compcertr}
 
-\todo{TODO}
+In this section, we list how we modified \cc{} in \ccr{}.
+
+As discussed, we enriched \cc{}'s existing memory injection so that it can be used in an open simulation.
+Roughly speaking, \cc{} only \emph{relies} on the private memory protection (by system call axioms) while it does not \emph{guarantee} it.
+This is indeed okay because system calls are expected not to make a mutually recursive call and well-behaved.
+However, in our open setting, an external call can make a mutually recursive call and each translation should also guarantee the condition.
+For instance, suppose that \code{f} calls \code{g} and \code{g} calls \code{f} again.
+Here, for the first f to rely on private memory protection, second f needs to guarantee it.
+
+%% Recall that by prohibiting mutual recursion, \ccx{} was able to use closed simulations which do not require the ``guarantee'' condition.
+
+%% 1) Proving "guarantee" conditions of each translations.  
+%% In the context of open simulations, CompCert only "rely" on it (by external call axioms) but does not "guarantee" it.  
+%% To address this gap, we needed to prove "guarantee" conditions for each per-pass proofs.  
+%% We needed to prove additional properties for injection passes only.  
+
+%% 2) Changing "Callstate" of each language to carry function pointer, instead of function definition.  
+%% External module's function definition may not be visible in the local module, but it should be able to call it with function pointer.  
+
+%% 3) Relaxing each translation's simulation relation so that first stack (`main`, in CompCert) may have called with arguments.  
+%% This change affects only three passes, and except for the Stackingproof the change is very small.  
+
+%% 4) Generalizing "step" relation to respect "symbol environment".  
