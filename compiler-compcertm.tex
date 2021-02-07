@@ -139,7 +139,7 @@ Conversely, we prove that the repaired interaction semantics refines the physica
 using a closed simulation of \cc{} with memory identity.
 This result is useful because we want to allow separate compilation (of C modules) on the compiler side, and on the program verification side, we want to hide complexities from inter-module steps.
 \begin{theorem}[Adequacy w.r.t C]\label{thm:results-adequacy-c}
-  Let $M_1, \cdots, M_n$ be \textrm{\cc{} C} modules.  We have:
+  Let $M_1, \cdots, M_n$ be well-typed \textrm{\cc{} C} modules.  We have:
   \[  \beh{M_1 \plink \ldots \plink M_n} \supseteq \beh{M_1 \llink \ldots \llink M_n}  ~.\]
 \end{theorem}
 

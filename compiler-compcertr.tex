@@ -1,14 +1,87 @@
 \section{CompCertR}
 \label{sec:compiler:compcertr}
 
-In this section, we list how we modified \cc{} in \ccr{}.
+In this section, we list the major differences between \cc{} and \ccr{}.
 
 As discussed, we enriched \cc{}'s existing memory injection so that it can be used in an open simulation.
-Roughly speaking, \cc{} only \emph{relies} on the private memory protection (by system call axioms) while it does not \emph{guarantee} it.
+Roughly speaking, \cc{} only \emph{relies} on private memory protection (by system call axioms) while it does not \emph{guarantee} it.
 This is indeed okay because system calls are expected not to make a mutually recursive call and well-behaved.
-However, in our open setting, an external call can make a mutually recursive call and each translation should also guarantee the condition.
+However, in our open setting, an external call can make a mutually recursive call, and each translation should also guarantee the condition.
 For instance, suppose that \code{f} calls \code{g} and \code{g} calls \code{f} again.
 Here, for the first f to rely on private memory protection, second f needs to guarantee it.
+
+For technical reasons, we also refactored some language's semantics but \cc{}'s correctness results remain the same.
+Specifically, we changed the followings:
+\begin{itemize}
+\item We changed the \code{Callstate} of each language to carry function pointer instead of identifiers.
+  Note that in the open setting, a module can call another module's function via a function pointer.
+  %% There are two ways to support it.
+  To be specific, suppose that module X's symbol code is \code{[b, c]} and the global symbol code is \code{[a, b, c, d]}.
+  Then, the global symbol environment is $[1\mapsto\code{a}, 2\mapsto\code{b}, 3\mapsto\code{c}, 4\mapsto\code{d}]$,
+  and module X's is $[2 \mapsto \code{b}, 3 \mapsto \code{c}]$.
+  If the \code{Callstate} carries identifiers, X cannot call a function \code{a} via its function pointer $1$ because it first needs to lookup its environment with $1$ and find the corresponding identifier, but it is lacking.
+  For this reason, we changed \code{Callstate} to carry more raw information, a function pointer itself, than an identifier.
+
+  It is worth noting that \ccc{} takes a different approach; in their setting X's symbol environment is $[1\mapsto\code{extern a}, 2\mapsto\code{b}, 3\mapsto\code{c}, 4\mapsto\code{extern d}]$,
+  where \code{extern} means that it just has an identifier and its body is missing.
+  However, this symbol environment is quite different from the one originally used in \cc{}, $[1\mapsto\code{b}, 2\mapsto\code{c}]$.
+  We deviated from \ccc{}'s approach because it is desirable to maintain each symbol environment as a mere relocation from the original ones.
+  This property is beneficial when proving optimizations that are sensitive to symbol code/symbol environment, such as \code{Unusedglob}, which was missing in the days of \ccc{}.
+  %% Also we believe our approach is more resilient to future extensions like \emph{dynamic loading};
+  %% every time a new definition is loaded, \ccc{}'s approach needs to update all module's symbol environments while ours does not.
+
+  %% is the same as global symbol environment.
+  %% \footnote{Actually, the memory to identifier mapping are the same but identifier to definition mapping is different}
+
+  %% The first approach, taken by \ccc{}, is to make each module's symbol environment to contain all the identifiers.
+  %% In our interaction semantics, we wanted to keep each module's symbol environment to be a simple relocation of
+\item
+  \cc{}'s main function -- the entry point of the whole program -- does not accept any argument, and this fact is exploited in various proofs.
+  We relaxed such proofs not to rely on empty arguments so that such proofs can be reused in the open setting where each module can be called with arbitrary arguments. 
+  %% Changes are miniscule except for the \code{Stacking.v}.
+  \\
+  %
+  In detail, in \ccm{} we employ a special gadget called \emph{dummy stack} in three consecutive intermediate languages (\emph{LTL, Linear, Mach}) to take initial arguments into account.
+  Those languages are unusual because the callee reads arguments from caller's stack frame; higher-level languages directly pass the argument, and a lower-level language (assembly) passes arguments via memory.
+  Therefore, unlike \cc{}, where the initial stack frame of those languages is empty, in \ccm{}, we put a \emph{dummy stack} that only contains initial arguments but nothing else.
+  \footnote{Correspondingly, the \code{corestep} is defined as follows: $\code{corestep}(st_0, e, st_1) \defeq st_0 \estep{e} st_1 \land \code{get\_stack}(st_0) \neq []$.}
+  For this, we relaxed \cc{}'s simulation proof so that it can be used in both \cc{} and \ccm{}.
+  The two passes that introduce (\code{Allocation.v}; translation to \emph{LTL}) and eliminates (\code{Asmgen.v}; translation from \emph{Mach}) dummy stack required slight change.
+  The other passes whose source and target both have dummy stack (\eg \code{Linearize.v}, \code{Tunneling.v}) are almost unchanged,
+  except for the \code{Stacking.v} whose proof is deeply involved with the structure of stack frame.
+  %
+
+\item
+  In \cc{}'s assembly semantics, the $\code{RSP}$ register is initialized to an integer 0.
+  This is okay for \cc{} generated assemblies where the initial value of $\code{RSP}$ is never used, but in our setting, we may include a hand-written assembly module, so a more faithful formalization would be desirable.
+  Therefore, we initialize $\code{RSP}$ with a junk pointer.\footnote{we can also use \texttt{undef} value but junk pointer is more convenient in simulation proof}.
+  As we did in \Cref{sec:compiler:solution:model}, we massaged the initial memory to contain a junk block (block number 1), and initialize $\code{RSP}$ with that address.
+  %% We prefer junk pointer because 
+
+%% 4) Generalizing "step" relation to respect "symbol environment".
+\end{itemize}
+The correctness result of \cc{} remains the same, and the reason is as follows.
+\begin{itemize}
+\item The semantics of the source language is unchanged. In \code{ClightBigstep.v} the equivalence between small-step style and big-step style is proven.
+  We did not modify the big-step style at all, and the equivalence is still proven.
+\item The only thing that is changed in the target language's semantics is the initial value of RSP register, where our version admits more behavior. 
+\end{itemize}
+
+Additionally, we have strengthened the C type checker in order to prove \Cref{thm:results-adequacy-c}; our modification is faithful w.r.t modern C compliers.%\footnote{Probably valid w.r.t. C standards too.}
+Specifically, our modified type checker additionally rejects the following cases: (1) void function returning a value, (2) non-void function not returning a value, and (3) ill-formed composite types.
+With these enhancements, we proved that when executing a well-typed C module, arguments of a function call and a return value of a function are always well-typed.
+\footnote{\cc{}'s type soundness theorem already maintains all the value in its state are well-typed.}
+This additional property guarantees that nothing weird happens in the inter-module step, which is necessary for proving \Cref{thm:results-adequacy-c}.
+
+
+%% Note that, in spite of these technical modifications, mathematical meaning of the semantics is unchanged.  
+%% - For source languages, see `/cfrontend/ClightBigstep.v` and `/cfrontend/Cstrategy.v` which proves the small-step variant and big-step variant of the semantics are equivalent. We modified small-step variant but it is still equivalent to (unmodified) big-step semantics.
+%% - For target language (`/x86/Asm.v`), we didn't modify the semantics at all.
+
+
+%% 5) Ctyping
+
+%% mathematical meaning is proven to be equivalent as before.
 
 %% Recall that by prohibiting mutual recursion, \ccx{} was able to use closed simulations which do not require the ``guarantee'' condition.
 
