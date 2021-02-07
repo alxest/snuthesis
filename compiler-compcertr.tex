@@ -54,7 +54,7 @@ Specifically, we changed the followings:
 \item
   In \cc{}'s assembly semantics, the $\code{RSP}$ register is initialized to an integer 0.
   This is okay for \cc{} generated assemblies where the initial value of $\code{RSP}$ is never used, but in our setting, we may include a hand-written assembly module, so a more faithful formalization would be desirable.
-  Therefore, we initialize $\code{RSP}$ with a junk pointer.\footnote{we can also use \texttt{undef} value but junk pointer is more convenient in simulation proof}.
+  Therefore, we initialize $\code{RSP}$ with a junk pointer.\footnote{We can also use \texttt{undef} value but junk pointer is more convenient in simulation proof.}
   As we did in \Cref{sec:compiler:solution:model}, we massaged the initial memory to contain a junk block (block number 1), and initialize $\code{RSP}$ with that address.
   %% We prefer junk pointer because 
 
