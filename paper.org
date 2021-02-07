@@ -1,14 +1,10 @@
-일단 TODO (compcertr, parameters, program-related works) 남겨둔 채로 맞춤법 체크 하고 발송하자.
-
-- TODO: mixed sim 증명에서 t1 <> t2 조건 써야 함
-  그리고 mt_nil_left/right는 technical하게 증명 편하게 하려고 했다고 걍 대충 쓰자
+TODO abstract revise, significant -> meaningful step forward
 
 
 
 
 
 내용 추가할만한 것들 
-- parameter instances, 직관 더 설명
 - future works for program verif
 - 리뷰 읽고 거기 답했던거 중에 건질거 있나 보자  
   + Also, all the reviewers agree that if one is not already an expert on the nuances of CompCert specifications, this paper is very difficult to follow.
@@ -26,7 +22,10 @@ DONE utod figure
 DONE rusc figure 추가하기 그림으로
 DONE: Chapter III에서 pagebreak가 있으니까 Chapter II background 좀만 추가하면 page+1임
 DONE: 맞춤법 한번 싹 돌리기
-
+- DONE: mixed sim 증명에서 t1 <> t2 조건 써야 함
+  그리고 mt_nil_left/right는 technical하게 증명 편하게 하려고 했다고 걍 대충 쓰자
+일단 DONE (compcertr, parameters, program-related works) 남겨둔 채로 맞춤법 체크 하고 발송하자.
+- DONE parameter instances, 직관 더 설명
 
 
 

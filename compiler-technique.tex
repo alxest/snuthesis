@@ -47,7 +47,8 @@ Finally, mode (4) is defined as follows:
   where $\ms \exstep{e} \ms'$ denotes that determinate\_at($\ms$) holds and $\ms \estep{e} \ms'$.
 \end{enumerate}
 \begin{proof}
-We write a rough outline of the adequacy proof of this mode.
+The proof is basically the same with forward to backward simulation proof in \cc{} except that ST is parameterized.
+%% We write a rough outline of the adequacy proof of this mode.
 If the $\mssrc$ cannot take any step, it is undefined behavior, so the proof is over. Otherwise, we have $e_1$ such that $\mssrc \estep{e_1} \mssrc'$.
 By applying mode (4) proof with $e_1$ and $\mssrc'$, we have ($\tau$ steps omitted for brevity) $\mstgt \estep{e_1} \mstgt' \land (\mssrc', \mstgt') \in R$. Now, it suffices\footnote{We omit the details about coinductive reasoning here.} to prove this:
 \[\forall e_2, \mstgt'', \mstgt \estep{e_2} \mstgt'' \implies \exists \mssrc', \mssrc \estep{e_2} \mssrc' \land (\mssrc', \mstgt'') \in R.\]
@@ -55,8 +56,10 @@ By applying mode (4) proof with $e_1$ and $\mssrc'$, we have ($\tau$ steps omitt
 By determinate\_at, we have $(e_1 \sim e_2 \land (e_1 = e_2 \implies \mstgt' = \mstgt''))$.
 If $e_1 = e_2$, we have $\mstgt' = \mstgt''$. We finish the proof by instantiating $\exists \mssrc'$ with $\mssrc'$.
 Otherwise, we still have $e_1 \sim e_2$.
-Then, by receptive\_at, we have $\mssrc''$ such that $\mssrc \estep{e_2} \mssrc''$.
-Finally, by applying mode (4) proof with $e_2$ and $\mssrc''$, we get $\mstgt''$ such that $\mstgt \estep{e_1} \mstgt'' \land (\mssrc'', \mstgt'') \in R$.
+By receptive\_at, we have $\mssrc''$ such that $\mssrc \estep{e_2} \mssrc''$.
+Then, by applying mode (4) proof with $e_2$ and $\mssrc''$, we get $\mstgt'''$ such that $\mstgt \estep{e_1} \mstgt''' \land (\mssrc'', \mstgt''') \in R$.
+By applying determinate\_at with $e_2, \mstgt'', e_2, \mstgt'''$, we get $(e_2 \sim e_2 \land (e_2 = e_2 \implies \mstgt'' = \mstgt'''))$.
+Hence, we have $\mstgt'' = \mstgt'''$, and by simple rewriting, $(\mssrc'', \mstgt'') \in R$.
 We finish the proof by instantiating $\exists \mssrc'$ with $\mssrc''$.
 
 \end{proof}
@@ -69,6 +72,8 @@ We finish the proof by instantiating $\exists \mssrc'$ with $\mssrc''$.
 %% \end{itemize}
 
 We get modes (2) and (3) by instantiating $\sim$ of (4) with proper instances; the former with equality, and the latter with a certain relation called ``match\_traces'' from \cc{}.
+Note that the above proof outline does not use conditions $(\forall \, e, \; \none \sim e \implies e = \none) \land (\forall \, e, \; e \sim \none \implies e = \none)$ in ST.
+These are mainly added for technical reasons and might not be essential.
 %% \end{itemize}
 
 \subsection{Parameters for Open Simulations}
